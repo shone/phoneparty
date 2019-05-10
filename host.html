@@ -3,11 +3,11 @@
   </head>
   <body>
     <h1>HOST</h1>
-    <video id="video" playsinline autoplay muted></video>
     <div id="statusbar">
       <span id="websocket_status" class="initial">WS</span>
       <span id="rtc_status"       class="initial">RTC</span>
     </div>
+    <div id="videos"></div>
   </body>
   <style>
     h1 {
@@ -18,12 +18,22 @@
       text-align: center;
       z-index: 2;
     }
-    #video {
+    #videos {
       position: fixed;
       left:   0;
       top:    0;
       width:  100%;
       height: 100%;
+      display: flex;
+      flex-direction: row;
+    }
+    #videos video {
+      flex-grow: 1;
+      flex-shrink: 0;
+      object-fit: cover;
+      flex-basis: 1px;
+      transform: scaleX(-1);
+      -webkit-border-radius: 1px; /* workaround for Chrome (video overhangs element) */
     }
     #statusbar {
       position: fixed;
@@ -47,76 +57,89 @@
   </style>
   <script>
     // HTTPS redirect
-    if (location.hostname !== 'localhost' && location.protocol != 'https:') {
+    if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol != 'https:') {
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
-    const video = document.getElementById('video');
-
-    const websocket = new WebSocket(`wss://${location.hostname}:${location.port}/host`);
+    const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/host`);
     const websocketStatus = document.getElementById('websocket_status');
     websocket.addEventListener('open', function (event) {
       console.log('Websocket opened');
       websocketStatus.className = 'connected';
     });
-    
-    const rtcConnection = new RTCPeerConnection({});
-    const rtcStatus = document.getElementById('rtc_status');
-    rtcConnection.addEventListener('iceconnectionstatechange', event => {
-      console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
-      if (rtcConnection.iceConnectionState === 'connected') {
-        rtcStatus.className = 'connected';
-      } else {
-        rtcStatus.className = 'disconnected';
-      }
-    });
-    let hasSentSdp = false;
-    let iceCandidatesToSend = [];
-    rtcConnection.addEventListener('icecandidate', event => {
-      console.log('Got local ICE candidate');
-      if (event.candidate) {
-        iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
-        if (websocket.readyState === websocket.OPEN && hasSentSdp) {
-          sendIceCandidates();
-        }
-      }
-    });
-    function sendIceCandidates() {
-      for (let iceCandidate of iceCandidatesToSend) {
-        console.log('Sending ICE candidate..');
-        websocket.send(iceCandidate);
-      }
-      iceCandidatesToSend = [];
-    }
-    rtcConnection.addEventListener('track', event => {
-      console.log('Got track from RTC connection');
-      if (video.srcObject !== event.streams[0]) {
-        video.srcObject = event.streams[0];
-        console.log('received remote stream');
-      }
-    });
+
+    const rtcConnections = {};
     
     // Listen for messages
     websocket.addEventListener('message', function (event) {
-      console.log('Received websocket message');
-      rtcConnection.setRemoteDescription({type: 'offer', sdp: event.data}).then(() => {
-        console.log('Set remote description on RTC connection');
-        rtcConnection.createAnswer().then(answer => {
+      const clientIdAndMessage = JSON.parse(event.data);
+      const clientId = clientIdAndMessage[0];
+      console.log(`Received websocket message from client ${clientId}`);
+      
+      if (!(clientId in rtcConnections)) {
+        console.log('New client connected')
+      
+        async function setupRtcConnection() {
+          const rtcConnection = new RTCPeerConnection({});
+          rtcConnections[clientId] = rtcConnection;
+          rtcConnection.addEventListener('iceconnectionstatechange', event => {
+            console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
+          });
+          let hasSentSdp = false;
+          let iceCandidatesToSend = [];
+          rtcConnection.addEventListener('icecandidate', event => {
+            console.log('Got local ICE candidate');
+            if (event.candidate) {
+              iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+              if (hasSentSdp) {
+                sendIceCandidates();
+              }
+            }
+          });
+          function sendIceCandidates() {
+            for (let iceCandidate of iceCandidatesToSend) {
+              console.log('Sending ICE candidate..');
+              websocket.send(JSON.stringify([clientId, iceCandidate]));
+            }
+            iceCandidatesToSend = [];
+          }
+
+          const video = document.createElement('video');
+          video.autoplay = true;
+          document.getElementById('videos').appendChild(video);
+          rtcConnection.addEventListener('track', event => {
+            console.log('Got track from RTC connection');
+            if (video.srcObject !== event.streams[0]) {
+              video.srcObject = event.streams[0];
+              setTimeout(() => {
+                video.play();
+              });
+              console.log('received remote stream');
+            }
+          });
+
+          const remoteSdp = clientIdAndMessage[1];
+          await rtcConnection.setRemoteDescription({type: 'offer', sdp: remoteSdp});
+          console.log('Set remote description on RTC connection');
+
+          const answer = await rtcConnection.createAnswer();
           console.log('Created answer for RTC connection');
           rtcConnection.setLocalDescription(answer);
-          websocket.send(answer.sdp);
+          websocket.send(JSON.stringify([clientId, answer.sdp]));
           hasSentSdp = true;
-          if (websocket.readyState === websocket.OPEN) {
-            sendIceCandidates();
-          } else {
-            websocket.addEventListener('open', sendIceCandidates, {once: true});
-          }
+          sendIceCandidates();
           websocket.addEventListener('message', function (event) {
             console.log('Adding remote ICE candidate..');
-            rtcConnection.addIceCandidate(JSON.parse(event.data));
+            const clientIdAndMessage = JSON.parse(event.data);
+            const iceCandidateClientId = clientIdAndMessage[0];
+            const message = clientIdAndMessage[1];
+            if (iceCandidateClientId === clientId) {
+              rtcConnection.addIceCandidate(JSON.parse(message));
+            }
           });
-        });
-      });
-    }, {once: true});
+        }
+        setupRtcConnection();
+      }
+    });
   </script>
 </html>

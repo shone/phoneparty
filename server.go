@@ -5,6 +5,8 @@ import (
   "github.com/gorilla/websocket"
   "sync"
   "sync/atomic"
+  "strconv"
+  "encoding/json"
 )
 
 func main() {
@@ -53,7 +55,12 @@ func main() {
         log.Println("Unexpected message type received from host websocket")
       } else {
         log.Println("Received message from host, relaying to client..")
-        err = clientWebsocket.WriteMessage(websocket.TextMessage, message)
+        clientIdAndMessage := []string{"",""}
+        json.Unmarshal(message, &clientIdAndMessage)
+        clientId,_ := strconv.ParseUint(clientIdAndMessage[0], 10, 64)
+        clientConnI,_ := clientConns.Load(clientId)
+        clientConn := clientConnI.(*websocket.Conn)
+        err = clientConn.WriteMessage(websocket.TextMessage, []byte(clientIdAndMessage[1]))
         if err != nil {
           log.Println("Error while attempting to write to client websocket: ", err)
         }
@@ -61,10 +68,6 @@ func main() {
     }
   })
   http.HandleFunc("/client", func(response http.ResponseWriter, request *http.Request) {
-    if clientWebsocket != nil {
-      log.Println("A client attempted to connect, but there's already a client connected")
-      return
-    }
     conn,err := upgrader.Upgrade(response, request, nil)
     if err != nil {
       log.Println("Unable to upgrade client connection to websocket: ", err)
@@ -74,14 +77,17 @@ func main() {
     clientId := atomic.AddUint64(&nextClientId, 1)
     clientConns.Store(clientId, conn)
 
+    // Send client ID
+//     conn.WriteMessage(websocket.TextMessage, strconv.FormatInt(clientId, 10))
+    
     messageType,clientSdp,err := conn.ReadMessage()
     if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
       log.Println("Client websocket closed unexpectedly")
-      clientWebsocket = nil
+      clientConns.Delete(clientId)
       return
     } else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
       log.Println("Client websocket closed")
-      clientWebsocket = nil
+      clientConns.Delete(clientId)
       return
     }
     if err != nil {
@@ -91,7 +97,8 @@ func main() {
       log.Println("Unexpected message type received from client websocket")
     }
     log.Println("Client SDP received, relaying to host..")
-    err = hostConn.WriteMessage(websocket.TextMessage, clientSdp)
+    messageWithClientId,_ := json.Marshal([]string{strconv.FormatUint(clientId, 10), string(clientSdp)})
+    err = hostConn.WriteMessage(websocket.TextMessage, messageWithClientId)
     if err != nil {
       log.Println("Unable to relay client SDP to host: ", err)
     }
@@ -99,11 +106,11 @@ func main() {
       messageType,message,err := conn.ReadMessage()
       if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
         log.Println("Client websocket closed unexpectedly")
-        clientWebsocket = nil
+        clientConns.Delete(clientId)
         return
       } else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
         log.Println("Client websocket closed")
-        clientWebsocket = nil
+        clientConns.Delete(clientId)
         return
       }
       if err != nil {
@@ -113,8 +120,9 @@ func main() {
       if messageType != websocket.TextMessage {
         log.Println("Received unexpected message type from host websocket")
       }
+      messageWithClientId,_ = json.Marshal([]string{strconv.FormatUint(clientId, 10), string(message)})
       log.Println("Received message from client, relaying to host..")
-      err = hostConn.WriteMessage(websocket.TextMessage, message)
+      err = hostConn.WriteMessage(websocket.TextMessage, messageWithClientId)
       if err != nil {
         log.Println("Unable to write to host websocket: ", err)
       }

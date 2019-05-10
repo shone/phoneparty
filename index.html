@@ -46,11 +46,13 @@
   </style>
   <script>
     // HTTPS redirect
-    if (location.hostname !== 'localhost' && location.protocol != 'https:') {
+    if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol != 'https:') {
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
-    const websocket = new WebSocket(`wss://${location.hostname}:${location.port}/client`);
+//     let clientId = null;
+
+    const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/client`);
     const websocketStatus = document.getElementById('websocket_status');
     const waitUntilWebsocketConnected = new Promise(resolve => {
       websocket.addEventListener('open', function(event) {
@@ -58,6 +60,13 @@
         resolve();
       });
     });
+    function receiveMessageFromWebsocket() {
+      return new Promise(resolve => {
+        websocket.addEventListener('message', function (event) {
+          resolve(event.data);
+        }, {once: true});
+      });
+    }
 
     const rtcConnection = new RTCPeerConnection({});
     const rtcStatus = document.getElementById('rtc_status');
@@ -99,20 +108,22 @@
       await rtcConnection.setLocalDescription(offer)
             
       await waitUntilWebsocketConnected;
+      
+//       clientId = await receiveMessageFromWebsocket();
+      
       console.log('Sending SDP..');
       websocket.send(offer.sdp);
       hasSentSdp = true;
       sendIceCandidates();
 
-      // Listen for messages
+      const remoteSdp = await receiveMessageFromWebsocket();
+      console.log('Received remote SDP');
+      rtcConnection.setRemoteDescription({type: 'answer', sdp: remoteSdp});
+
       websocket.addEventListener('message', function (event) {
-        console.log('Received remote SDP');
-        rtcConnection.setRemoteDescription({type: 'answer', sdp: event.data});
-        websocket.addEventListener('message', function (event) {
-          console.log('Adding remote ICE candidate');
-          rtcConnection.addIceCandidate(JSON.parse(event.data));
-        });
-      }, {once: true});
+        console.log('Adding remote ICE candidate');
+        rtcConnection.addIceCandidate(JSON.parse(event.data));
+      });
     }
     setup();
   </script>
