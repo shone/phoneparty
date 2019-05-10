@@ -1,0 +1,60 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <video id="localVideo" playsinline autoplay muted></video>
+    <button id="start_button">Start</button>
+    <button id="connect_button">Connect</button>
+  </body>
+  <script>
+    if (location.hostname !== 'localhost' && location.protocol != 'https:')
+    {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+
+    let localStream = null;
+    document.getElementById('start_button').addEventListener('click', event => {
+      const localVideo = document.getElementById('localVideo');
+      navigator.mediaDevices.getUserMedia({audio: true, video: true}).then(stream => {
+        alert('got stream');
+        localVideo.srcObject = stream;
+        localStream = stream;
+      }, error => {
+        alert(error);
+      });
+    });
+    document.getElementById('connect_button').addEventListener('click', event => {
+      let pc1 = new RTCPeerConnection({});
+      pc1.addEventListener('iceconnectionstatechange', event => {
+        console.log('ICE connection state changed');
+      });
+      localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
+      pc1.createOffer({
+        offerToReceiveAudio: 1,
+        offerToReceiveVideo: 1,
+      }).then(offer => {
+        pc1.setLocalDescription(offer).then(() => {
+          const socket = new WebSocket(`wss://${location.hostname}:${location.port}/client`);
+          // Connection opened
+          socket.addEventListener('open', function (event) {
+            socket.send(offer.sdp);
+            pc1.addEventListener('icecandidate', event => {
+              console.log('Got ICE candidate');
+              if (event.candidate) {
+                socket.send(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+              }
+            });
+          });
+          // Listen for messages
+          socket.addEventListener('message', function (event) {
+            console.log('Got message: ', event.data);
+            pc1.setRemoteDescription({type: 'answer', sdp: event.data});
+            socket.addEventListener('message', function (event) {
+              pc1.addIceCandidate(JSON.parse(event.data));
+            });
+          }, {once: true});
+        });
+      });
+    });
+  </script>
+</html>

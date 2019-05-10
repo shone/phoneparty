@@ -1,0 +1,61 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <video id="remoteVideo" playsinline autoplay muted></video>
+    <button id="connect_button">Connect</button>
+  </body>
+  <script>
+    if (location.hostname !== 'localhost' && location.protocol != 'https:')
+    {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+
+    const remoteVideo = document.getElementById('remoteVideo');
+
+    let localStream = null;
+    document.getElementById('connect_button').addEventListener('click', event => {
+
+//       localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
+//       pc1.createOffer({
+//         offerToReceiveAudio: 1,
+//         offerToReceiveVideo: 1,
+//       }).then(offer => {
+//         pc1.setLocalDescription(offer).then(() => {
+          const socket = new WebSocket(`wss://${location.hostname}:${location.port}/host`);
+          // Connection opened
+          socket.addEventListener('open', function (event) {});
+          // Listen for messages
+          socket.addEventListener('message', function (event) {
+            console.log('Got message: ', event.data);
+            let pc1 = new RTCPeerConnection({});
+            pc1.addEventListener('iceconnectionstatechange', event => {
+              console.log('ICE connection state changed');
+            });
+            pc1.addEventListener('track', event => {
+              if (remoteVideo.srcObject !== event.streams[0]) {
+                remoteVideo.srcObject = event.streams[0];
+                console.log('received remote stream');
+              }
+            });
+            pc1.setRemoteDescription({type: 'offer', sdp: event.data}).then(() => {
+              pc1.createAnswer().then(answer => {
+                pc1.setLocalDescription(answer);
+                socket.send(answer.sdp);
+                pc1.addEventListener('icecandidate', event => {
+                  console.log('Got ICE candidate');
+                  if (event.candidate) {
+                    socket.send(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+                  }
+                });
+                socket.addEventListener('message', function (event) {
+                  pc1.addIceCandidate(JSON.parse(event.data));
+                });
+              });
+            });
+          }, {once: true});
+//         });
+//       });
+    });
+  </script>
+</html>
