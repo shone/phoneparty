@@ -3,13 +3,16 @@ import (
   "net/http"
   "log"
   "github.com/gorilla/websocket"
+  "sync"
+  "sync/atomic"
 )
 
 func main() {
   http.Handle("/", http.FileServer(http.Dir(".")))
 
-  var hostWebsocket   *websocket.Conn
-  var clientWebsocket *websocket.Conn
+  var hostConn *websocket.Conn
+  var clientConns sync.Map
+  var nextClientId uint64
 
   var upgrader = websocket.Upgrader{
     ReadBufferSize:  1024,
@@ -19,8 +22,10 @@ func main() {
   upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
   http.HandleFunc("/host", func(response http.ResponseWriter, request *http.Request) {
-    if hostWebsocket != nil {
+    if hostConn != nil {
       log.Println("A host attempted to connect, but there's already a host connected")
+      response.WriteHeader(http.StatusConflict)
+      response.Write([]byte("A host is already connected"))
       return
     }
     conn,err := upgrader.Upgrade(response, request, nil)
@@ -29,17 +34,17 @@ func main() {
       return
     }
     log.Println("Host connected")
-    hostWebsocket = conn
+    hostConn = conn
     // Relay all messages to client
     for {
       messageType,message,err := conn.ReadMessage()
       if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
         log.Println("Host websocket closed unexpectedly")
-        hostWebsocket = nil
+        hostConn = nil
         return
       } else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
         log.Println("Host websocket closed")
-        hostWebsocket = nil
+        hostConn = nil
         return
       }
       if err != nil {
@@ -66,7 +71,8 @@ func main() {
       return
     }
     log.Println("Client connected")
-    clientWebsocket = conn
+    clientId := atomic.AddUint64(&nextClientId, 1)
+    clientConns.Store(clientId, conn)
 
     messageType,clientSdp,err := conn.ReadMessage()
     if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
@@ -85,7 +91,7 @@ func main() {
       log.Println("Unexpected message type received from client websocket")
     }
     log.Println("Client SDP received, relaying to host..")
-    err = hostWebsocket.WriteMessage(websocket.TextMessage, clientSdp)
+    err = hostConn.WriteMessage(websocket.TextMessage, clientSdp)
     if err != nil {
       log.Println("Unable to relay client SDP to host: ", err)
     }
@@ -108,7 +114,7 @@ func main() {
         log.Println("Received unexpected message type from host websocket")
       }
       log.Println("Received message from client, relaying to host..")
-      err = hostWebsocket.WriteMessage(websocket.TextMessage, message)
+      err = hostConn.WriteMessage(websocket.TextMessage, message)
       if err != nil {
         log.Println("Unable to write to host websocket: ", err)
       }
