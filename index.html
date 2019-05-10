@@ -2,59 +2,118 @@
   <head>
   </head>
   <body>
-    <video id="localVideo" playsinline autoplay muted></video>
-    <button id="start_button">Start</button>
-    <button id="connect_button">Connect</button>
+    <h1>CLIENT</h1>
+    <video id="video" playsinline autoplay muted></video>
+    <div id="statusbar">
+      <span id="websocket_status" class="initial">WS</span>
+      <span id="rtc_status"       class="initial">RTC</span>
+    </div>
   </body>
+  <style>
+    h1 {
+      position: fixed;
+      top: 10vh;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 2;
+    }
+    #video {
+      position: fixed;
+      left:   0;
+      top:    0;
+      width:  100%;
+      height: 100%;
+    }
+    #statusbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 2;
+      text-align: right;
+    }
+    #statusbar span {
+      height: 5vh;
+      width: 5vh;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #statusbar span.initial      { background-color: grey;  }
+    #statusbar span.connected    { background-color: green; }
+    #statusbar span.disconnected { background-color: red; }
+  </style>
   <script>
-    if (location.hostname !== 'localhost' && location.protocol != 'https:')
-    {
+    // HTTPS redirect
+    if (location.hostname !== 'localhost' && location.protocol != 'https:') {
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
-    let localStream = null;
-    document.getElementById('start_button').addEventListener('click', event => {
-      const localVideo = document.getElementById('localVideo');
-      navigator.mediaDevices.getUserMedia({audio: true, video: true}).then(stream => {
-        alert('got stream');
-        localVideo.srcObject = stream;
-        localStream = stream;
-      }, error => {
-        alert(error);
+    const websocket = new WebSocket(`wss://${location.hostname}:${location.port}/client`);
+    const websocketStatus = document.getElementById('websocket_status');
+    const waitUntilWebsocketConnected = new Promise(resolve => {
+      websocket.addEventListener('open', function(event) {
+        websocketStatus.className = 'connected';
+        resolve();
       });
     });
-    document.getElementById('connect_button').addEventListener('click', event => {
-      let pc1 = new RTCPeerConnection({});
-      pc1.addEventListener('iceconnectionstatechange', event => {
-        console.log('ICE connection state changed');
-      });
-      localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
-      pc1.createOffer({
-        offerToReceiveAudio: 1,
-        offerToReceiveVideo: 1,
-      }).then(offer => {
-        pc1.setLocalDescription(offer).then(() => {
-          const socket = new WebSocket(`wss://${location.hostname}:${location.port}/client`);
-          // Connection opened
-          socket.addEventListener('open', function (event) {
-            socket.send(offer.sdp);
-            pc1.addEventListener('icecandidate', event => {
-              console.log('Got ICE candidate');
-              if (event.candidate) {
-                socket.send(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
-              }
-            });
-          });
-          // Listen for messages
-          socket.addEventListener('message', function (event) {
-            console.log('Got message: ', event.data);
-            pc1.setRemoteDescription({type: 'answer', sdp: event.data});
-            socket.addEventListener('message', function (event) {
-              pc1.addIceCandidate(JSON.parse(event.data));
-            });
-          }, {once: true});
+
+    const rtcConnection = new RTCPeerConnection({});
+    const rtcStatus = document.getElementById('rtc_status');
+    rtcConnection.addEventListener('iceconnectionstatechange', event => {
+      if (rtcConnection.iceConnectionState === 'connected') {
+        rtcStatus.className = 'connected';
+      } else if (rtcConnection.iceConnectionState === 'disconnected') {
+        rtcStatus.className = 'disconnected';
+      }
+      console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
+    });
+    let hasSentSdp = false;
+    let iceCandidatesToSend = [];
+    rtcConnection.addEventListener('icecandidate', event => {
+      console.log('Got local ICE candidate');
+      if (event.candidate) {
+        iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+        if (websocket.readyState === websocket.OPEN && hasSentSdp) {
+          sendIceCandidates();
+        }
+      }
+    });
+    function sendIceCandidates() {
+      for (let iceCandidate of iceCandidatesToSend) {
+        console.log('Sending ICE candidate..');
+        websocket.send(iceCandidate);
+      }
+      iceCandidatesToSend = [];
+    }
+
+    const video = document.getElementById('video');
+
+    async function setup() {
+      const stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+      video.srcObject = stream;
+      stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
+
+      const offer = await rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1});
+      await rtcConnection.setLocalDescription(offer)
+            
+      await waitUntilWebsocketConnected;
+      console.log('Sending SDP..');
+      websocket.send(offer.sdp);
+      hasSentSdp = true;
+      sendIceCandidates();
+
+      // Listen for messages
+      websocket.addEventListener('message', function (event) {
+        console.log('Received remote SDP');
+        rtcConnection.setRemoteDescription({type: 'answer', sdp: event.data});
+        websocket.addEventListener('message', function (event) {
+          console.log('Adding remote ICE candidate');
+          rtcConnection.addIceCandidate(JSON.parse(event.data));
         });
-      });
-    });
+      }, {once: true});
+    }
+    setup();
   </script>
 </html>
