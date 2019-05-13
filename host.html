@@ -2,38 +2,49 @@
   <head>
   </head>
   <body>
-    <h1>HOST</h1>
     <div id="statusbar">
       <span id="websocket_status" class="initial">WS</span>
-      <span id="rtc_status"       class="initial">RTC</span>
     </div>
-    <div id="videos"></div>
   </body>
   <style>
-    h1 {
+    video {
+      object-fit: cover;
+      transform: scale(-1, 1);
       position: fixed;
-      top: 10vh;
-      left: 0;
-      right: 0;
-      text-align: center;
+      width:  12vw;
+      height: 12vw;
+      margin-left: -6vw;
+      margin-top: -6vw;
+      border-radius: 12vw;
+      box-sizing: border-box;
+    }
+    video.pinging {
+      width:  30vw;
+      height: 30vw;
+      margin-left: -15vw;
+      margin-top: -15vw;
+      border-radius: 15vw;
       z-index: 2;
     }
-    #videos {
-      position: fixed;
-      left:   0;
-      top:    0;
-      width:  100%;
-      height: 100%;
-      display: flex;
-      flex-direction: row;
+    video.chosen {
+      border: 1vw solid blue;
     }
-    #videos video {
-      flex-grow: 1;
-      flex-shrink: 0;
-      object-fit: cover;
-      flex-basis: 1px;
-      transform: scaleX(-1);
-      -webkit-border-radius: 1px; /* workaround for Chrome (video overhangs element) */
+    video.flash {
+      animation: 0.2s flash 5;
+    }
+    video.fullscreen {
+      border-radius: 0;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      margin-left: 0;
+      margin-top: 0;
+      z-index: -1;
+    }
+    @keyframes flash {
+      from {border: 1vw solid blue;}
+      to {border: none;}
     }
     #statusbar {
       position: fixed;
@@ -54,6 +65,28 @@
     #statusbar span.initial      { background-color: grey;  }
     #statusbar span.connected    { background-color: green; }
     #statusbar span.disconnected { background-color: red; }
+    .countdown {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 10vh;
+      font-size: 10vw;
+      text-align: center;
+    }
+    .wheel-ticker {
+      display: block;
+      position: fixed;
+      left: 50vw;
+      top: 2vw;
+      width: 10vw;
+      height: 10vw;
+      margin-left: -5vw;
+      background-repeat: no-repeat;
+      background-size: 100%;
+      transform: rotate(180deg);
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEgMSIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj48cGF0aCBkPSJNIDAsMC44IDAuNSwwLjIgMSwwLjggeiIgc3R5bGU9ImZpbGw6IzAwMDBmZjtzdHJva2U6bm9uZTsiIC8+PC9zdmc+');
+    }
   </style>
   <script>
     // HTTPS redirect
@@ -67,79 +100,281 @@
       console.log('Websocket opened');
       websocketStatus.className = 'connected';
     });
+    function receiveMessageFromWebsocket() {
+      return new Promise(resolve => {
+        websocket.addEventListener('message', function (event) {
+          resolve(JSON.parse(event.data));
+        }, {once: true});
+      });
+    }
 
     const rtcConnections = {};
+    const players = [];
     
     // Listen for messages
     websocket.addEventListener('message', function (event) {
-      const clientIdAndMessage = JSON.parse(event.data);
-      const clientId = clientIdAndMessage[0];
-      console.log(`Received websocket message from client ${clientId}`);
-      
-      if (!(clientId in rtcConnections)) {
+      const message = JSON.parse(event.data);
+      console.log(`Received websocket message from client ${message.clientId}`);
+      if (!(message.clientId in rtcConnections) && message.type !== 'clientDisconnected') {
         console.log('New client connected')
-      
-        async function setupRtcConnection() {
-          const rtcConnection = new RTCPeerConnection({});
-          rtcConnections[clientId] = rtcConnection;
-          rtcConnection.addEventListener('iceconnectionstatechange', event => {
-            console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
-          });
-          let hasSentSdp = false;
-          let iceCandidatesToSend = [];
-          rtcConnection.addEventListener('icecandidate', event => {
-            console.log('Got local ICE candidate');
-            if (event.candidate) {
-              iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
-              if (hasSentSdp) {
-                sendIceCandidates();
-              }
-            }
-          });
-          function sendIceCandidates() {
-            for (let iceCandidate of iceCandidatesToSend) {
-              console.log('Sending ICE candidate..');
-              websocket.send(JSON.stringify([clientId, iceCandidate]));
-            }
-            iceCandidatesToSend = [];
-          }
-
-          const video = document.createElement('video');
-          video.autoplay = true;
-          document.getElementById('videos').appendChild(video);
-          rtcConnection.addEventListener('track', event => {
-            console.log('Got track from RTC connection');
-            if (video.srcObject !== event.streams[0]) {
-              video.srcObject = event.streams[0];
-              setTimeout(() => {
-                video.play();
-              });
-              console.log('received remote stream');
-            }
-          });
-
-          const remoteSdp = clientIdAndMessage[1];
-          await rtcConnection.setRemoteDescription({type: 'offer', sdp: remoteSdp});
-          console.log('Set remote description on RTC connection');
-
-          const answer = await rtcConnection.createAnswer();
-          console.log('Created answer for RTC connection');
-          rtcConnection.setLocalDescription(answer);
-          websocket.send(JSON.stringify([clientId, answer.sdp]));
-          hasSentSdp = true;
-          sendIceCandidates();
-          websocket.addEventListener('message', function (event) {
-            console.log('Adding remote ICE candidate..');
-            const clientIdAndMessage = JSON.parse(event.data);
-            const iceCandidateClientId = clientIdAndMessage[0];
-            const message = clientIdAndMessage[1];
-            if (iceCandidateClientId === clientId) {
-              rtcConnection.addIceCandidate(JSON.parse(message));
-            }
-          });
-        }
-        setupRtcConnection();
+        handleClient(message.clientId, message.message);
       }
     });
+
+    async function handleClient(clientId, sdp) {
+      const rtcConnection = new RTCPeerConnection({});
+      rtcConnections[clientId] = rtcConnection;
+      rtcConnection.addEventListener('iceconnectionstatechange', event => {
+        console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
+      });
+      let hasSentSdp = false;
+      let iceCandidatesToSend = [];
+      rtcConnection.addEventListener('icecandidate', event => {
+        console.log('Got local ICE candidate');
+        if (event.candidate) {
+          iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+          if (hasSentSdp) {
+            sendIceCandidates();
+          }
+        }
+      });
+      function sendIceCandidates() {
+        for (let iceCandidate of iceCandidatesToSend) {
+          console.log('Sending ICE candidate..');
+          websocket.send(JSON.stringify({clientId: clientId, message: iceCandidate}));
+        }
+        iceCandidatesToSend = [];
+      }
+
+      const player = {};
+
+      const video = document.createElement('video');
+      player.video = video;
+      video.autoplay = true;
+      video.muted = true;
+      rtcConnection.addEventListener('track', event => {
+        console.log('Got track from RTC connection');
+        if (video.srcObject !== event.streams[0]) {
+          video.srcObject = event.streams[0];
+          document.body.appendChild(video);
+          console.log('received remote stream');
+        }
+      });
+
+      try {
+        await rtcConnection.setRemoteDescription({type: 'offer', sdp: sdp});
+        console.log('Set remote description on RTC connection');
+
+        const answer = await rtcConnection.createAnswer();
+        console.log('Created answer for RTC connection');
+        rtcConnection.setLocalDescription(answer);
+        websocket.send(JSON.stringify({clientId: clientId, message: answer.sdp}));
+        hasSentSdp = true;
+        sendIceCandidates();
+
+        const buttonStates = {};
+
+        const momentum = {x: 0, y: 0};
+        let lastTimestamp = null;
+        function handleFrame(timestamp) {
+          if (lastTimestamp) {
+            const delta = timestamp - lastTimestamp;
+            const playerRadius = 6;
+            
+            // Bounce back from edges of screen
+            const bounceBack = 0.015;
+            if (parseFloat(video.style.left) < playerRadius)       momentum.x += bounceBack * delta;
+            if (parseFloat(video.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
+            if (parseFloat(video.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
+            if (parseFloat(video.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
+
+            const playerMovementSpeed = 0.012;
+            if (buttonStates['left'])  momentum.x -= playerMovementSpeed * delta;
+            if (buttonStates['right']) momentum.x += playerMovementSpeed * delta;
+            if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
+            if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
+            
+            if (!(video.classList.contains('not-player-moveable') || video.classList.contains('fullscreen'))) {
+              video.style.left = ((parseFloat(video.style.left) || 0) + momentum.x) + 'vw';
+              video.style.top  = ((parseFloat(video.style.top) || 0) - momentum.y) + 'vh';
+            }
+
+            // Apply friction
+            const friction = 0.005;
+            momentum.x *= Math.max(0, 1 - (delta * friction));
+            momentum.y *= Math.max(0, 1 - (delta * friction));
+          }
+          lastTimestamp = timestamp;
+          window.requestAnimationFrame(handleFrame);
+        }
+        window.requestAnimationFrame(handleFrame);
+        
+        rtcConnection.ondatachannel = event => {
+          const channel = event.channel;
+          if (channel.label === 'accelerometer') {
+//             channel.onmessage = event => {
+//               const acceleration = JSON.parse(event.data);
+//               const wiggle = 0.5;
+//               video.style.transform = `translate(${(parseFloat(acceleration.x) * wiggle) + 'vw'}, ${(parseFloat(acceleration.y) * -wiggle) + 'vw'})`;
+//             }
+          } else if (channel.label === 'buttons') {
+            channel.onmessage = event => {
+              console.log('Got button state: ' + event.data);
+              const [button, state] = event.data.split(' ');
+              buttonStates[button] = state === 'true';
+              if (button === 'ping') {
+                video.classList.toggle('pinging', state === 'true');
+              }
+            }
+          } else if (channel.label === 'poke') {
+            player.pokeChannel = channel;
+          }
+        }
+
+        players.push(player);
+
+        while (true) {
+          const message = await receiveMessageFromWebsocket();
+          if (message.clientId !== clientId) {
+            continue;
+          }
+          if (message.type === 'clientDisconnected') {
+            break;
+          } else {
+            console.log('Adding remote ICE candidate..');
+            rtcConnection.addIceCandidate(JSON.parse(message.message));
+          }
+        }
+      } catch(error) {
+        console.error(error);
+      }
+
+      video.remove();
+      rtcConnection.close();
+      delete rtcConnections[clientId];
+      players.splice(players.indexOf(player), 1);
+    }
+    
+    (async function() {
+      await countdown(5);
+      while (true) {
+        const player = await randomPlayerSelection();
+        if (player) {
+          player.video.classList.add('fullscreen');
+          player.video.style.left = '';
+          player.video.style.top = '';
+        }
+        await countdown(15);
+        if (player) {
+          player.video.classList.remove('fullscreen');
+          player.video.style.left = '0vw';
+          player.video.style.top = '0vh';
+        }
+        await countdown(15);
+      }
+    })();
+
+    async function countdown(seconds) {
+      const div = document.createElement('div');
+      div.classList.add('countdown');
+      document.body.appendChild(div);
+      let n = seconds;
+      while (n > 0) {
+        div.textContent = n;
+        const result = await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
+        if (result && result.type === 'keypress') {
+          div.remove();
+          return;
+        }
+        n -= 1;
+      }
+      div.textContent = "Time's up!";
+      await waitForNSeconds(1);
+      div.remove();
+    }
+
+    async function randomPlayerSelection() {
+      for (let player of players) {
+        player.video.classList.add('not-player-moveable');
+      }
+      const wheelTicker = document.createElement('div');
+      wheelTicker.classList.add('wheel-ticker');
+      document.body.appendChild(wheelTicker);
+      let playerRotations = new Map();
+      let rotationSpeed = 0.004;
+      let lastTimestamp = null;
+      let wheelRotation = Math.PI*2*Math.random();
+      let skipped = false;
+      waitForKeypress(' ').then(event => {
+        skipped = true;
+      });
+      const player = await new Promise(resolve => {
+        function handleFrame(timestamp) {
+          if (lastTimestamp) {
+            const delta = timestamp - lastTimestamp;
+            let index = 0;
+            wheelRotation += (delta*rotationSpeed);
+            for (let player of players) {
+              const playerRotation = wheelRotation + (Math.PI*2*(index / players.length));
+              player.video.style.left = (50 + (30 * Math.cos(playerRotation - (Math.PI*0.5)))) + 'vw';
+              player.video.style.top  = (50 + (30 * Math.sin(playerRotation - (Math.PI*0.5)))) + 'vh';
+              if (playerRotations.has(player)) {
+                if ((((playerRotation) % (Math.PI*2)) - ((playerRotations.get(player)) % (Math.PI*2))) < 0) {
+                  player.pokeChannel.send('poke');
+                  for (let chosen of document.querySelectorAll('.chosen')) chosen.classList.remove('chosen');
+                  setTimeout(() => player.video.classList.remove('pinging'), 100);
+                }
+              }
+              player.radsToWheelTicker = Math.min(playerRotation % (Math.PI*2), (Math.PI*2) - (playerRotation % (Math.PI*2)));
+              playerRotations.set(player, playerRotation);
+              index++;
+            }
+            const playersSorted = players.slice();
+            playersSorted.sort((a,b) => a.radsToWheelTicker - b.radsToWheelTicker);
+            for (let player of playersSorted) {
+              player.video.classList.remove('chosen');
+            }
+            if (playersSorted.length > 0) {
+              playersSorted[0].video.classList.add('chosen');
+            }
+            rotationSpeed -= 0.0000002 * delta;
+            rotationSpeed = Math.max(0, rotationSpeed);
+            if (rotationSpeed <= 0 || skipped) {
+              playersSorted[0].video.classList.remove('chosen');
+              playersSorted[0].video.classList.add('flash');
+              setTimeout(() => playersSorted[0].video.classList.remove('flash'), 1000);
+              resolve(playersSorted[0]);
+              return;
+            }
+          }
+          lastTimestamp = timestamp;
+          window.requestAnimationFrame(handleFrame);
+        }
+        window.requestAnimationFrame(handleFrame);
+      });
+      await waitForNSeconds(1);
+      for (let player of players) {
+        player.video.classList.remove('not-player-moveable');
+        player.video.classList.remove('chosen');
+      }
+      wheelTicker.remove();
+      return player;
+    }
+
+    function waitForNSeconds(seconds) {
+      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
+    }
+
+    function waitForKeypress(key) {
+      return new Promise(resolve => {
+        function handleKeypress(event) {
+          if (event.key === key) {
+            resolve(event);
+            window.removeEventListener('keypress', handleKeypress);
+          }
+        }
+        window.addEventListener('keypress', handleKeypress);
+      });
+    }
   </script>
 </html>

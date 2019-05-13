@@ -1,48 +1,98 @@
 <html>
   <head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
   </head>
   <body>
-    <h1>CLIENT</h1>
     <video id="video" playsinline autoplay muted></video>
-    <div id="statusbar">
-      <span id="websocket_status" class="initial">WS</span>
-      <span id="rtc_status"       class="initial">RTC</span>
-    </div>
+    <button data-button="up" class="arrow-button"></button>
+    <button data-button="down" class="arrow-button"></button>
+    <button data-button="left" class="arrow-button"></button>
+    <button data-button="right" class="arrow-button"></button>
+    <button data-button="ping"</button>
+    <div id="connection_status" class="connecting"></div>
   </body>
   <style>
-    h1 {
+    body.poked:after {
+      content: '';
+      display: block;
       position: fixed;
-      top: 10vh;
       left: 0;
+      top: 0;
       right: 0;
-      text-align: center;
-      z-index: 2;
+      bottom: 0;
+      background-color: blue;
+      opacity: 0.8;
+      animation: 0.5s fadeout forwards;
     }
+    @keyframes fadeout { to {opacity: 0} }
     #video {
       position: fixed;
       left:   0;
       top:    0;
       width:  100%;
       height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
     }
-    #statusbar {
+    #connection_status {
       position: fixed;
       left: 0;
-      right: 0;
       top: 0;
-      z-index: 2;
-      text-align: right;
-    }
-    #statusbar span {
-      height: 5vh;
-      width: 5vh;
-      display: inline-flex;
+      right: 0;
+      bottom: 0;
+      display: none;
+      flex-direction: column;
+      background-color: #fff;
+      text-align: center;
       justify-content: center;
       align-items: center;
+      font-size: 5vw;
     }
-    #statusbar span.initial      { background-color: grey;  }
-    #statusbar span.connected    { background-color: green; }
-    #statusbar span.disconnected { background-color: red; }
+    #connection_status.connecting { display: flex; background-color: blue; }
+    #connection_status.error      { display: flex; background-color: red;  }
+    #connection_status::before {
+      display: block;
+      font-size: 10vw;
+    }
+    #connection_status.connecting::before { content: 'Connecting..'; }
+    #connection_status.error::before      { content: 'Error';        }
+    button {
+      position: fixed;
+      display: block;
+      font-size: 15vw;
+      background-color: grey;
+      border-radius: 10vw;
+      border: 1vw solid white;
+      opacity: 0.8;
+      outline: none;
+      cursor: pointer;
+    }
+    button:after {
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 70%;
+    }
+    button.pressed {
+      transform: scale(1.4);
+      background-color: orange;
+    }
+    button:after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 100%;
+      
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEgMSIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj48cGF0aCBkPSJNIDAsMC44IDAuNSwwLjIgMSwwLjggeiIgc3R5bGU9ImZpbGw6IzAwMDAwMDtzdHJva2U6bm9uZTsiIC8+PC9zdmc+');
+      pointer-events: none;
+    }
+    button[data-button="up"]    { left: 50vw; top: 20vw; width: 20vw; height: 20vw; margin-left: -10vw; margin-top: -10vw; }
+    button[data-button="down"]  { left: 50vw; top: 50vw; width: 20vw; height: 20vw; margin-left: -10vw; margin-top: -10vw; } button[data-button="down"]:after  { transform: rotate(180deg); }
+    button[data-button="left"]  { left: 20vw; top: 40vw; width: 20vw; height: 20vw; margin-left: -10vw; margin-top: -10vw; } button[data-button="left"]:after  { transform: rotate(-90deg); }
+    button[data-button="right"] { left: 80vw; top: 40vw; width: 20vw; height: 20vw; margin-left: -10vw; margin-top: -10vw; } button[data-button="right"]:after { transform: rotate(90deg);  }
+    button[data-button="ping"]  { left: 20vw; top: 70vw; width: 60vw; height: 20vw; }
+    button[data-button="ping"]:after {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4LjQ2NyA0LjIzMyIgaGVpZ2h0PSIxNiIgd2lkdGg9IjMyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwIC0yOTIuNzY3KSI+PGNpcmNsZSByPSIuOTI2IiBjeT0iMjk0Ljk2IiBjeD0iNC4yMDYiIHN0eWxlPSJtYXJrZXI6bm9uZSIvPjxwYXRoIGQ9Ik0zLjEyMyAyOTUuOTM0YTEuNDU3IDEuNDU3IDAgMCAxLS4wNDItMS45TTIuMzQgMjk2LjMxNmEyLjMwOCAyLjMwOCAwIDAgMSAuMDM0LTIuNzU5TTEuNjM1IDI5Ni43MTFhMy4xMSAzLjExIDAgMCAxIC4wMzctMy41NTVNNS4yODIgMjk1LjkzNGExLjQ1NyAxLjQ1NyAwIDAgMCAuMDQzLTEuOU02LjA2NiAyOTYuMzE2YTIuMzA4IDIuMzA4IDAgMCAwLS4wMzUtMi43NTlNNi43NyAyOTYuNzExYTMuMTEgMy4xMSAwIDAgMC0uMDM3LTMuNTU1IiBzdHlsZT0ibWFya2VyOm5vbmUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuNDQxIi8+PC9nPjwvc3ZnPg==');
+    }
   </style>
   <script>
     // HTTPS redirect
@@ -50,81 +100,225 @@
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
-//     let clientId = null;
+    const connectionStatus = document.getElementById('connection_status');
 
-    const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/client`);
-    const websocketStatus = document.getElementById('websocket_status');
-    const waitUntilWebsocketConnected = new Promise(resolve => {
-      websocket.addEventListener('open', function(event) {
-        websocketStatus.className = 'connected';
-        resolve();
-      });
-    });
-    function receiveMessageFromWebsocket() {
-      return new Promise(resolve => {
-        websocket.addEventListener('message', function (event) {
-          resolve(event.data);
-        }, {once: true});
-      });
-    }
-
-    const rtcConnection = new RTCPeerConnection({});
-    const rtcStatus = document.getElementById('rtc_status');
-    rtcConnection.addEventListener('iceconnectionstatechange', event => {
-      if (rtcConnection.iceConnectionState === 'connected') {
-        rtcStatus.className = 'connected';
-      } else if (rtcConnection.iceConnectionState === 'disconnected') {
-        rtcStatus.className = 'disconnected';
-      }
-      console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
-    });
-    let hasSentSdp = false;
-    let iceCandidatesToSend = [];
-    rtcConnection.addEventListener('icecandidate', event => {
-      console.log('Got local ICE candidate');
-      if (event.candidate) {
-        iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
-        if (websocket.readyState === websocket.OPEN && hasSentSdp) {
-          sendIceCandidates();
+    var pokeSound = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
+    
+    (async function() {
+    
+      // Setup video
+      try {
+        var stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+      } catch(error) {
+        connectionStatus.className = 'error';
+        if (error && error.name === 'NotFoundError') {
+          connectionStatus.textContent = 'No camera found';
+        } else {
+          connectionStatus.textContent = 'Could not get camera';
         }
+        return;
       }
-    });
-    function sendIceCandidates() {
-      for (let iceCandidate of iceCandidatesToSend) {
-        console.log('Sending ICE candidate..');
-        websocket.send(iceCandidate);
-      }
-      iceCandidatesToSend = [];
-    }
 
-    const video = document.getElementById('video');
+      while (true) {
+        connectionStatus.className = 'connecting';
+        connectionStatus.textContent = '';
 
-    async function setup() {
-      const stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
-      video.srcObject = stream;
-      stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
+        // Create websocket
+        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/client`);
 
-      const offer = await rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1});
-      await rtcConnection.setLocalDescription(offer)
+        // Create WebRTC connection
+        const rtcConnection = new RTCPeerConnection({});
+        stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
+        let hasSentSdp = false;
+        let iceCandidatesToSend = [];
+        rtcConnection.addEventListener('icecandidate', event => {
+          console.log('Got local ICE candidate');
+          if (event.candidate) {
+            iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+            if (websocket.readyState === websocket.OPEN && hasSentSdp) {
+              sendIceCandidates();
+            }
+          }
+        });
+        function sendIceCandidates() {
+          for (let iceCandidate of iceCandidatesToSend) {
+            console.log('Sending ICE candidate..');
+            websocket.send(iceCandidate);
+          }
+          iceCandidatesToSend = [];
+        }
+        const buttonsChannel       = rtcConnection.createDataChannel('buttons');
+        const accelerometerChannel = rtcConnection.createDataChannel('accelerometer');
+        const pokeChannel          = rtcConnection.createDataChannel('poke');
+
+        // Wait for both the websocket to connect and for the RTC offer to be created
+        try {
+          var [websocketEvent, rtcOffer] = await Promise.all([
+            waitForWebsocketToConnect(websocket),
+            rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1})
+          ]);
+        } catch(error) {
+          connectionStatus.className = 'error';
+          if (error === 'WebsocketError') {
+            connectionStatus.textContent = 'Could not establish websocket, retrying in 2 seconds..';
+            await waitForNSeconds(2);
+            continue;
+          } else {
+            connectionStatus.textContent = 'Could not create WebRTC offer';
+          }
+          return;
+        }
+
+        await rtcConnection.setLocalDescription(rtcOffer);
+
+        console.log('Sending SDP..');
+        websocket.send(rtcOffer.sdp);
+        hasSentSdp = true;
+        sendIceCandidates();
+
+        const remoteSdp = await waitForMessageFromWebsocket(websocket);
+        console.log('Received remote SDP');
+        rtcConnection.setRemoteDescription({type: 'answer', sdp: remoteSdp});
+
+        websocket.addEventListener('message', event => {
+          console.log('Adding remote ICE candidate');
+          rtcConnection.addIceCandidate(JSON.parse(event.data));
+        });
+
+        await waitForRtcConnection(rtcConnection);
+        connectionStatus.className = 'connected';
+        connectionStatus.textContent = '';
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+
+        // Setup buttons channel
+        await waitForDataChannelOpen(buttonsChannel);
+        for (let button of document.getElementsByTagName('button')) {
+          button.addEventListener('pointerdown', event => {
+//             if (button.dataset.button === 'ping') {
+//               window.navigator.vibrate(200);
+//             }
+            button.classList.add('pressed');
+            buttonsChannel.send(button.dataset.button + ' true');
+            const pointerId = event.pointerId;
+            button.setPointerCapture(pointerId);
+            function handlePointerUp(event) {
+              if (event.pointerId === pointerId) {
+                button.classList.remove('pressed');
+                buttonsChannel.send(button.dataset.button + ' false');
+                button.releasePointerCapture(pointerId);
+                window.removeEventListener('pointerup', handlePointerUp);
+                window.removeEventListener('pointercancel', handlePointerUp);
+              }
+            }
+            window.addEventListener('pointerup', handlePointerUp);
+            window.addEventListener('pointercancel', handlePointerUp);
+          });
+        }
+
+        // Setup accelerometer channel
+        await waitForDataChannelOpen(accelerometerChannel);
+        function handleDeviceMotion(event) {
+          accelerometerChannel.send(JSON.stringify({x: event.acceleration.x, y: event.acceleration.y}));
+        }
+        window.addEventListener('devicemotion', handleDeviceMotion);
+        accelerometerChannel.onclose = event => {
+          window.remoteEventListener('devicemotion', handleDeviceMotion);
+        }
+
+        await waitForDataChannelOpen(pokeChannel);
+        pokeChannel.onmessage = event => {
+          document.body.classList.add('poked');
+          setTimeout(() => document.body.classList.remove('poked'), 500);
+          setTimeout(() => {
+            try {
+              window.navigator.vibrate(200);
+            } catch(error) {
             
-      await waitUntilWebsocketConnected;
-      
-//       clientId = await receiveMessageFromWebsocket();
-      
-      console.log('Sending SDP..');
-      websocket.send(offer.sdp);
-      hasSentSdp = true;
-      sendIceCandidates();
+            }
+          });
+          setTimeout(() => { pokeSound.play(); });
+        }
 
-      const remoteSdp = await receiveMessageFromWebsocket();
-      console.log('Received remote SDP');
-      rtcConnection.setRemoteDescription({type: 'answer', sdp: remoteSdp});
+        await waitForRtcToDisconnect(rtcConnection);
+        rtcConnection.close();
+        websocket.close();
+        connectionStatus.className = 'error';
+        connectionStatus.textContent = 'WebRTC Disconnected, reconnecting in 2 seconds..';
+        await waitForNSeconds(2);
+        continue;
+      }
+    })();
 
-      websocket.addEventListener('message', function (event) {
-        console.log('Adding remote ICE candidate');
-        rtcConnection.addIceCandidate(JSON.parse(event.data));
+    function waitForWebsocketToConnect(websocket) {
+      return new Promise((resolve, reject) => {
+        if (websocket.readyState === websocket.OPEN) {
+          resolve();
+        } else if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+          reject();
+        } else {
+          websocket.addEventListener('open',  event => resolve(event),           {once: true});
+          websocket.addEventListener('close', event => reject('WebsocketError'), {once: true});
+          websocket.addEventListener('error', event => reject('WebsocketError'), {once: true});
+        }
       });
     }
-    setup();
+
+    function waitForMessageFromWebsocket(websocket) {
+      return new Promise((resolve, reject) => {
+        websocket.addEventListener('message', event => { resolve(event.data); }, {once: true});
+        websocket.addEventListener('close',   event => { reject(event); },       {once: true});
+      });
+    }
+
+    function waitForRtcConnection(rtcConnection) {
+      return new Promise((resolve, reject) => {
+        if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+          resolve();
+        } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+          reject();
+        } else {
+          rtcConnection.addEventListener('iceconnectionstatechange', event => {
+            if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+              resolve();
+            } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+              reject();
+            }
+          });
+        }
+      });
+    }
+
+    function waitForRtcToDisconnect(rtcConnection) {
+      return new Promise((resolve, reject) => {
+        if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+          resolve();
+        } else {
+          rtcConnection.addEventListener('iceconnectionstatechange', event => {
+            if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+              resolve();
+            }
+          });
+        }
+      });
+    }
+
+    function waitForDataChannelOpen(dataChannel) {
+      return new Promise((resolve, reject) => {
+        if (dataChannel.readyState === 'open') {
+          resolve();
+        } else if (dataChannel.readyState === 'closed' || dataChannel.readyState === 'closing') {
+          reject();
+        } else {
+          dataChannel.addEventListener('open',  resolve, {once: true});
+          dataChannel.addEventListener('error', reject,  {once: true});
+          dataChannel.addEventListener('close', reject,  {once: true});
+        }
+      });
+    }
+
+    function waitForNSeconds(seconds) {
+      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
+    }
   </script>
 </html>
