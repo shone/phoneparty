@@ -4,11 +4,11 @@
   </head>
   <body>
     <video id="video" playsinline autoplay muted></video>
-    <button data-button="up" class="arrow-button"></button>
-    <button data-button="down" class="arrow-button"></button>
-    <button data-button="left" class="arrow-button"></button>
-    <button data-button="right" class="arrow-button"></button>
-    <button data-button="ping"</button>
+    <button data-button="up"    class="arrow-button" data-key="ArrowUp"></button>
+    <button data-button="down"  class="arrow-button" data-key="ArrowDown"></button>
+    <button data-button="left"  class="arrow-button" data-key="ArrowLeft"></button>
+    <button data-button="right" class="arrow-button" data-key="ArrowRight"></button>
+    <button data-button="ping" data-key=" "></button>
     <div id="connection_status" class="connecting"></div>
   </body>
   <style>
@@ -127,7 +127,38 @@
         const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/client`);
 
         // Create WebRTC connection
-        const rtcConnection = new RTCPeerConnection({});
+        const rtcConnection = new RTCPeerConnection({
+          iceServers: [
+            {
+              urls: "stun:stun.l.google.com:19302",
+            },
+            {
+              urls: "turn:numb.viagenie.ca",
+              username: 'webrtc@live.com',
+              credential: 'muazkh',
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=udp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808'
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=tcp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808'
+            },
+            {
+              urls: 'turn:turn.bistri.com:80',
+              username: 'homeo',
+              credential: 'homeo',
+            },
+            {
+              urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
+              credential: 'webrtc',
+              username: 'webrtc'
+            }
+          ],
+        });
         stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
         let hasSentSdp = false;
         let iceCandidatesToSend = [];
@@ -193,27 +224,54 @@
 
         // Setup buttons channel
         await waitForDataChannelOpen(buttonsChannel);
-        for (let button of document.getElementsByTagName('button')) {
-          button.addEventListener('pointerdown', event => {
-//             if (button.dataset.button === 'ping') {
-//               window.navigator.vibrate(200);
-//             }
-            button.classList.add('pressed');
-            buttonsChannel.send(button.dataset.button + ' true');
-            const pointerId = event.pointerId;
-            button.setPointerCapture(pointerId);
-            function handlePointerUp(event) {
-              if (event.pointerId === pointerId) {
-                button.classList.remove('pressed');
-                buttonsChannel.send(button.dataset.button + ' false');
-                button.releasePointerCapture(pointerId);
-                window.removeEventListener('pointerup', handlePointerUp);
-                window.removeEventListener('pointercancel', handlePointerUp);
+        let buttonTouchHandlers = [...document.getElementsByTagName('button')].map(button => {
+          function handleTouchstart(event) {
+            event.preventDefault();
+            if (!button.classList.contains('pressed')) {
+              button.classList.add('pressed');
+              buttonsChannel.send(button.dataset.button + ' true');
+              function handleTouchend(event) {
+                if (![...event.touches].some(touch => touch.target === button)) {
+                  button.classList.remove('pressed');
+                  buttonsChannel.send(button.dataset.button + ' false');
+                  window.removeEventListener('touchend',    handleTouchend);
+                  window.removeEventListener('touchcancel', handleTouchend);
+                }
               }
+              window.addEventListener('touchend',    handleTouchend);
+              window.addEventListener('touchcancel', handleTouchend);
             }
-            window.addEventListener('pointerup', handlePointerUp);
-            window.addEventListener('pointercancel', handlePointerUp);
-          });
+            return false;
+          }
+          button.addEventListener('touchstart', handleTouchstart);
+          return {button: button, callback: handleTouchstart};
+        });
+        const buttonKeys = {};
+        for (let button of [...document.getElementsByTagName('button')]) {
+          buttonKeys[button.dataset.key] = button;
+        }
+        function handleKeydown(event) {
+          if (event.key in buttonKeys) {
+            event.preventDefault();
+            buttonKeys[event.key].classList.add('pressed');
+            buttonsChannel.send(buttonKeys[event.key].dataset.button + ' true');
+            return false;
+          }
+        }
+        function handleKeyup(event) {
+          if (event.key in buttonKeys) {
+            buttonKeys[event.key].classList.remove('pressed');
+            buttonsChannel.send(buttonKeys[event.key].dataset.button + ' false');
+          }
+        }
+        window.addEventListener('keydown', handleKeydown);
+        window.addEventListener('keyup',   handleKeyup);
+        buttonsChannel.onclose = event => {
+          window.removeEventListener('keydown', handleKeydown);
+          window.removeEventListener('keyup',   handleKeyup);
+          for (let entry of buttonTouchHandlers) {
+            entry.button.removeEventListener('touchstart', entry.callback);
+          }
         }
 
         // Setup accelerometer channel

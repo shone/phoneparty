@@ -2,14 +2,14 @@
   <head>
   </head>
   <body>
-    <div id="statusbar">
-      <span id="websocket_status" class="initial">WS</span>
-    </div>
+    <div id="pause-indicator">⏸</div>
   </body>
   <style>
-    video {
-      object-fit: cover;
-      transform: scale(-1, 1);
+    body {
+      background-color: orange;
+    }
+    .player {
+      display: block;
       position: fixed;
       width:  12vw;
       height: 12vw;
@@ -17,8 +17,21 @@
       margin-top: -6vw;
       border-radius: 12vw;
       box-sizing: border-box;
+      overflow: hidden;
+      z-index: 2;
+      opacity: 0.8;
     }
-    video.pinging {
+    video {
+      object-fit: cover;
+      transform: scale(-1, 1);
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+/*       -webkit-border-radius: 1px; */
+    }
+    .player.pinging {
       width:  30vw;
       height: 30vw;
       margin-left: -15vw;
@@ -26,13 +39,13 @@
       border-radius: 15vw;
       z-index: 2;
     }
-    video.chosen {
+    .player.chosen {
       border: 1vw solid blue;
     }
-    video.flash {
+    .player.flash {
       animation: 0.2s flash 5;
     }
-    video.fullscreen {
+    .player.fullscreen {
       border-radius: 0;
       left: 0;
       top: 0;
@@ -46,39 +59,82 @@
       from {border: 1vw solid blue;}
       to {border: none;}
     }
-    #statusbar {
+    #pause-indicator {
+      display: none;
+    }
+    #pause-indicator.activated {
       position: fixed;
+      z-index: 4;
+      left: 0;
+      top: 0;
+      width:  5vw;
+      height: 5vw;
+      font-size: 4vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      background-color: black;
+      border-bottom-right-radius: 2vw;
+    }
+    .countdown {
+      position: fixed;
+      z-index: 3;
       left: 0;
       right: 0;
       top: 0;
-      z-index: 2;
-      text-align: right;
-    }
-    #statusbar span {
-      height: 5vh;
-      width: 5vh;
-      font-size: 2vh;
-      display: inline-flex;
+      bottom: 0;
+      font-size: 10vw;
+      display: flex;
       justify-content: center;
       align-items: center;
+/*       background-color: orange; */
+      text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
     }
-    #statusbar span.initial      { background-color: grey;  }
-    #statusbar span.connected    { background-color: green; }
-    #statusbar span.disconnected { background-color: red; }
-    .countdown {
-      display: block;
+    .countdown-title {
+      position: fixed;
+      z-index: 3;
+      left: 0;
+      top: 0;
+      height: 40vh;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 5vw;
+      text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
+    }
+    .countdown-detail {
+      position: fixed;
+      z-index: 3;
+      left: 0;
+      top: 60vh;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 4vw;
+      text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
+    }
+    em {
+      background-color: black;
+      color: white;
+      text-shadow: none;
+    }
+    .wheel-title {
       position: fixed;
       left: 0;
+      top: 0;
       right: 0;
-      top: 10vh;
-      font-size: 10vw;
+      font-size: 6vw;
       text-align: center;
     }
     .wheel-ticker {
       display: block;
       position: fixed;
       left: 50vw;
-      top: 2vw;
+      top: 5vw;
       width: 10vw;
       height: 10vw;
       margin-left: -5vw;
@@ -86,6 +142,127 @@
       background-size: 100%;
       transform: rotate(180deg);
       background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEgMSIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj48cGF0aCBkPSJNIDAsMC44IDAuNSwwLjIgMSwwLjggeiIgc3R5bGU9ImZpbGw6IzAwMDBmZjtzdHJva2U6bm9uZTsiIC8+PC9zdmc+');
+    }
+    .voting-field {
+      position: fixed;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      font-size: 5vw;
+      background-color: white;
+    }
+    .voting-field .option-a {
+      position: absolute;
+      left: 0;
+      width: 50%;
+      top: 15vw;
+      bottom: 0;
+      background-color: #9100ce;
+      content: 'Nein';
+      text-align: center;
+      z-index: -1;
+    }
+    .voting-field.option-a .option-a {
+      font-size: 8vw;
+      font-weight: bold;
+    }
+    .voting-field .option-b {
+      position: absolute;
+      left: 50%;
+      width: 50%;
+      top: 15vw;
+      bottom: 0;
+      background-color: #d0780c;
+      content: 'Ja';
+      text-align: center;
+      z-index: -1;
+    }
+    .voting-field.option-b .option-b {
+      font-size: 8vw;
+      font-weight: bold;
+    }
+    .voting-field.finished.option-b .option-b { left: 0; width: 100%; padding-top: 14vw; }
+    .voting-field.finished.option-b .option-a { display: none; }
+    .voting-field.finished.option-a .option-a { left: 0; width: 100%; padding-top: 14vw; }
+    .voting-field.finished.option-a .option-b { display: none; }
+    .voting-field .you-selected {
+      display: none;
+    }
+    .voting-field.finished .you-selected {
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 15vw;
+      font-size: 5vw;
+      text-align: center;
+    }
+    .voting-field .swing-arrow {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      top: 15vw;
+      width: 5vw;
+      height: 20vw;
+      z-index: 1;
+      margin-left: -2.5vw;
+      background-color: grey;
+      transform-origin: 2.5vw 0;
+    }
+    .voting-field .swing-arrow:after {
+      content: '';
+      position: absolute;
+      top: 90%;
+      left: -47%;
+      width: 10vw;
+      height: 10vw;
+      transform: rotate(180deg);
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEgMSIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj48cGF0aCBkPSJNIDAsMC44IDAuNSwwLjIgMSwwLjggeiIgc3R5bGU9ImZpbGw6IzAwMDBmZjtzdHJva2U6bm9uZTsiIC8+PC9zdmc+');
+      background-repeat: no-repeat;
+      background-size: 100%;
+    }
+    .voting-field .voting-text {
+      position: absolute;
+      z-index: 3;
+      left: 0;
+      top: 0;
+      right: 0;
+      height: 15vw;
+      text-align: center;
+      padding-left:  5vw;
+      padding-right: 5vw;
+      padding-top: 1vw;
+    }
+    .voting-field .voting-countdown {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      top: 12vw;
+      left: 50%;
+      z-index: 1;
+      font-size: 4vw;
+      background-color: grey;
+      width: 6vw;
+      height: 6vw;
+      border-radius: 3vw;
+      margin-left: -3vw;
+    }
+    .voting-field.finished .voting-countdown {
+      display: none;
+    }
+    .fullscreen-text {
+      display: flex;
+      position: fixed;
+/*       z-index: 3; */
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      font-size: 15vw;
+      justify-content: center;
+      align-items: center;
     }
   </style>
   <script>
@@ -95,10 +272,8 @@
     }
 
     const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/host`);
-    const websocketStatus = document.getElementById('websocket_status');
     websocket.addEventListener('open', function (event) {
       console.log('Websocket opened');
-      websocketStatus.className = 'connected';
     });
     function receiveMessageFromWebsocket() {
       return new Promise(resolve => {
@@ -122,7 +297,38 @@
     });
 
     async function handleClient(clientId, sdp) {
-      const rtcConnection = new RTCPeerConnection({});
+      const rtcConnection = new RTCPeerConnection({
+        iceServers: [
+            {
+              urls: "stun:stun.l.google.com:19302",
+            },
+            {
+              urls: "turn:numb.viagenie.ca",
+              username: 'webrtc@live.com',
+              credential: 'muazkh',
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=udp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808'
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=tcp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808'
+            },
+            {
+              urls: 'turn:turn.bistri.com:80',
+              username: 'homeo',
+              credential: 'homeo',
+            },
+            {
+              urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
+              credential: 'webrtc',
+              username: 'webrtc'
+            }
+        ],
+      });
       rtcConnections[clientId] = rtcConnection;
       rtcConnection.addEventListener('iceconnectionstatechange', event => {
         console.log('ICE connection state changed to: ' + rtcConnection.iceConnectionState);
@@ -146,7 +352,9 @@
         iceCandidatesToSend = [];
       }
 
-      const player = {};
+      const player = document.createElement('div');
+      player.classList.add('player');
+      document.body.appendChild(player);
 
       const video = document.createElement('video');
       player.video = video;
@@ -156,7 +364,7 @@
         console.log('Got track from RTC connection');
         if (video.srcObject !== event.streams[0]) {
           video.srcObject = event.streams[0];
-          document.body.appendChild(video);
+          player.appendChild(video);
           console.log('received remote stream');
         }
       });
@@ -183,10 +391,10 @@
             
             // Bounce back from edges of screen
             const bounceBack = 0.015;
-            if (parseFloat(video.style.left) < playerRadius)       momentum.x += bounceBack * delta;
-            if (parseFloat(video.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
-            if (parseFloat(video.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
-            if (parseFloat(video.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
+            if (parseFloat(player.style.left) < playerRadius)       momentum.x += bounceBack * delta;
+            if (parseFloat(player.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
+            if (parseFloat(player.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
+            if (parseFloat(player.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
 
             const playerMovementSpeed = 0.012;
             if (buttonStates['left'])  momentum.x -= playerMovementSpeed * delta;
@@ -194,9 +402,9 @@
             if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
             if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
             
-            if (!(video.classList.contains('not-player-moveable') || video.classList.contains('fullscreen'))) {
-              video.style.left = ((parseFloat(video.style.left) || 0) + momentum.x) + 'vw';
-              video.style.top  = ((parseFloat(video.style.top) || 0) - momentum.y) + 'vh';
+            if (!(player.classList.contains('not-player-moveable') || player.classList.contains('fullscreen'))) {
+              player.style.left = ((parseFloat(player.style.left) || 0) + momentum.x) + 'vw';
+              player.style.top  = ((parseFloat(player.style.top) || 0) - momentum.y) + 'vh';
             }
 
             // Apply friction
@@ -215,7 +423,7 @@
 //             channel.onmessage = event => {
 //               const acceleration = JSON.parse(event.data);
 //               const wiggle = 0.5;
-//               video.style.transform = `translate(${(parseFloat(acceleration.x) * wiggle) + 'vw'}, ${(parseFloat(acceleration.y) * -wiggle) + 'vw'})`;
+//               player.style.transform = `translate(${(parseFloat(acceleration.x) * wiggle) + 'vw'}, ${(parseFloat(acceleration.y) * -wiggle) + 'vw'})`;
 //             }
           } else if (channel.label === 'buttons') {
             channel.onmessage = event => {
@@ -223,7 +431,7 @@
               const [button, state] = event.data.split(' ');
               buttonStates[button] = state === 'true';
               if (button === 'ping') {
-                video.classList.toggle('pinging', state === 'true');
+                player.classList.toggle('pinging', state === 'true');
               }
             }
           } else if (channel.label === 'poke') {
@@ -249,54 +457,142 @@
         console.error(error);
       }
 
-      video.remove();
-      rtcConnection.close();
+      player.remove();
       delete rtcConnections[clientId];
       players.splice(players.indexOf(player), 1);
+      rtcConnection.close();
     }
+
+    let paused = false;
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'p') {
+        paused = !paused;
+        document.getElementById('pause-indicator').classList.toggle('activated', paused);
+      }
+    });
     
     (async function() {
-      await countdown(5);
+      const textDiv = document.createElement('div');
+      textDiv.classList.add('fullscreen-text');
+      textDiv.style.backgroundColor = '#6930a7';
+      textDiv.style.color = 'white';
+      textDiv.textContent = 'Spielen zusammen!';
+      document.body.appendChild(textDiv);
+      await waitForKeypress(' ');
+      textDiv.remove();
+
       while (true) {
-        const player = await randomPlayerSelection();
-        if (player) {
-          player.video.classList.add('fullscreen');
-          player.video.style.left = '';
-          player.video.style.top = '';
+
+        await countdown(8);
+
+        let answer = await vote('Wenn hat die Berliner Mauer gefallen?', 'November 1991', 'Dezember 1991');
+        if (answer === 'a') {
+          await showText("Ihr habt recht!", 5, 'green');
+        } else {
+          await showText("Falsch!", 5, 'red');
         }
-        await countdown(15);
+
+        await countdown(8);
+
+        let player = await randomPlayerSelection('Wer ist dran?');
         if (player) {
-          player.video.classList.remove('fullscreen');
-          player.video.style.left = '0vw';
-          player.video.style.top = '0vh';
+          player.classList.add('fullscreen');
+          player.style.left = '';
+          player.style.top = '';
+          await countdown(20, 'Machen Sie ein Satz mit:', '<em>Futur I</em> und <em>bekommen</em>');
+          player.classList.remove('fullscreen');
+          player.style.left = '0vw';
+          player.style.top = '0vh';
         }
-        await countdown(15);
+
+        await countdown(8);
+
+        answer = await vote('What is the 2nd. person präteritum form of Fahren?', 'fahrtest', 'fuhrst');
+        if (answer === 'a') {
+          await showText("Nein! It's fuhrst.", 5, 'red');
+        } else {
+          await showText("Ja! Ihr habt recht!", 5, 'green');
+        }
+
+        await countdown(8);
+
+        player = await randomPlayerSelection('Wer ist dran?');
+        if (player) {
+          player.classList.add('fullscreen');
+          player.style.left = '';
+          player.style.top = '';
+          await countdown(20, 'Machen Sie ein Satz mit:', '<em>Perfekt</em>, <em>gehen</em>, und <em>possesiv pronomen</em>');
+          player.classList.remove('fullscreen');
+          player.style.left = '0vw';
+          player.style.top = '0vh';
+        }
+
+        await countdown(8);
+
+        answer = await vote('Who announced the opening of the Berlin wall?', 'Günter Schabowski', 'Konrad Adenauer');
+        if (answer === 'a') {
+          await showText("Ja! Ihr habt recht!", 5, 'green');
+        } else {
+          await showText("Nein.. :(", 5, 'red');
+        }
+
+        await countdown(8);
+
+        player = await randomPlayerSelection('Wer ist dran?');
+        if (player) {
+          player.classList.add('fullscreen');
+          player.style.left = '';
+          player.style.top = '';
+          await countdown(20, 'Machen Sie ein Satz mit:', '<em>superlativ</em> und <em>werden</em>');
+          player.classList.remove('fullscreen');
+          player.style.left = '0vw';
+          player.style.top = '0vh';
+        }
       }
     })();
 
-    async function countdown(seconds) {
+    async function countdown(seconds, title, detail) {
       const div = document.createElement('div');
       div.classList.add('countdown');
       document.body.appendChild(div);
+      const titleDiv = document.createElement('div');
+      titleDiv.classList.add('countdown-title');
+      titleDiv.textContent = title;
+      document.body.appendChild(titleDiv);
+      const detailDiv = document.createElement('div');
+      detailDiv.classList.add('countdown-detail');
+      if (detail) {
+        detailDiv.innerHTML = detail;
+      }
+      document.body.appendChild(detailDiv);
       let n = seconds;
       while (n > 0) {
-        div.textContent = n;
+        div.textContent = '⏲' + n;
         const result = await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
         if (result && result.type === 'keypress') {
+          titleDiv.remove();
+          detailDiv.remove();
           div.remove();
           return;
         }
         n -= 1;
       }
-      div.textContent = "Time's up!";
-      await waitForNSeconds(1);
+      titleDiv.remove();
+      detailDiv.remove();
+      div.textContent = "Los geht's!";
+      await waitForNSeconds(3);
       div.remove();
     }
 
-    async function randomPlayerSelection() {
+    async function randomPlayerSelection(title) {
       for (let player of players) {
-        player.video.classList.add('not-player-moveable');
+        player.classList.add('not-player-moveable');
       }
+      const titleDiv = document.createElement('div');
+      titleDiv.classList.add('wheel-title');
+      titleDiv.textContent = title;
+      document.body.appendChild(titleDiv);
       const wheelTicker = document.createElement('div');
       wheelTicker.classList.add('wheel-ticker');
       document.body.appendChild(wheelTicker);
@@ -305,25 +601,24 @@
       let lastTimestamp = null;
       let wheelRotation = Math.PI*2*Math.random();
       let skipped = false;
+      let lastPlayerChosen = null;
       waitForKeypress(' ').then(event => {
         skipped = true;
       });
       const player = await new Promise(resolve => {
         function handleFrame(timestamp) {
-          if (lastTimestamp) {
+          if (lastTimestamp && !paused) {
             const delta = timestamp - lastTimestamp;
             let index = 0;
             wheelRotation += (delta*rotationSpeed);
             for (let player of players) {
               const playerRotation = wheelRotation + (Math.PI*2*(index / players.length));
-              player.video.style.left = (50 + (30 * Math.cos(playerRotation - (Math.PI*0.5)))) + 'vw';
-              player.video.style.top  = (50 + (30 * Math.sin(playerRotation - (Math.PI*0.5)))) + 'vh';
+              player.style.left = (50 + (30 * Math.cos(playerRotation - (Math.PI*0.5)))) + 'vw';
+              player.style.top  = (60 + (30 * Math.sin(playerRotation - (Math.PI*0.5)))) + 'vh';
               if (playerRotations.has(player)) {
-                if ((((playerRotation) % (Math.PI*2)) - ((playerRotations.get(player)) % (Math.PI*2))) < 0) {
-                  player.pokeChannel.send('poke');
-                  for (let chosen of document.querySelectorAll('.chosen')) chosen.classList.remove('chosen');
-                  setTimeout(() => player.video.classList.remove('pinging'), 100);
-                }
+//                 if ((((playerRotation) % (Math.PI*2)) - ((playerRotations.get(player)) % (Math.PI*2))) < 0) {
+//                   player.pokeChannel.send('poke');
+//                 }
               }
               player.radsToWheelTicker = Math.min(playerRotation % (Math.PI*2), (Math.PI*2) - (playerRotation % (Math.PI*2)));
               playerRotations.set(player, playerRotation);
@@ -332,18 +627,28 @@
             const playersSorted = players.slice();
             playersSorted.sort((a,b) => a.radsToWheelTicker - b.radsToWheelTicker);
             for (let player of playersSorted) {
-              player.video.classList.remove('chosen');
+              player.classList.remove('chosen');
             }
             if (playersSorted.length > 0) {
-              playersSorted[0].video.classList.add('chosen');
+              playersSorted[0].classList.add('chosen');
+              if (lastPlayerChosen !== playersSorted[0]) {
+                lastPlayerChosen = playersSorted[0];
+                if (playersSorted[0].pokeChannel) {
+                  playersSorted[0].pokeChannel.send('poke');
+                }
+              }
             }
             rotationSpeed -= 0.0000002 * delta;
             rotationSpeed = Math.max(0, rotationSpeed);
             if (rotationSpeed <= 0 || skipped) {
-              playersSorted[0].video.classList.remove('chosen');
-              playersSorted[0].video.classList.add('flash');
-              setTimeout(() => playersSorted[0].video.classList.remove('flash'), 1000);
-              resolve(playersSorted[0]);
+              if (playersSorted.length > 0) {
+                playersSorted[0].classList.remove('chosen');
+                playersSorted[0].classList.add('flash');
+                setTimeout(() => playersSorted[0].classList.remove('flash'), 1000);
+                resolve(playersSorted[0]);
+              } else {
+                resolve(null);
+              }
               return;
             }
           }
@@ -354,15 +659,105 @@
       });
       await waitForNSeconds(1);
       for (let player of players) {
-        player.video.classList.remove('not-player-moveable');
-        player.video.classList.remove('chosen');
+        player.classList.remove('not-player-moveable');
+        player.classList.remove('chosen');
       }
+      titleDiv.remove();
       wheelTicker.remove();
       return player;
     }
 
+    async function vote(topic, optionA, optionB) {
+      const votingField = document.createElement('div');
+      votingField.classList.add('voting-field');
+      const optionADiv = document.createElement('div');
+      optionADiv.classList.add('option-a');
+      optionADiv.textContent = optionA;
+      votingField.appendChild(optionADiv);
+      const optionBDiv = document.createElement('div');
+      optionBDiv.classList.add('option-b');
+      optionBDiv.textContent = optionB;
+      votingField.appendChild(optionBDiv);
+      const swingArrow = document.createElement('div');
+      swingArrow.classList.add('swing-arrow');
+      votingField.appendChild(swingArrow);
+      const votingText = document.createElement('div');
+      votingText.classList.add('voting-text');
+      votingField.appendChild(votingText);
+      votingText.textContent = topic;
+      const votingCountdown = document.createElement('div');
+      votingCountdown.classList.add('voting-countdown');
+      votingField.appendChild(votingCountdown);
+      const youSelected = document.createElement('div');
+      youSelected.classList.add('you-selected');
+      youSelected.textContent = 'You selected:';
+      votingField.appendChild(youSelected);
+      document.body.appendChild(votingField);
+
+      let isVoting = true;
+      function handleFrame(timestamp) {
+        if (isVoting) {
+          let averageSwing = 0;
+          for (let player of players) {
+            const playerSwing = (parseFloat(player.style.left) - 50) / 50;
+            averageSwing += playerSwing;
+          }
+          averageSwing /= players.length;
+          swingArrow.style.transform = `rotate(${45 * -averageSwing}deg)`;
+          votingField.classList.toggle('option-a', averageSwing < 0);
+          votingField.classList.toggle('option-b',  averageSwing >=  0);
+          window.requestAnimationFrame(handleFrame);
+        }
+      }
+      window.requestAnimationFrame(handleFrame);
+
+      let n = 20;
+      while (n > 0) {
+        votingCountdown.textContent = n;
+        const result = await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
+        if (result && result.type === 'keypress') {
+          break;
+        }
+        n -= 1;
+      }
+      isVoting = false;
+      votingField.classList.add('finished');
+      swingArrow.remove();
+      await waitForNSeconds(5);
+
+      let answer = null;
+      if (votingField.classList.contains('option-a')) {
+        answer = 'a';
+      } else if (votingField.classList.contains('option-b')) {
+        answer = 'b';
+      }
+      votingField.remove();
+      return answer;
+    }
+
+    async function showText(text, seconds, backgroundColor) {
+      const textDiv = document.createElement('div');
+      textDiv.classList.add('fullscreen-text');
+      if (backgroundColor) {
+        textDiv.style.backgroundColor = backgroundColor;
+        textDiv.style.color = 'white';
+      }
+      textDiv.textContent = text;
+      document.body.appendChild(textDiv);
+      await waitForNSeconds(seconds);
+      textDiv.remove();
+    }
+    
     function waitForNSeconds(seconds) {
-      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
+      return new Promise(resolve => {
+        setTimeout(() => {
+          if (!paused) {
+            resolve();
+          } else {
+            waitForKeypress('p').then(() => resolve());
+          }
+        }, 1000 * seconds);
+      });
     }
 
     function waitForKeypress(key) {
