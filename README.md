@@ -1,4 +1,3 @@
-# Phone Party
 ![Phone Party logo](logo.svg)
 
 A framework for party games, where each player connects using their phone and plays together on a shared screen.
@@ -21,7 +20,7 @@ $ go get github.com/gorilla/websocket
 # serves on port 8080
 $ go run server.go
 
-# Players will need to connect with HTTPs for video streaming to be allowed.
+# Players will need to connect with HTTPS for video streaming to be allowed.
 # Suggestion: forward traffic with serveo.net
 $ ssh -R 80:localhost:8080 serveo.net
 ```
