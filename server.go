@@ -146,6 +146,7 @@ func main() {
     }
   })
 
+  log.Println("Serving on port 8080..")
   if err := http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
   }

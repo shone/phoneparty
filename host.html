@@ -23,7 +23,8 @@
     }
     .player.new {
       transform: scale(0);
-      animation: 0.5s scaleup;
+      animation: 0.5s both scaleup;
+      animation-delay: 2s;
     }
     @keyframes scaleup {
       0%   { transform: scale(0); }
@@ -328,11 +329,20 @@
     "use strict";
 
     // HTTPS redirect
-    if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol != 'https:') {
+    if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol !== 'https:' && location.protocol !== 'file:') {
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
+    if (location.protocol === 'file:') {
+      const message = 'Cannot open websocket because this page is loaded with the file protocol.';
+      alert(message);
+      throw message;
+    }
+
     const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/host`);
+    websocket.onerror = event => {
+      alert('Websocket error');
+    }
     function receiveMessageFromWebsocket() {
       return new Promise(resolve => websocket.addEventListener('message', event => resolve(JSON.parse(event.data)), {once: true}));
     }
@@ -340,7 +350,7 @@
     const players = [];
     
     // Listen for new players
-    websocket.addEventListener('message', function (event) {
+    websocket.addEventListener('message', event => {
       const message = JSON.parse(event.data);
       if (message.type !== 'clientDisconnected' && JSON.parse(message.message).sdp) {
         console.log('New client connected')
@@ -354,7 +364,7 @@
       const iceCandidatesToSend = [];
       rtcConnection.onicecandidate = event => {
         if (event.candidate) {
-          iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+          iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
           if (hasSentSdp) {
             while (iceCandidatesToSend.length) websocket.send(JSON.stringify({clientId: clientId, message: iceCandidatesToSend.pop()}));
           }
@@ -364,9 +374,9 @@
       const player = document.createElement('div');
       player.classList.add('player');
       player.style.left = (Math.random() * 100) + 'vw';
-      player.style.top  = (Math.random() * 100) + 'vh';
+      player.style.top  = 30 + (Math.random() * 70) + 'vh';
       player.classList.add('new');
-      setTimeout(() => player.classList.remove('new'), 1000);
+      setTimeout(() => player.classList.remove('new'), 4000);
 
       document.body.appendChild(player);
 
@@ -393,6 +403,7 @@
         const buttonStates = {};
 
         const momentum = {x: 0, y: 0};
+        setTimeout(() => momentum.y = 5, 2000);
         let lastTimestamp = null;
         window.requestAnimationFrame(function handleFrame(timestamp) {
           if (!player.parentElement) {

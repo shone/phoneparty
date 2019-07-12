@@ -53,10 +53,20 @@
     }
     #video {
       position: fixed;
-      width:  100%;
-      height: 100%;
+      width:  100vmin;
+      height: 100vmin;
+      left: calc(50% - 50vmin);
+      top:  calc(50% - 50vmin);
       object-fit: cover;
       transform: scaleX(-1);
+      border-radius: 50%;
+      animation: 3s forwards appear-and-move-up;
+    }
+    @keyframes appear-and-move-up {
+      0%   { transform: scale(0) translateY(0); }
+      40%  { transform: scale(1) translateY(0); }
+      60%  { transform: scale(1) translateY(0); }
+      100% { transform: scale(1) translateY(-200vh); }
     }
     #connection_status {
       position: fixed;
@@ -116,6 +126,12 @@
       top:   0;
       right: 0;
       max-height: 100vh;
+      animation: 3.5s forwards fade-in-buttons;
+    }
+    @keyframes fade-in-buttons {
+        0% { opacity: 0; }
+       90% { opacity: 0; }
+      100% { opacity: 1; }
     }
     button[data-button="down"]:after  { transform: rotate(180deg); }
     button[data-button="left"]:after  { transform: rotate(-90deg); }
@@ -293,7 +309,7 @@
           const iceCandidatesToSend = [];
           rtcConnection.addEventListener('icecandidate', event => {
             if (event.candidate) {
-              iceCandidatesToSend.push(JSON.stringify({candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex}));
+              iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
               if (websocket.readyState === websocket.OPEN && hasSentSdp) {
                 while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
               }
@@ -402,7 +418,6 @@
           visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
           visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-          // Wait for both the websocket to connect and for the RTC offer to be created
           try {
             var rtcOffer = await rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1})
           } catch(error) {
@@ -462,6 +477,13 @@
           connectionStatus.textContent = '';
           const video = document.getElementById('video');
           video.srcObject = stream;
+          setTimeout(
+            () => {
+              video.srcObject = null;
+              video.remove();
+            },
+            3000
+          );
 
           try {
             var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForHostDisconnect(websocket)]);
