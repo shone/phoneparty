@@ -51,6 +51,20 @@
       from { opacity: 1; }
       to   { opacity: 0; }
     }
+    body.host-dragging:after {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNi45IDE2LjkiIGhlaWdodD0iNjQiIHdpZHRoPSI2NCI+PHBhdGggZD0iTTYuOCAzLjN2OS40bDIuNC0xLjQgMy4xIDUuNSAyLjMtMS4zLTMtNS4zTDE0IDguN3oiLz48cGF0aCBkPSJNNy42IDMuMmwyLTFNNi43IDIuNVYuMk01LjkgMi45bC0yLjMtMU02LjEgMy44TDQuNiA1LjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE3NmNmZiIgc3Ryb2tlLXdpZHRoPSIuOCIvPjwvc3ZnPg==');
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      pointer-events: none;
+    }
+    body.host-dragging #buttons {
+      visibility: hidden;
+    }
     #video {
       position: fixed;
       width:  100vmin;
@@ -240,6 +254,8 @@
       }, (timeOffset * 1000) + 1000);
     }
 
+    const personalToneFrequency = 180 + (200 * Math.random());
+    
     (async function() {
     
       // Setup video
@@ -388,10 +404,10 @@
             if (event.data.startsWith('chosen')) {
               if (event.data.endsWith('final')) {
                 for (let i=0; i<5; i++) {
-                  playTone(261.626, i*0.2);
+                  playTone(personalToneFrequency, i*0.2);
                 }
               } else {
-                playTone(130.813);
+                playTone(personalToneFrequency);
               }
               if (navigator.vibrate) {
                 try { navigator.vibrate(200); } catch(error) { }
@@ -417,6 +433,19 @@
           function handleVisibilityChange() { visibilityChannel.send(document.visibilityState); }
           visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
           visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+          const hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
+          hostInteractionChannel.onmessage = event => {
+            if (event.data === 'drag start') {
+              document.body.classList.add('host-dragging');
+              playTone(personalToneFrequency);
+              if (navigator.vibrate) {
+                try { navigator.vibrate(200); } catch(error) { }
+              }
+            } else if (event.data === 'drag end') {
+              document.body.classList.remove('host-dragging');
+            }
+          }
 
           try {
             var rtcOffer = await rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1})

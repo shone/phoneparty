@@ -20,6 +20,7 @@
       background-color: grey;
       opacity: 0.8;
       overflow: hidden;
+      cursor: pointer;
     }
     .player.new {
       transform: scale(0);
@@ -379,6 +380,26 @@
       setTimeout(() => player.classList.remove('new'), 4000);
 
       document.body.appendChild(player);
+
+      player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
+
+      player.onpointerdown = event => {
+        player.setPointerCapture(event.pointerId);
+        if (player.hostInteractionChannel.readyState === 'open') {
+          player.hostInteractionChannel.send('drag start');
+        }
+        function mousemove(event) {
+          player.style.left = ((event.pageX / window.innerWidth)  * 100) + 'vw';
+          player.style.top  = ((event.pageY / window.innerHeight) * 100) + 'vh';
+        }
+        window.addEventListener('pointermove', mousemove);
+        window.addEventListener('pointerup', event => {
+          window.removeEventListener('pointermove', mousemove);
+          if (player.hostInteractionChannel.readyState === 'open') {
+            player.hostInteractionChannel.send('drag end');
+          }
+        });
+      }
 
       const video = document.createElement('video');
       player.video = video;
