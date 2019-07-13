@@ -3,10 +3,34 @@
   </head>
   <body>
     <div id="pause-indicator">⏸</div>
+    <div id="introduction-page" class="hide">
+      <h1>Join our game!</h1>
+      <h2>1. Connect to the Game Jam WiFi</h2>
+      <p>sid: ??  password: ??</p>
+      <h2>2. Go to <em>jam.joshshone.com</em><h2>
+    </div>
   </body>
   <style>
     body {
       background-color: orange;
+    }
+    #introduction-page {
+      position: fixed;
+      left: 0;
+      top:  0;
+      width:  100%;
+      height: 100%;
+      font-size: 5vmin;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #introduction-page h2 {
+      margin-bottom: 0;
+    }
+    .hide {
+      display: none !important;
     }
     .player {
       position: fixed;
@@ -116,6 +140,9 @@
       margin-top: 0;
       z-index: -1;
     }
+    .player.fullscreen video {
+      border-radius: 0;
+    }
     @keyframes flash {
       from { opacity: 1; }
       to   { opacity: 0; }
@@ -149,8 +176,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
-/*       background-color: orange; */
       text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
+      pointer-events: none;
     }
     .countdown-title {
       position: fixed;
@@ -164,6 +191,7 @@
       align-items: center;
       font-size: 5vw;
       text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
+      pointer-events: none;
     }
     .countdown-detail {
       position: fixed;
@@ -177,6 +205,7 @@
       align-items: center;
       font-size: 4vw;
       text-shadow: white 2px 2px, white -2px -2px, white -2px 2px, white 2px -2px;
+      pointer-events: none;
     }
     em {
       background-color: black;
@@ -518,85 +547,37 @@
         document.getElementById('pause-indicator').classList.toggle('activated', paused);
       }
     });
-    
-//     (async function() {
-//       const textDiv = document.createElement('div');
-//       textDiv.classList.add('fullscreen-text');
-//       textDiv.style.backgroundColor = '#6930a7';
-//       textDiv.style.color = 'white';
-//       document.body.appendChild(textDiv);
-//       await waitForKeypress(' ');
-//       textDiv.remove();
-// 
-//       while (true) {
-// 
-//         await countdown(8);
-// 
-//         let answer = await vote('Wenn hat die Berliner Mauer gefallen?', 'November 1991', 'Dezember 1991');
-//         if (answer === 'a') {
-//           await showText("Ihr habt recht!", 5, 'green');
-//         } else if (answer === 'b') {
-//           await showText("Falsch!", 5, 'red');
-//         }
-// 
-//         await countdown(8);
-// 
-//         let player = await randomPlayerSelection('Wer ist dran?');
-//         if (player) {
-//           player.classList.add('fullscreen');
-//           player.style.left = '';
-//           player.style.top = '';
-//           await countdown(20, 'Machen Sie ein Satz mit:', '<em>Futur I</em> und <em>bekommen</em>');
-//           player.classList.remove('fullscreen');
-//           player.style.left = '0vw';
-//           player.style.top = '0vh';
-//         }
-// 
-//         await countdown(8);
-// 
-//         answer = await vote('What is the 2nd. person präteritum form of Fahren?', 'fahrtest', 'fuhrst');
-//         if (answer === 'a') {
-//           await showText("Nein! It's fuhrst.", 5, 'red');
-//         } else {
-//           await showText("Ja! Ihr habt recht!", 5, 'green');
-//         }
-// 
-//         await countdown(8);
-// 
-//         player = await randomPlayerSelection('Wer ist dran?');
-//         if (player) {
-//           player.classList.add('fullscreen');
-//           player.style.left = '';
-//           player.style.top = '';
-//           await countdown(20, 'Machen Sie ein Satz mit:', '<em>Perfekt</em>, <em>gehen</em>, und <em>possesiv pronomen</em>');
-//           player.classList.remove('fullscreen');
-//           player.style.left = '0vw';
-//           player.style.top = '0vh';
-//         }
-// 
-//         await countdown(8);
-// 
-//         answer = await vote('Who announced the opening of the Berlin wall?', 'Günter Schabowski', 'Konrad Adenauer');
-//         if (answer === 'a') {
-//           await showText("Ja! Ihr habt recht!", 5, 'green');
-//         } else {
-//           await showText("Nein.. :(", 5, 'red');
-//         }
-// 
-//         await countdown(8);
-// 
-//         player = await randomPlayerSelection('Wer ist dran?');
-//         if (player) {
-//           player.classList.add('fullscreen');
-//           player.style.left = '';
-//           player.style.top = '';
-//           await countdown(20, 'Machen Sie ein Satz mit:', '<em>superlativ</em> und <em>werden</em>');
-//           player.classList.remove('fullscreen');
-//           player.style.left = '0vw';
-//           player.style.top = '0vh';
-//         }
-//       }
-//     })();
+
+    // Game logic
+    (async function() {
+      await showElement(document.getElementById('introduction-page'));
+
+      while (true) {
+
+        await countdown(8);
+
+        const player = await randomPlayerSelection("Who's next?");
+        if (player) {
+          player.classList.add('fullscreen');
+          player.style.left = '';
+          player.style.top = '';
+          await countdown(20);
+          player.classList.remove('fullscreen');
+          player.style.left = '0vw';
+          player.style.top = '0vh';
+        }
+        
+        await countdown(8);
+
+        await vote('Vote!');
+      }
+    })();
+
+    async function showElement(element) {
+      element.classList.remove('hide');
+      await waitForKeypress(' ');
+      element.classList.add('hide');
+    }
 
     async function countdown(seconds, title, detail) {
       seconds = seconds || 10;
@@ -622,7 +603,7 @@
       }
       titleDiv.remove();
       detailDiv.remove();
-      div.textContent = "Los geht's!";
+      div.textContent = "Let's go!";
       await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
       div.remove();
     }
@@ -716,10 +697,11 @@
       return player;
     }
 
-    async function vote(topic, optionA, optionB) {
+    async function vote(topic, optionA, optionB, countdownSeconds) {
       topic   = topic   || '';
       optionA = optionA || 'no';
       optionB = optionB || 'yes';
+      countdownSeconds = countdownSeconds || 20;
       document.body.insertAdjacentHTML('beforeend', `
         <div class="voting-field">
           <div class="option-a">${optionA}</div>
@@ -750,7 +732,7 @@
         window.requestAnimationFrame(handleFrame);
       });
 
-      for (let n=5; n>0; n--) {
+      for (let n=countdownSeconds; n>0; n--) {
         field.querySelector('.voting-countdown').textContent = n;
         const result = await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
         if (result && result.type === 'keypress') {
