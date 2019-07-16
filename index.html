@@ -232,8 +232,7 @@
 
     const audioContext = new (window.AudioContext || window.webkitAudioContext);
 
-    function playTone(frequency, timeOffset) {
-      timeOffset = timeOffset || 0;
+    function playTone(frequency = 440, timeOffset = 0) {
       const envelope = audioContext.createGain();
       envelope.gain.setValueAtTime(0, audioContext.currentTime);
       envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
@@ -368,27 +367,20 @@
                 }, {once: true});
               }
             }
-            function handleKeydown(event) {
+            function handleKey(event) {
               const button = document.querySelector(`button[data-key="${event.key}"]`);
               if (button) {
                 event.preventDefault();
-                button.classList.add('pressed');
-                buttonsChannel.send(button.dataset.button + ' true');
+                button.classList.toggle('pressed', event.type === 'keydown');
+                buttonsChannel.send(button.dataset.button + ((event.type === 'keydown') ? ' true' : ' false'));
                 return false;
               }
             }
-            function handleKeyup(event) {
-              const button = document.querySelector(`button[data-key="${event.key}"]`);
-              if (button) {
-                button.classList.remove('pressed');
-                buttonsChannel.send(button.dataset.button + ' false');
-              }
-            }
-            window.addEventListener('keydown', handleKeydown);
-            window.addEventListener('keyup',   handleKeyup);
+            window.addEventListener('keydown', handleKey);
+            window.addEventListener('keyup',   handleKey);
             buttonsChannel.onclose = event => {
-              window.removeEventListener('keydown', handleKeydown);
-              window.removeEventListener('keyup',   handleKeyup);
+              window.removeEventListener('keydown', handleKey);
+              window.removeEventListener('keyup',   handleKey);
               for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
                 button.onmousedown  = null;
                 button.ontouchstart = null;

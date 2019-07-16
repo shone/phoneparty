@@ -402,11 +402,10 @@
       }
 
       const player = document.createElement('div');
-      player.classList.add('player');
+      player.classList.add('player', 'new');
+      setTimeout(() => player.classList.remove('new'), 4000);
       player.style.left = (Math.random() * 100) + 'vw';
       player.style.top  = 30 + (Math.random() * 70) + 'vh';
-      player.classList.add('new');
-      setTimeout(() => player.classList.remove('new'), 4000);
 
       document.body.appendChild(player);
 
@@ -454,38 +453,36 @@
 
         const momentum = {x: 0, y: 0};
         setTimeout(() => momentum.y = 5, 2000);
-        let lastTimestamp = null;
+        let lastTimestamp = performance.now();
         window.requestAnimationFrame(function handleFrame(timestamp) {
           if (!player.parentElement) {
             return;
           }
-          if (lastTimestamp) {
-            const delta = timestamp - lastTimestamp;
-            const playerRadius = 6;
+          const delta = timestamp - lastTimestamp;
+          const playerRadius = 6;
 
-            // Bounce back from edges of screen
-            const bounceBack = 0.015;
-            if (parseFloat(player.style.left) < playerRadius)       momentum.x += bounceBack * delta;
-            if (parseFloat(player.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
-            if (parseFloat(player.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
-            if (parseFloat(player.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
+          // Bounce back from edges of screen
+          const bounceBack = 0.015;
+          if (parseFloat(player.style.left) < playerRadius)       momentum.x += bounceBack * delta;
+          if (parseFloat(player.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
+          if (parseFloat(player.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
+          if (parseFloat(player.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
 
-            const playerMovementSpeed = 0.012;
-            if (buttonStates['left'])  momentum.x -= playerMovementSpeed * delta;
-            if (buttonStates['right']) momentum.x += playerMovementSpeed * delta;
-            if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
-            if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
-            
-            if (!(player.classList.contains('not-player-moveable') || player.classList.contains('fullscreen'))) {
-              player.style.left = ((parseFloat(player.style.left) || 0) + momentum.x) + 'vw';
-              player.style.top  = ((parseFloat(player.style.top) || 0) - momentum.y) + 'vh';
-            }
-
-            // Apply friction
-            const friction = 0.005;
-            momentum.x *= Math.max(0, 1 - (delta * friction));
-            momentum.y *= Math.max(0, 1 - (delta * friction));
+          const playerMovementSpeed = 0.012;
+          if (buttonStates['left'])  momentum.x -= playerMovementSpeed * delta;
+          if (buttonStates['right']) momentum.x += playerMovementSpeed * delta;
+          if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
+          if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
+          
+          if (!(player.classList.contains('not-player-moveable') || player.classList.contains('fullscreen'))) {
+            player.style.left = ((parseFloat(player.style.left) || 0) + momentum.x) + 'vw';
+            player.style.top  = ((parseFloat(player.style.top) || 0) - momentum.y) + 'vh';
           }
+
+          // Apply friction
+          const friction = 0.005;
+          momentum.x *= Math.max(0, 1 - (delta * friction));
+          momentum.y *= Math.max(0, 1 - (delta * friction));
           lastTimestamp = timestamp;
           window.requestAnimationFrame(handleFrame);
         });
@@ -579,8 +576,7 @@
       element.classList.add('hide');
     }
 
-    async function countdown(seconds, title, detail) {
-      seconds = seconds || 10;
+    async function countdown(seconds = 10, title = '', detail = '') {
       const div = document.createElement('div');
       div.classList.add('countdown');
       document.body.appendChild(div);
@@ -629,7 +625,7 @@
       const wheelRevolutions = 5;
       const wheelSpinTimeMs = 10000;
       const wheelStartingAngle = Math.PI*2*Math.random();
-      let firstTimestamp = null;
+      const firstTimestamp = performance.now();
       let skipped = false;
       let lastPlayerChosen = null;
       waitForKeypress(' ').then(event => {
@@ -637,11 +633,8 @@
       });
       const player = await new Promise(resolve => {
         window.requestAnimationFrame(function handleFrame(timestamp) {
-          if (!firstTimestamp) {
-            firstTimestamp = timestamp;
-          }
           const timeSinceStart = timestamp - firstTimestamp;
-          let spinCompletionRatio = timeSinceStart / wheelSpinTimeMs;
+          const spinCompletionRatio = timeSinceStart / wheelSpinTimeMs;
           function easeOutCubic(t) { return (--t)*t*t+1 }
           const wheelAngle = wheelStartingAngle + (Math.PI*2*wheelRevolutions * easeOutCubic(spinCompletionRatio));
           for (const [index, player] of players.entries()) {
@@ -697,11 +690,7 @@
       return player;
     }
 
-    async function vote(topic, optionA, optionB, countdownSeconds) {
-      topic   = topic   || '';
-      optionA = optionA || 'no';
-      optionB = optionB || 'yes';
-      countdownSeconds = countdownSeconds || 20;
+    async function vote(topic = '', optionA = 'no', optionB = 'yes', countdownSeconds = 20) {
       document.body.insertAdjacentHTML('beforeend', `
         <div class="voting-field">
           <div class="option-a">${optionA}</div>
@@ -723,7 +712,7 @@
       }
       
       let isVoting = true;
-      window.requestAnimationFrame(function handleFrame(timestamp) {
+      window.requestAnimationFrame(function handleFrame() {
         if (!isVoting) return;
         const swing = players.map(player => (parseFloat(player.style.left) - 50) / 50).reduce((a, swing) => a + swing, 0) / players.length;
         field.querySelector('.swing-arrow').style.transform = `rotate(${45 * -swing}deg)`;
