@@ -1,9 +1,9 @@
 <html>
   <head>
+    <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
   </head>
   <body>
-    <video id="video" playsinline autoplay muted></video>
     <div id="buttons">
       <div id="arrow-buttons">
         <button data-button="up"    class="arrow-button" data-key="ArrowUp">   </button>
@@ -16,6 +16,442 @@
     <button id="fullscreen-button"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
+  <script>
+    "use strict";
+
+    // HTTPS redirect
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.')) {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+
+    const connectionStatus = document.getElementById('connection_status');
+
+    const audioContext = new (window.AudioContext || window.webkitAudioContext);
+    const personalToneFrequency = 180 + (200 * Math.random());
+    
+    (async function() {
+    
+      // Setup video
+      let stream = null;
+      while (!stream) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+        } catch(error) {
+          if (location.hostname === 'localhost') {
+            break;
+          }
+          connectionStatus.className = 'error';
+          if (error && error.name === 'NotFoundError') {
+            connectionStatus.textContent = 'No camera found';
+          } else {
+            connectionStatus.textContent = 'Could not get camera';
+          }
+          const retryButton = document.createElement('button');
+          retryButton.textContent = 'Retry';
+          connectionStatus.appendChild(retryButton);
+          await new Promise(resolve => retryButton.onclick = resolve);
+          retryButton.remove();
+        }
+      }
+
+      if (document.body.requestFullscreen) {
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.body.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        }
+        document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+        document.getElementById('fullscreen-button').addEventListener('touchstart', event => {
+          event.preventDefault();
+          toggleFullscreen();
+          return false;
+        });
+      } else {
+        document.getElementById('fullscreen-button').remove();
+      }
+      
+      while (true) {
+        await waitForPageToBeVisible();
+        connectionStatus.className = 'connecting';
+        connectionStatus.textContent = '(websocket)';
+
+        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player`);
+
+        let hasHost = false;
+        websocket.addEventListener('message', event => {
+          const message = JSON.parse(event.data);
+          if (message.type === 'host') {
+            hasHost = message.message === 'connected';
+          }
+        });
+        websocket.addEventListener('close', event => hasHost = false);
+        websocket.addEventListener('error', event => hasHost = false);
+
+        try {
+          await waitForWebsocketToConnect(websocket);
+        } catch(error) {
+          connectionStatus.className = 'error';
+          connectionStatus.textContent = 'Could not establish websocket, retrying in 2 seconds..';
+          await waitForNSeconds(2);
+          continue;
+        }
+
+        while (true) {
+          await waitForPageToBeVisible();
+          
+          try {
+            if (!hasHost) {
+              connectionStatus.className = 'connecting';
+              connectionStatus.textContent = '(waiting for host..)';
+              await waitForHost(websocket);
+            }
+            
+            connectionStatus.className = 'connecting';
+            connectionStatus.textContent = '(WebRTC)';
+
+            var rtcConnection = new RTCPeerConnection();
+            if (stream) {
+              stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
+            }
+            let hasSentSdp = false;
+            const iceCandidatesToSend = [];
+            rtcConnection.addEventListener('icecandidate', event => {
+              if (event.candidate) {
+                iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
+                if (websocket.readyState === websocket.OPEN && hasSentSdp) {
+                  while (iceCandidatesToSend.length) websocket.send(JSON.stringify({type: 'ice', iceCandidate: iceCandidatesToSend.pop()}));
+                }
+              }
+            });
+
+            var buttonsChannel         = rtcConnection.createDataChannel('buttons',         {negotiated: true, id: 1, ordered: true});
+            var wheelChannel           = rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true});
+            var accelerometerChannel   = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
+            var visibilityChannel      = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
+            var hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
+            var closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
+
+            try {
+              var rtcOffer = await rtcConnection.createOffer();
+            } catch(error) {
+              connectionStatus.className = 'error';
+              connectionStatus.textContent = 'Could not create WebRTC offer';
+              return;
+            }
+
+            rtcConnection.setLocalDescription(rtcOffer);
+            websocket.send(JSON.stringify({type: 'sdp', sdp: rtcOffer.sdp}));
+            hasSentSdp = true;
+
+            while (iceCandidatesToSend.length) websocket.send(JSON.stringify({type: 'ice', iceCandidate: iceCandidatesToSend.pop()}));
+
+            websocket.addEventListener('message', function callback(event) {
+              const message = JSON.parse(event.data);
+              if (message.type === 'sdp') {
+                rtcConnection.setRemoteDescription({type: 'answer', sdp: message.message});
+              } else if (message.type === 'ice') {
+                rtcConnection.addIceCandidate(JSON.parse(message.message));
+              } else if (message.type === 'host' && message.message === 'disconnected') {
+                websocket.removeEventListener('message', callback);
+                rtcConnection.close();
+              }
+            });
+
+            try {
+              var result = await Promise.race([waitForRtcConnection(rtcConnection), waitForWebsocketToDisconnect(websocket)]);
+            } catch(error) {
+              if (error === 'rtc_disconnected') {
+                connectionStatus.className = 'error';
+                connectionStatus.textContent = 'Could not establish WebRTC connection, retrying in 2 seconds..';
+                await waitForNSeconds(2);
+                continue;
+              } else {
+                throw error;
+              }
+            }
+          } catch(error) {
+            if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+              rtcConnection.close();
+              connectionStatus.className = 'error';
+              connectionStatus.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
+              await waitForNSeconds(2);
+              break;
+            } else {
+              throw error;
+            }
+          }
+          
+          connectionStatus.className = 'connected';
+          connectionStatus.textContent = '';
+
+          window.onbeforeunload = () => {
+            if (closeChannel.readyState === 'open') {
+              closeChannel.send('true');
+            }
+          }
+          
+          buttonsChannel.onopen = () => {
+            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
+              button.ontouchstart = event => {
+                event.preventDefault();
+                if (!button.classList.contains('pressed')) {
+                  button.classList.add('pressed');
+                  buttonsChannel.send(button.dataset.button + ' true');
+                  function handleTouchend(event) {
+                    if (![...event.touches].some(touch => touch.target === button)) {
+                      button.classList.remove('pressed');
+                      if (buttonsChannel.readyState === 'open') {
+                        buttonsChannel.send(button.dataset.button + ' false');
+                      }
+                      window.removeEventListener('touchend',    handleTouchend);
+                      window.removeEventListener('touchcancel', handleTouchend);
+                    }
+                  }
+                  window.addEventListener('touchend',    handleTouchend);
+                  window.addEventListener('touchcancel', handleTouchend);
+                }
+                return false;
+              }
+            }
+            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
+              button.onmousedown = event => {
+                button.classList.add('pressed');
+                buttonsChannel.send(button.dataset.button + ' true');
+                if (button.dataset.button === 'ping') {
+                  rtcConnection.close();
+                }
+                window.addEventListener('mouseup', event => {
+                  button.classList.remove('pressed');
+                  if (buttonsChannel.readyState === 'open') {
+                    buttonsChannel.send(button.dataset.button + ' false');
+                  }
+                }, {once: true});
+              }
+            }
+            function handleKey(event) {
+              const button = document.querySelector(`button[data-key="${event.key}"]`);
+              if (button) {
+                event.preventDefault();
+                button.classList.toggle('pressed', event.type === 'keydown');
+                buttonsChannel.send(button.dataset.button + ((event.type === 'keydown') ? ' true' : ' false'));
+                return false;
+              }
+            }
+            window.addEventListener('keydown', handleKey);
+            window.addEventListener('keyup',   handleKey);
+            buttonsChannel.onclose = event => {
+              window.removeEventListener('keydown', handleKey);
+              window.removeEventListener('keyup',   handleKey);
+              for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
+                button.onmousedown  = null;
+                button.ontouchstart = null;
+                button.classList.remove('pressed');
+              }
+            }
+          }
+
+          wheelChannel.onmessage = event => {
+            document.body.classList.toggle('chosen',       event.data.startsWith('chosen'));
+            document.body.classList.toggle('chosen-final', event.data.endsWith('final'));
+            if (event.data.startsWith('chosen')) {
+              if (event.data.endsWith('final')) {
+                for (let i=0; i<5; i++) {
+                  playTone(personalToneFrequency, i*0.2);
+                }
+              } else {
+                playTone(personalToneFrequency);
+              }
+              if (navigator.vibrate) {
+                try { navigator.vibrate(200); } catch(error) { }
+              }
+            }
+          }
+          wheelChannel.onclose = () => {
+            document.body.classList.remove('chosen');
+            document.body.classList.remove('chosen-final');
+          }
+
+          function handleDeviceMotion(event) { accelerometerChannel.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
+          accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
+          accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
+
+          function handleVisibilityChange() { visibilityChannel.send(document.visibilityState); }
+          visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
+          visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+          hostInteractionChannel.onmessage = event => {
+            if (event.data === 'drag start') {
+              document.body.classList.add('host-dragging');
+              playTone(personalToneFrequency);
+              if (navigator.vibrate) {
+                try { navigator.vibrate(200); } catch(error) { }
+              }
+            } else if (event.data === 'drag end') {
+              document.body.classList.remove('host-dragging');
+            }
+          }
+
+          const waitForCloseChannel = new Promise(resolve => closeChannel.onmessage = event => {
+            resolve('close_channel');
+          });
+          
+          var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForCloseChannel]);
+          if (result === 'close_channel') {
+            hasHost = false;
+            continue;
+          } else {
+            connectionStatus.className = 'error';
+            connectionStatus.textContent = 'WebRTC Disconnected, reconnecting in 5 seconds..';
+            await waitForNSeconds(5);
+            continue;
+          }
+        }
+      }
+    })();
+
+    function playTone(frequency = 440, timeOffset = 0) {
+      const envelope = audioContext.createGain();
+      envelope.gain.setValueAtTime(0, audioContext.currentTime);
+      envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
+      envelope.gain.setTargetAtTime(0, audioContext.currentTime + timeOffset, 0.2);
+      envelope.connect(audioContext.destination);
+
+      const osc = audioContext.createOscillator();
+      osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      osc.type = 'square';
+      osc.connect(envelope);
+      osc.start();
+      
+      setTimeout(() => {
+        osc.stop();
+        osc.disconnect(envelope);
+        envelope.gain.cancelScheduledValues(audioContext.currentTime);
+        envelope.disconnect(audioContext.destination);
+      }, (timeOffset * 1000) + 1000);
+    }
+
+    function waitForWebsocketToConnect(websocket) {
+      return new Promise((resolve, reject) => {
+        if (websocket.readyState === websocket.OPEN) {
+          resolve();
+        } else if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+          reject();
+        } else {
+          websocket.addEventListener('open',  event => resolve(event),           {once: true});
+          websocket.addEventListener('close', event => reject('WebsocketError'), {once: true});
+          websocket.addEventListener('error', event => reject('WebsocketError'), {once: true});
+        }
+      });
+    }
+
+    function waitForWebsocketToDisconnect(websocket) {
+      return new Promise(resolve => {
+        if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+          resolve('websocket_disconnected');
+        } else {
+          websocket.addEventListener('close', event => resolve('websocket_disconnected'), {once: true});
+          websocket.addEventListener('error', event => resolve('websocket_disconnected'), {once: true});
+        }
+      });
+    }
+
+    function waitForMessageFromWebsocket(websocket) {
+      return new Promise((resolve, reject) => {
+        websocket.addEventListener('message', event => { resolve(event.data); }, {once: true});
+        websocket.addEventListener('close',   event => { reject(event); },       {once: true});
+        websocket.addEventListener('error',   event => { reject(event); },       {once: true});
+      });
+    }
+
+    function waitForHost(websocket) {
+      return new Promise((resolve, reject) => {
+        if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+          reject('websocket_disconnected');
+        } else {
+          function callback(event) {
+            const message = JSON.parse(event.data);
+            if (message.type === 'host' && message.message === 'connected') {
+              resolve('host_connected');
+              websocket.removeEventListener('message', callback);
+            }
+          }
+          websocket.addEventListener('message', callback);
+          websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+          websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+        }
+      });
+    }
+
+    function waitForHostDisconnect(websocket) {
+      return new Promise((resolve, reject) => {
+        function callback(event) {
+          if (event.data === 'Host disconnected') {
+            resolve('host_disconnected');
+            websocket.removeEventListener('message', callback);
+          }
+        }
+        websocket.addEventListener('message', callback);
+        websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+        websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+      });
+    }
+
+    function waitForRtcConnection(rtcConnection) {
+      return new Promise((resolve, reject) => {
+        if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+          resolve();
+        } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+          reject('rtc_disconnected');
+        } else {
+          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
+            if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+              resolve();
+              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
+            } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+              reject();
+              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
+            }
+          });
+        }
+      });
+    }
+
+    function waitForRtcToDisconnect(rtcConnection) {
+      return new Promise((resolve, reject) => {
+        if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+          resolve('webrtc_disconnected');
+        } else {
+          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
+            if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
+              resolve('webrtc_disconnected');
+              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
+            }
+          });
+        }
+      });
+    }
+
+    function waitForNSeconds(seconds) {
+      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
+    }
+
+    function waitForPageToBeVisible() {
+      return new Promise(resolve => {
+        if (document.visibilityState === 'visible') {
+          resolve();
+        } else {
+          document.addEventListener('visibilitychange', function callback(event) {
+            if (document.visibilityState === 'visible') {
+              resolve();
+              document.removeEventListener('visibilitychange', callback);
+            }
+          });
+        }
+      });
+    }
+  </script>
   <style>
     body {
       margin: 0;
@@ -65,23 +501,6 @@
     body.host-dragging #buttons {
       visibility: hidden;
     }
-    #video {
-      position: fixed;
-      width:  100vmin;
-      height: 100vmin;
-      left: calc(50% - 50vmin);
-      top:  calc(50% - 50vmin);
-      object-fit: cover;
-      transform: scaleX(-1);
-      border-radius: 50%;
-      animation: 3s forwards appear-and-move-up;
-    }
-    @keyframes appear-and-move-up {
-      0%   { transform: scale(0) translateY(0); }
-      40%  { transform: scale(1) translateY(0); }
-      60%  { transform: scale(1) translateY(0); }
-      100% { transform: scale(1) translateY(-200vh); }
-    }
     #connection_status {
       position: fixed;
       width:  100%;
@@ -101,6 +520,12 @@
     }
     #connection_status.connecting::before { content: 'Connecting..'; }
     #connection_status.error::before      { content: 'Error';        }
+    #connection_status button {
+      font-size: 3rem;
+    }
+    #connection_status button:active {
+      background-color: orange;
+    }
     button {
       font-size: 15vw;
       background-color: grey;
@@ -140,12 +565,6 @@
       top:   0;
       right: 0;
       max-height: 100vh;
-      animation: 3.5s forwards fade-in-buttons;
-    }
-    @keyframes fade-in-buttons {
-        0% { opacity: 0; }
-       90% { opacity: 0; }
-      100% { opacity: 1; }
     }
     button[data-button="down"]:after  { transform: rotate(180deg); }
     button[data-button="left"]:after  { transform: rotate(-90deg); }
@@ -220,426 +639,4 @@
       border-radius: 0;
     }
   </style>
-  <script>
-    "use strict";
-
-    // HTTPS redirect
-    if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol != 'https:') {
-      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
-    }
-
-    const connectionStatus = document.getElementById('connection_status');
-
-    const audioContext = new (window.AudioContext || window.webkitAudioContext);
-
-    function playTone(frequency = 440, timeOffset = 0) {
-      const envelope = audioContext.createGain();
-      envelope.gain.setValueAtTime(0, audioContext.currentTime);
-      envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
-      envelope.gain.setTargetAtTime(0, audioContext.currentTime + timeOffset, 0.2);
-      envelope.connect(audioContext.destination);
-
-      const osc = audioContext.createOscillator();
-      osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      osc.type = 'square';
-      osc.connect(envelope);
-      osc.start();
-      
-      setTimeout(() => {
-        osc.stop();
-        osc.disconnect(envelope);
-        envelope.gain.cancelScheduledValues(audioContext.currentTime);
-        envelope.disconnect(audioContext.destination);
-      }, (timeOffset * 1000) + 1000);
-    }
-
-    const personalToneFrequency = 180 + (200 * Math.random());
-    
-    (async function() {
-    
-      // Setup video
-      var stream = null;
-      try {
-        var stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
-      } catch(error) {
-        if (location.hostname !== 'localhost') {
-          connectionStatus.className = 'error';
-          if (error && error.name === 'NotFoundError') {
-            connectionStatus.textContent = 'No camera found';
-          } else {
-            connectionStatus.textContent = 'Could not get camera';
-          }
-          return;
-        }
-      }
-
-      if (document.body.requestFullscreen) {
-        function toggleFullscreen() {
-          if (!document.fullscreenElement) {
-            document.body.requestFullscreen();
-          } else {
-            document.exitFullscreen();
-          }
-        }
-        document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
-        document.getElementById('fullscreen-button').addEventListener('touchstart', event => {
-          event.preventDefault();
-          toggleFullscreen();
-          return false;
-        });
-      } else {
-        document.getElementById('fullscreen-button').remove();
-      }
-      
-      while (true) {
-        await waitForPageToBeVisible();
-        connectionStatus.className = 'connecting';
-        connectionStatus.textContent = '(websocket)';
-
-        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/client`);
-        
-        try {
-          await waitForWebsocketToConnect(websocket);
-        } catch(error) {
-          connectionStatus.className = 'error';
-          connectionStatus.textContent = 'Could not establish websocket, retrying in 2 seconds..';
-          await waitForNSeconds(2);
-          continue;
-        }
-
-        connectionStatus.className = 'connecting';
-        connectionStatus.textContent = '(waiting for host..)';
-        await waitForHost(websocket);
-
-        while (true) {
-          await waitForPageToBeVisible();
-          connectionStatus.className = 'connecting';
-          connectionStatus.textContent = '(WebRTC)';
-
-          const rtcConnection = new RTCPeerConnection();
-          if (stream) {
-            stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
-          }
-          let hasSentSdp = false;
-          const iceCandidatesToSend = [];
-          rtcConnection.addEventListener('icecandidate', event => {
-            if (event.candidate) {
-              iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
-              if (websocket.readyState === websocket.OPEN && hasSentSdp) {
-                while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
-              }
-            }
-          });
-
-          const buttonsChannel = rtcConnection.createDataChannel('buttons', {negotiated: true, id: 1, ordered: true});
-          buttonsChannel.onopen = () => {
-            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-              button.ontouchstart = event => {
-                event.preventDefault();
-                if (!button.classList.contains('pressed')) {
-                  button.classList.add('pressed');
-                  buttonsChannel.send(button.dataset.button + ' true');
-                  function handleTouchend(event) {
-                    if (![...event.touches].some(touch => touch.target === button)) {
-                      button.classList.remove('pressed');
-                      if (buttonsChannel.readyState === 'open') {
-                        buttonsChannel.send(button.dataset.button + ' false');
-                      }
-                      window.removeEventListener('touchend',    handleTouchend);
-                      window.removeEventListener('touchcancel', handleTouchend);
-                    }
-                  }
-                  window.addEventListener('touchend',    handleTouchend);
-                  window.addEventListener('touchcancel', handleTouchend);
-                }
-                return false;
-              }
-            }
-            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-              button.onmousedown = event => {
-                button.classList.add('pressed');
-                buttonsChannel.send(button.dataset.button + ' true');
-                window.addEventListener('mouseup', event => {
-                  button.classList.remove('pressed');
-                  if (buttonsChannel.readyState === 'open') {
-                    buttonsChannel.send(button.dataset.button + ' false');
-                  }
-                }, {once: true});
-              }
-            }
-            function handleKey(event) {
-              const button = document.querySelector(`button[data-key="${event.key}"]`);
-              if (button) {
-                event.preventDefault();
-                button.classList.toggle('pressed', event.type === 'keydown');
-                buttonsChannel.send(button.dataset.button + ((event.type === 'keydown') ? ' true' : ' false'));
-                return false;
-              }
-            }
-            window.addEventListener('keydown', handleKey);
-            window.addEventListener('keyup',   handleKey);
-            buttonsChannel.onclose = event => {
-              window.removeEventListener('keydown', handleKey);
-              window.removeEventListener('keyup',   handleKey);
-              for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-                button.onmousedown  = null;
-                button.ontouchstart = null;
-                button.classList.remove('pressed');
-              }
-            }
-          }
-
-          const wheelChannel = rtcConnection.createDataChannel('wheel', {negotiated: true, id: 2, ordered: true});
-          wheelChannel.onmessage = event => {
-            document.body.classList.toggle('chosen',       event.data.startsWith('chosen'));
-            document.body.classList.toggle('chosen-final', event.data.endsWith('final'));
-            if (event.data.startsWith('chosen')) {
-              if (event.data.endsWith('final')) {
-                for (let i=0; i<5; i++) {
-                  playTone(personalToneFrequency, i*0.2);
-                }
-              } else {
-                playTone(personalToneFrequency);
-              }
-              if (navigator.vibrate) {
-                try { navigator.vibrate(200); } catch(error) { }
-              }
-            }
-          }
-          wheelChannel.onclose = () => {
-            document.body.classList.remove('chosen');
-            document.body.classList.remove('chosen-final');
-          }
-
-          const accelerometerChannel = rtcConnection.createDataChannel('accelerometer', {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
-          function handleDeviceMotion(event) { accelerometerChannel.send(JSON.stringify({x: event.acceleration.x, y: event.acceleration.y})); }
-          accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
-          accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
-
-//           const gyroChannel = rtcConnection.createDataChannel('gyro', {negotiated: true, id: 4, ordered: false, maxRetransmits: 0});
-//           function handleDeviceOrientation(event) { gyroChannel.send(JSON.stringify({alpha: event.alpha, beta: event.beta, gamma: event.gamma})); }
-//           gyroChannel.onopen  = () => window.addEventListener(   'deviceorientation', handleDeviceOrientation);
-//           gyroChannel.onclose = () => window.removeEventListener('deviceorientation', handleDeviceOrientation);
-
-          const visibilityChannel = rtcConnection.createDataChannel('visibility', {negotiated: true, id: 5, ordered: true});
-          function handleVisibilityChange() { visibilityChannel.send(document.visibilityState); }
-          visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
-          visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-
-          const hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
-          hostInteractionChannel.onmessage = event => {
-            if (event.data === 'drag start') {
-              document.body.classList.add('host-dragging');
-              playTone(personalToneFrequency);
-              if (navigator.vibrate) {
-                try { navigator.vibrate(200); } catch(error) { }
-              }
-            } else if (event.data === 'drag end') {
-              document.body.classList.remove('host-dragging');
-            }
-          }
-
-          try {
-            var rtcOffer = await rtcConnection.createOffer({offerToReceiveAudio: 1, offerToReceiveVideo: 1})
-          } catch(error) {
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'Could not create WebRTC offer';
-            return;
-          }
-
-          rtcConnection.setLocalDescription(rtcOffer);
-          try {
-            websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
-          } catch(error) {
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'Websocket disconnected, retrying in 2 seconds..';
-            await waitForNSeconds(2);
-            continue;
-          }
-          hasSentSdp = true;
-
-          while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
-
-          try {
-            var remoteSdp = await waitForMessageFromWebsocket(websocket);
-          } catch(error) {
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
-            await waitForNSeconds(2);
-            break;
-          }
-          rtcConnection.setRemoteDescription({type: 'answer', sdp: remoteSdp});
-
-          websocket.addEventListener('message', function callback(event) {
-            if (event.data === 'Host disconnected') {
-              websocket.removeEventListener('message', callback);
-            } else {
-              rtcConnection.addIceCandidate(JSON.parse(event.data));
-            }
-          });
-
-          try {
-            await Promise.race([waitForRtcConnection(rtcConnection), waitForWebsocketToConnect(websocket)])
-          } catch(error) {
-            if (error === 'WebsocketError') {
-              connectionStatus.className = 'error';
-              connectionStatus.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
-              await waitForNSeconds(2);
-              break;
-            } else {
-              connectionStatus.className = 'error';
-              connectionStatus.textContent = 'Could not establish WebRTC connection, retrying in 2 seconds..';
-              await waitForNSeconds(2);
-              continue;
-            }
-          }
-          
-          connectionStatus.className = 'connected';
-          connectionStatus.textContent = '';
-          const video = document.getElementById('video');
-          video.srcObject = stream;
-          setTimeout(
-            () => {
-              video.srcObject = null;
-              video.remove();
-            },
-            3000
-          );
-
-          try {
-            var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForHostDisconnect(websocket)]);
-          } catch(error) {
-            if (error === 'websocket_disconnected') {
-              connectionStatus.className = 'error';
-              connectionStatus.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
-              await waitForNSeconds(2);
-              break;
-            }
-          }
-          if (result === 'webrtc_disconnected') {
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'WebRTC Disconnected, reconnecting in 2 seconds..';
-            await waitForNSeconds(2);
-            continue;
-          } else if (result === 'host_disconnected') {
-            rtcConnection.close();
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'Host Disconnected, waiting for new host..';
-            try {
-              await waitForHost(websocket);
-            } catch(error) {
-              if (error === 'websocket_disconnected') {
-                break;
-              }
-            }
-            continue;
-          }
-        }
-      }
-    })();
-
-    function waitForWebsocketToConnect(websocket) {
-      return new Promise((resolve, reject) => {
-        if (websocket.readyState === websocket.OPEN) {
-          resolve();
-        } else if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-          reject();
-        } else {
-          websocket.addEventListener('open',  event => resolve(event),           {once: true});
-          websocket.addEventListener('close', event => reject('WebsocketError'), {once: true});
-          websocket.addEventListener('error', event => reject('WebsocketError'), {once: true});
-        }
-      });
-    }
-
-    function waitForMessageFromWebsocket(websocket) {
-      return new Promise((resolve, reject) => {
-        websocket.addEventListener('message', event => { resolve(event.data); }, {once: true});
-        websocket.addEventListener('close',   event => { reject(event); },       {once: true});
-        websocket.addEventListener('error',   event => { reject(event); },       {once: true});
-      });
-    }
-
-    function waitForHost(websocket) {
-      return new Promise((resolve, reject) => {
-        function callback(event) {
-          if (event.data === 'Host connected') {
-            resolve('host_connected');
-            websocket.removeEventListener('message', callback);
-          }
-        }
-        websocket.addEventListener('message', callback);
-        websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-        websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-      });
-    }
-
-    function waitForHostDisconnect(websocket) {
-      return new Promise((resolve, reject) => {
-        function callback(event) {
-          if (event.data === 'Host disconnected') {
-            resolve('host_disconnected');
-            websocket.removeEventListener('message', callback);
-          }
-        }
-        websocket.addEventListener('message', callback);
-        websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-        websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-      });
-    }
-
-    function waitForRtcConnection(rtcConnection) {
-      return new Promise((resolve, reject) => {
-        if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
-          resolve();
-        } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          reject();
-        } else {
-          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-            if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
-              resolve();
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-              reject();
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            }
-          });
-        }
-      });
-    }
-
-    function waitForRtcToDisconnect(rtcConnection) {
-      return new Promise((resolve, reject) => {
-        if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          resolve('webrtc_disconnected');
-        } else {
-          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-            if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-              resolve('webrtc_disconnected');
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            }
-          });
-        }
-      });
-    }
-
-    function waitForNSeconds(seconds) {
-      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
-    }
-
-    function waitForPageToBeVisible() {
-      return new Promise(resolve => {
-        if (document.visibilityState === 'visible') {
-          resolve();
-        } else {
-          document.addEventListener('visibilitychange', function callback(event) {
-            if (document.visibilityState === 'visible') {
-              resolve();
-              document.removeEventListener('visibilitychange', callback);
-            }
-          });
-        }
-      });
-    }
-  </script>
 </html>

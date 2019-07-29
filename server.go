@@ -8,8 +8,14 @@ import (
   "encoding/json"
 )
 
-type ClientMessage struct {
-  ClientId uint64 `json:"clientId"`
+type Message struct {
+  PlayerId uint64 `json:"playerId"`
+  Type     string `json:"type"`
+  Message  string `json:"message"`
+}
+
+type MessageWithPlayerId struct {
+  PlayerId uint64 `json:"playerId"`
   Type     string `json:"type"`
   Message  string `json:"message"`
 }
@@ -19,8 +25,8 @@ func main() {
   http.Handle("/", http.FileServer(http.Dir(".")))
 
   var hostConn *websocket.Conn
-  var clientConns sync.Map
-  var nextClientId uint64
+  var playerConns sync.Map
+  var nextPlayerId uint64
 
   var upgrader = websocket.Upgrader{
     ReadBufferSize:  1024,
@@ -47,14 +53,15 @@ func main() {
 
     hostConn = conn
 
-    clientConns.Range(func (clientId, clientConn interface{}) bool {
-      (clientConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, []byte("Host connected"))
+    playerConns.Range(func (playerId, playerConn interface{}) bool {
+      messageToPlayer,_ := json.Marshal(Message{Type: "host", Message: "connected"})
+      (playerConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, messageToPlayer)
       return true
     })
 
     hostDisconnectedChan := make(chan bool)
     
-    // Relay messages from clients to host
+    // Relay messages from players to host
     go func() {
       for {
         select {
@@ -69,7 +76,7 @@ func main() {
       }
     }()
 
-    // Relay messages from host to clients
+    // Relay messages from host to players
     for {
       _,message,err := conn.ReadMessage()
       if err != nil {
@@ -81,68 +88,71 @@ func main() {
         } else {
           log.Println("Error reading from host websocket: ", err)
         }
-        clientConns.Range(func (clientId, clientConn interface{}) bool {
-          (clientConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, []byte("Host disconnected"))
+        playerConns.Range(func (playerId, playerConn interface{}) bool {
+          messageToPlayer,_ := json.Marshal(Message{Type: "host", Message: "disconnected"})
+          (playerConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, messageToPlayer)
           return true
         })
         hostConn = nil
         return
       }
 
-      clientMessage := ClientMessage{}
-      json.Unmarshal(message, &clientMessage)
-      clientConn,found := clientConns.Load(clientMessage.ClientId)
+      playerMessage := MessageWithPlayerId{}
+      json.Unmarshal(message, &playerMessage)
+      playerConn,found := playerConns.Load(playerMessage.PlayerId)
       if !found {
-        log.Println("Received message from host for client ", clientMessage.ClientId, " but the client could not be found")
+        log.Println("Received message from host for player ", playerMessage.PlayerId, " but the player could not be found")
         continue
       }
-      err = (clientConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, []byte(clientMessage.Message))
+      messageToPlayer,_ := json.Marshal(Message{Type: playerMessage.Type, Message: playerMessage.Message})
+      err = (playerConn.(*websocket.Conn)).WriteMessage(websocket.TextMessage, messageToPlayer)
       if err != nil {
         if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-          log.Println("Client", clientMessage.ClientId, "websocket closed unexpectedly")
+          log.Println("Player", playerMessage.PlayerId, "websocket closed unexpectedly")
         } else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-          log.Println("Client", clientMessage.ClientId, "websocket closed")
+          log.Println("Player", playerMessage.PlayerId, "websocket closed")
         } else  {
-          log.Println("Error while attempting to write to client websocket: ", err)
+          log.Println("Error while attempting to write to player websocket: ", err)
         }
-        clientConns.Delete(clientMessage.ClientId)
-        messageToHost,_ := json.Marshal(ClientMessage{ClientId: clientMessage.ClientId, Type: "clientDisconnected"})
+        playerConns.Delete(playerMessage.PlayerId)
+        messageToHost,_ := json.Marshal(MessageWithPlayerId{PlayerId: playerMessage.PlayerId, Type: "playerDisconnected"})
         hostSendChan <- messageToHost
       }
     }
   })
-  http.HandleFunc("/client", func(response http.ResponseWriter, request *http.Request) {
+  http.HandleFunc("/player", func(response http.ResponseWriter, request *http.Request) {
     conn,err := upgrader.Upgrade(response, request, nil)
     if err != nil {
-      log.Println("Unable to upgrade client connection to websocket: ", err)
+      log.Println("Unable to upgrade player connection to websocket: ", err)
       return
     }
-    clientId := atomic.AddUint64(&nextClientId, 1)
-    log.Println("Client", clientId, "connected")
-    clientConns.Store(clientId, conn)
+    playerId := atomic.AddUint64(&nextPlayerId, 1)
+    log.Println("Player", playerId, "connected")
+    playerConns.Store(playerId, conn)
 
     if hostConn != nil {
-      conn.WriteMessage(websocket.TextMessage, []byte("Host connected"))
+      messageToPlayer,_ := json.Marshal(Message{Type: "host", Message: "connected"})
+      conn.WriteMessage(websocket.TextMessage, messageToPlayer)
     }
     
     for {
       _,message,err := conn.ReadMessage()
       if err != nil {
         if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-          log.Println("Client", clientId, "websocket closed unexpectedly")
+          log.Println("Player", playerId, "websocket closed unexpectedly")
         } else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-          log.Println("Client", clientId, "websocket closed")
+          log.Println("Player", playerId, "websocket closed")
         } else  {
-          log.Println("Error while reading from client websocket: ", err)
+          log.Println("Error while reading from player websocket: ", err)
         }
-        clientConns.Delete(clientId)
-        messageToHost,_ := json.Marshal(ClientMessage{ClientId: clientId, Type: "clientDisconnected"})
+        playerConns.Delete(playerId)
+        messageToHost,_ := json.Marshal(MessageWithPlayerId{PlayerId: playerId, Type: "playerDisconnected"})
         hostSendChan <- messageToHost
         return
       }
 
-      messageWithClientId,_ := json.Marshal(ClientMessage{ClientId: clientId, Message: string(message)})
-      hostSendChan <- messageWithClientId
+      messageWithPlayerId,_ := json.Marshal(MessageWithPlayerId{PlayerId: playerId, Message: string(message)})
+      hostSendChan <- messageWithPlayerId
     }
   })
 
