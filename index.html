@@ -186,7 +186,7 @@
           connectionStatus.className = 'connected';
           connectionStatus.textContent = '';
 
-          window.onbeforeunload = () => {
+          window.onunload = window.onbeforeunload = () => {
             if (closeChannel.readyState === 'open') {
               closeChannel.send('true');
             }

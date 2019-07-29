@@ -75,6 +75,17 @@
         }
       }
 
+      const video = document.createElement('video');
+      player.video = video;
+      video.autoplay = true;
+      video.muted = true;
+      rtcConnection.ontrack = event => {
+        if (video.srcObject !== event.streams[0]) {
+          video.srcObject = event.streams[0];
+          player.appendChild(video);
+        }
+      }
+
       websocket.addEventListener('message', function callback() {
         const message = JSON.parse(event.data);
         if (message.playerId === playerId) {
@@ -94,17 +105,6 @@
       const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
       player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
       const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
-
-      const video = document.createElement('video');
-      player.video = video;
-      video.autoplay = true;
-      video.muted = true;
-      rtcConnection.ontrack = event => {
-        if (video.srcObject !== event.streams[0]) {
-          video.srcObject = event.streams[0];
-          player.appendChild(video);
-        }
-      }
 
       const answer = await rtcConnection.createAnswer();
       rtcConnection.setLocalDescription(answer);
