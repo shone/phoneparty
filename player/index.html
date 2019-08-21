@@ -2,6 +2,7 @@
   <head>
     <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <link href="style.css" rel="stylesheet">
   </head>
   <body>
     <div id="buttons">
@@ -77,7 +78,7 @@
         connectionStatus.className = 'connecting';
         connectionStatus.textContent = '(websocket)';
 
-        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player`);
+        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
 
         let hasHost = false;
         websocket.addEventListener('message', event => {
@@ -219,9 +220,6 @@
               button.onmousedown = event => {
                 button.classList.add('pressed');
                 buttonsChannel.send(button.dataset.button + ' true');
-                if (button.dataset.button === 'ping') {
-                  rtcConnection.close();
-                }
                 window.addEventListener('mouseup', event => {
                   button.classList.remove('pressed');
                   if (buttonsChannel.readyState === 'open') {
@@ -452,184 +450,4 @@
       });
     }
   </script>
-  <style>
-    body {
-      margin: 0;
-    }
-    body.chosen:before {
-      content: '';
-      position: fixed;
-      width:  100%;
-      height: 100%;
-      background-color: blue;
-      opacity: 0.8;
-      z-index: 2;
-      pointer-events: none;
-    }
-    body.chosen:after {
-      content: '';
-      position: fixed;
-      z-index: 3;
-      left: 50%;
-      top:   -15vmin;
-      width:  70vmin;
-      height: 70vmin;
-      margin-left: -35vmin;
-      background: no-repeat center / 100% url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="32" height="32"><path d="M 0,0.8 0.5,0.2 1,0.8 z" style="fill:white;stroke:none;" /></svg>');
-      transform: rotate(180deg);
-      pointer-events: none;
-    }
-    body.chosen.chosen-final:before { animation: 0.2s steps(2) flash 5; }
-    body.chosen.chosen-final:after  { animation: 0.2s steps(2) flash 5; }
-    @keyframes flash {
-      from { opacity: 1; }
-      to   { opacity: 0; }
-    }
-    body.host-dragging:after {
-      content: '';
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      background: no-repeat center / contain url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.9 16.9" height="64" width="64"><path d="M6.8 3.3v9.4l2.4-1.4 3.1 5.5 2.3-1.3-3-5.3L14 8.7z"/><path d="M7.6 3.2l2-1M6.7 2.5V.2M5.9 2.9l-2.3-1M6.1 3.8L4.6 5.5" fill="none" stroke="%23176cff" stroke-width=".8"/></svg>');
-      pointer-events: none;
-    }
-    body.host-dragging #buttons {
-      visibility: hidden;
-    }
-    #connection_status {
-      position: fixed;
-      width:  100%;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      background-color: #fff;
-      text-align:      center;
-      justify-content: center;
-      align-items:     center;
-      font-size: 5vw;
-    }
-    #connection_status.connecting { display: flex; background-color: blue; }
-    #connection_status.error      { display: flex; background-color: red;  }
-    #connection_status::before {
-      font-size: 10vw;
-    }
-    #connection_status.connecting::before { content: 'Connecting..'; }
-    #connection_status.error::before      { content: 'Error';        }
-    #connection_status button {
-      font-size: 3rem;
-    }
-    #connection_status button:active {
-      background-color: orange;
-    }
-    button {
-      font-size: 15vw;
-      background-color: grey;
-      border-radius: 10vw;
-      border: 1vw solid white;
-      opacity: 0.8;
-      outline: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #b3b3b3;
-    }
-    button:after {
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 70%;
-    }
-    button.pressed {
-      transform: scale(1.4);
-      background-color: orange;
-    }
-    .arrow-button:after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top:  0;
-      width:  100%;
-      height: 100%;
-      background-image: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="32" height="32"><path d="M 0,0.8 0.5,0.2 1,0.8 z" style="fill:black;stroke:none;" /></svg>');
-    }
-    #buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: fixed;
-      left:  0;
-      top:   0;
-      right: 0;
-      max-height: 100vh;
-    }
-    button[data-button="down"]:after  { transform: rotate(180deg); }
-    button[data-button="left"]:after  { transform: rotate(-90deg); }
-    button[data-button="right"]:after { transform: rotate(90deg);  }
-    #arrow-buttons {
-      position: relative;
-      flex-shrink: 1;
-      flex-grow: 0;
-      flex-basis: 90vw;
-      width:      90vw;
-      max-width: calc(100vh - 42vw);
-    }
-    #arrow-buttons button {
-      position: absolute;
-      width:  30%;
-      height: 30%;
-      border-radius: 100%;
-    }
-    #arrow-buttons [data-button="up"]    { left:  50%; top:     0;  margin-left: -15%; }
-    #arrow-buttons [data-button="down"]  { left:  50%; bottom:  0;  margin-left: -15%; }
-    #arrow-buttons [data-button="left"]  { left:   0;  top:    50%; margin-top:  -15%; }
-    #arrow-buttons [data-button="right"] { right:  0;  top:    50%; margin-top:  -15%; }
-    button[data-button="ping"] {
-      flex-shrink: 0;
-      flex-grow:   0;
-      width:  80vw;
-      height: 30vw;
-      margin-top:    8vw;
-      margin-bottom: 8vw;
-      position: relative;
-    }
-    @media (orientation: landscape) {
-      #buttons {
-        flex-direction: row;
-        align-items: center;
-        bottom: 0;
-      }
-      #arrow-buttons {
-        flex-grow: 0;
-        height:     90vh;
-        flex-basis: 90vh;
-        max-width: none;
-        margin-left:  calc(((100vw - 46vh) - 90vh) * 0.2);
-        margin-right: calc(((100vw - 46vh) - 90vh) * 0.8);
-      }
-      button[data-button="ping"] {
-        height: 80vh;
-        width:  30vh;
-        margin-left:   4vh;
-        margin-right: 12vh;
-      }
-    }
-    button[data-button="ping"]:after {
-      content: '';
-      left: 0;
-      top:  0;
-      width:  100%;
-      height: 100%;
-      position: absolute;
-      background-image: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8.467 4.233" height="16" width="32"><g transform="translate(0 -292.767)"><circle r=".926" cy="294.96" cx="4.206" style="marker:none"/><path d="M3.123 295.934a1.457 1.457 0 0 1-.042-1.9M2.34 296.316a2.308 2.308 0 0 1 .034-2.759M1.635 296.711a3.11 3.11 0 0 1 .037-3.555M5.282 295.934a1.457 1.457 0 0 0 .043-1.9M6.066 296.316a2.308 2.308 0 0 0-.035-2.759M6.77 296.711a3.11 3.11 0 0 0-.037-3.555" style="marker:none" fill="none" stroke="black" stroke-width=".441"/></g></svg>');
-    }
-    #fullscreen-button {
-      background: no-repeat center / contain url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 8.5 8.5"><g fill="none" stroke="black" stroke-width="1.3"><path d="M.7 3.5V.7h2.6M7.8 3.5V.7H5.2M.7 5v2.8h2.6M7.8 5v2.8H5.2"/></g></svg>');
-      border: none;
-      position: fixed;
-      right: 0;
-      top:   0;
-      width:  10vmin;
-      height: 10vmin;
-      border-radius: 0;
-    }
-  </style>
 </html>

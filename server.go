@@ -21,8 +21,8 @@ type MessageWithPlayerId struct {
 }
 
 func main() {
-  // Serve files
-  http.Handle("/", http.FileServer(http.Dir(".")))
+  http.Handle("/", http.FileServer(http.Dir("./player")))
+  http.Handle("/host/", http.StripPrefix("/host/", http.FileServer(http.Dir("./host"))))
 
   var hostConn *websocket.Conn
   var playerConns sync.Map
@@ -37,7 +37,7 @@ func main() {
 
   hostSendChan := make(chan []byte)
 
-  http.HandleFunc("/host", func(response http.ResponseWriter, request *http.Request) {
+  http.HandleFunc("/host/ws", func(response http.ResponseWriter, request *http.Request) {
     if hostConn != nil {
       log.Println("A host attempted to connect, but there's already a host connected")
       response.WriteHeader(http.StatusConflict)
@@ -120,7 +120,7 @@ func main() {
       }
     }
   })
-  http.HandleFunc("/player", func(response http.ResponseWriter, request *http.Request) {
+  http.HandleFunc("/player/ws", func(response http.ResponseWriter, request *http.Request) {
     conn,err := upgrader.Upgrade(response, request, nil)
     if err != nil {
       log.Println("Unable to upgrade player connection to websocket: ", err)

@@ -1,0 +1,244 @@
+<html>
+  <head>
+    <title>Phone Party</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <link href="style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="introduction-page" class="hide">
+      <h1>Join our game!</h1>
+      <h2>1. Connect to the Game Jam WiFi</h2>
+      <p>sid: ??  password: ??</p>
+      <h2>2. Go to <em>jam.joshshone.com</em><h2>
+    </div>
+    <div id="pause-indicator">⏸</div>
+    <div id="connection-status"></div>
+    <div id="warning-indicator"></div>
+  </body>
+  <script>
+    "use strict";
+
+    // HTTPS redirect
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol !== 'file:') {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+
+    const connectionStatus = document.getElementById('connection-status');
+    const warningIndicator = document.getElementById('warning-indicator');
+
+    if (location.protocol === 'file:') {
+      const message = 'Cannot open websocket because this page is loaded with the file protocol.';
+      connectionStatus.className = 'error';
+      connectionStatus.textContent = message;
+      throw message;
+    }
+
+    const players = [];
+
+    (async function() {
+      connectionStatus.className = 'connecting';
+      while (true) {
+        const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/host/ws`);
+        websocket.onopen = () => connectionStatus.className = '';
+
+        websocket.onmessage = event => {
+          const message = JSON.parse(event.data);
+          if (message.type !== 'playerDisconnected' && JSON.parse(message.message).sdp) {
+            handleNewPlayer(message.playerId, JSON.parse(message.message).sdp, websocket);
+          }
+        }
+        
+        await new Promise(resolve => websocket.onclose = resolve);
+        warningIndicator.textContent = 'Websocket disconnected, reconnecting in 5 seconds';
+        await new Promise(resolve => setTimeout(() => resolve(), 5000));
+        warningIndicator.textContent = 'Websocket reconnecting..';
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
+        warningIndicator.textContent = '';
+      }
+    })();
+    
+    function receiveMessageFromWebsocket() {
+      return new Promise(resolve => websocket.addEventListener('message', event => resolve(JSON.parse(event.data)), {once: true}));
+    }
+
+    async function handleNewPlayer(playerId, sdp, websocket) {
+      const player = document.createElement('div');
+
+      const rtcConnection = new RTCPeerConnection();
+      let hasSentSdp = false;
+      const iceCandidatesToSend = [];
+      rtcConnection.onicecandidate = event => {
+        if (event.candidate) {
+          iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
+          if (hasSentSdp) {
+            while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, type: 'ice', message: iceCandidatesToSend.pop()}));
+          }
+        }
+      }
+
+      const video = document.createElement('video');
+      player.video = video;
+      video.autoplay = true;
+      video.muted = true;
+      rtcConnection.ontrack = event => {
+        if (video.srcObject !== event.streams[0]) {
+          video.srcObject = event.streams[0];
+          player.appendChild(video);
+        }
+      }
+
+      websocket.addEventListener('message', function callback() {
+        const message = JSON.parse(event.data);
+        if (message.playerId === playerId) {
+          if (message.type === 'playerDisconnected') {
+            websocket.removeEventListener('message', callback);
+          } else if (message.type === 'ice') {
+            rtcConnection.addIceCandidate(JSON.parse(JSON.parse(message.message).iceCandidate));
+          }
+        }
+      });
+
+      await rtcConnection.setRemoteDescription({type: 'offer', sdp: sdp});
+
+      const buttonsChannel          = rtcConnection.createDataChannel('buttons',         {negotiated: true, id: 1, ordered: true});
+      player.wheelChannel           = rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true});
+      const accelerometerChannel    = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
+      const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
+      player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
+      const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
+
+      const answer = await rtcConnection.createAnswer();
+      rtcConnection.setLocalDescription(answer);
+      websocket.send(JSON.stringify({playerId: playerId, type: 'sdp', message: answer.sdp}));
+      hasSentSdp = true;
+      while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, type: 'ice', message: iceCandidatesToSend.pop()}));
+
+      // Wait for RTC connection to connect
+      await new Promise((resolve, reject) => {
+        rtcConnection.onconnectionstatechange = () => {
+          if (rtcConnection.connectionState === 'connected') {
+            resolve();
+          } else if (rtcConnection.connectionState === 'failed') {
+            reject();
+          }
+        }
+      });
+
+      player.classList.add('player', 'new');
+      setTimeout(() => player.classList.remove('new'), 4000);
+      player.style.left = (Math.random() * 100) + 'vw';
+      player.style.top  = 30 + (Math.random() * 70) + 'vh';
+
+      player.onpointerdown = event => {
+        player.setPointerCapture(event.pointerId);
+        if (player.hostInteractionChannel.readyState === 'open') {
+          player.hostInteractionChannel.send('drag start');
+        }
+        function mousemove(event) {
+          player.style.left = ((event.pageX / window.innerWidth)  * 100) + 'vw';
+          player.style.top  = ((event.pageY / window.innerHeight) * 100) + 'vh';
+        }
+        window.addEventListener('pointermove', mousemove);
+        window.addEventListener('pointerup', event => {
+          window.removeEventListener('pointermove', mousemove);
+          if (player.hostInteractionChannel.readyState === 'open') {
+            player.hostInteractionChannel.send('drag end');
+          }
+        });
+      }
+
+      document.body.appendChild(player);
+      players.push(player);
+
+      const buttonStates = {};
+
+      const momentum = {x: 0, y: 0};
+      let lastTimestamp = performance.now();
+      window.requestAnimationFrame(function handleFrame(timestamp) {
+        if (!player.parentElement) {
+          return;
+        }
+        const delta = timestamp - lastTimestamp;
+        const playerRadius = 6;
+
+        // Bounce back from edges of screen
+        const bounceBack = 0.015;
+        if (parseFloat(player.style.left) < playerRadius)       momentum.x += bounceBack * delta;
+        if (parseFloat(player.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
+        if (parseFloat(player.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
+        if (parseFloat(player.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
+
+        const playerMovementSpeed = 0.012;
+        if (buttonStates['left'])  momentum.x -= playerMovementSpeed * delta;
+        if (buttonStates['right']) momentum.x += playerMovementSpeed * delta;
+        if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
+        if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
+        
+        if (!(player.classList.contains('not-player-moveable') || player.classList.contains('fullscreen'))) {
+          player.style.left = ((parseFloat(player.style.left) || 0) + momentum.x) + 'vw';
+          player.style.top  = ((parseFloat(player.style.top) || 0) - momentum.y) + 'vh';
+        }
+
+        // Apply friction
+        const friction = 0.005;
+        momentum.x *= Math.max(0, 1 - (delta * friction));
+        momentum.y *= Math.max(0, 1 - (delta * friction));
+        lastTimestamp = timestamp;
+        window.requestAnimationFrame(handleFrame);
+      });
+
+      buttonsChannel.onmessage = event => {
+        const [button, state] = event.data.split(' ');
+        buttonStates[button] = state === 'true';
+        if (button === 'ping') {
+          player.classList.toggle('pinging', state === 'true');
+        }
+      }
+
+      accelerometerChannel.onmessage = event => {
+        const acceleration = JSON.parse(event.data);
+        const wiggle = 0.5;
+        player.style.transform = `translate(${(acceleration.x * wiggle) + 'vw'}, ${(acceleration.y * -wiggle) + 'vw'})`;
+      }
+
+      visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
+
+      window.onbeforeunload = () => {
+        if (closeChannel.readyState === 'open') {
+          closeChannel.send('true');
+        }
+      }
+
+      document.body.dispatchEvent(new Event('playerAdded'));
+
+      const rtcConnectionClosed = new Promise(resolve => {
+        rtcConnection.addEventListener('connectionstatechange', function callback() {
+          if (rtcConnection.connectionState === 'failed' || rtcConnection.connectionState === 'closed') {
+            resolve();
+            rtcConnection.removeEventListener('connectionstatechange', callback);
+          }
+        });
+      });
+
+      const rtcCloseSignalReceived = new Promise(resolve => closeChannel.onmessage = resolve);
+
+      await Promise.race([rtcConnectionClosed, rtcCloseSignalReceived]);
+
+      rtcConnection.close();
+
+      player.classList.add('leaving');
+      player.dataset.visibility = '';
+      setTimeout(() => player.remove(), 200);
+      players.splice(players.indexOf(player), 1);
+    }
+
+    let paused = false;
+    window.addEventListener('keydown', event => {
+      if (event.key === 'p') {
+        paused = !paused;
+        document.getElementById('pause-indicator').classList.toggle('activated', paused);
+      }
+    });
+  </script>
+  <script src="gameplay.js"></script>
+</html>

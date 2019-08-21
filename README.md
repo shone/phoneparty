@@ -25,7 +25,7 @@ $ go run server.go
 $ ssh -R 80:localhost:8080 serveo.net
 ```
 
-For the shared screen, open a web browser to `(server address)/host.html`
+For the shared screen, open a web browser to `(server address)/host`
 
 Each player can load the server address directly in a web browser.
 
