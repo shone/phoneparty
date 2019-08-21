@@ -27,9 +27,29 @@
 
     const connectionStatus = document.getElementById('connection_status');
 
+    // Setup audio
     const audioContext = new (window.AudioContext || window.webkitAudioContext);
     const personalToneFrequency = 180 + (200 * Math.random());
-    
+    const envelope = audioContext.createGain();
+    envelope.gain.setValueAtTime(0, audioContext.currentTime);
+    envelope.connect(audioContext.destination);
+    const osc = audioContext.createOscillator();
+    osc.frequency.setValueAtTime(personalToneFrequency, audioContext.currentTime);
+    osc.type = 'square';
+    osc.connect(envelope);
+    osc.start();
+    function resumeAudio() {
+      if (audioContext.state === 'suspended') {
+        // The AudioContext will initially be in a suspended state, and is only allowed
+        // to be resumed in response to a user gesture.
+        // See https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#Autoplay_policy
+        audioContext.resume();
+      }
+    }
+    window.addEventListener('mousedown',  resumeAudio);
+    window.addEventListener('touchstart', resumeAudio);
+    window.addEventListener('keydown',    resumeAudio);
+
     (async function() {
     
       // Setup video
@@ -256,10 +276,10 @@
             if (event.data.startsWith('chosen')) {
               if (event.data.endsWith('final')) {
                 for (let i=0; i<5; i++) {
-                  playTone(personalToneFrequency, i*0.2);
+                  playTone(i*0.2);
                 }
               } else {
-                playTone(personalToneFrequency);
+                playTone();
               }
               if (navigator.vibrate) {
                 try { navigator.vibrate(200); } catch(error) { }
@@ -282,7 +302,7 @@
           hostInteractionChannel.onmessage = event => {
             if (event.data === 'drag start') {
               document.body.classList.add('host-dragging');
-              playTone(personalToneFrequency);
+              playTone();
               if (navigator.vibrate) {
                 try { navigator.vibrate(200); } catch(error) { }
               }
@@ -309,25 +329,10 @@
       }
     })();
 
-    function playTone(frequency = 440, timeOffset = 0) {
-      const envelope = audioContext.createGain();
+    function playTone(timeOffset = 0) {
       envelope.gain.setValueAtTime(0, audioContext.currentTime);
       envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
       envelope.gain.setTargetAtTime(0, audioContext.currentTime + timeOffset, 0.2);
-      envelope.connect(audioContext.destination);
-
-      const osc = audioContext.createOscillator();
-      osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      osc.type = 'square';
-      osc.connect(envelope);
-      osc.start();
-      
-      setTimeout(() => {
-        osc.stop();
-        osc.disconnect(envelope);
-        envelope.gain.cancelScheduledValues(audioContext.currentTime);
-        envelope.disconnect(audioContext.destination);
-      }, (timeOffset * 1000) + 1000);
     }
 
     function waitForWebsocketToConnect(websocket) {
