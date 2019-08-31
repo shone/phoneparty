@@ -3,25 +3,16 @@
 (async function() {
   await showElement(document.getElementById('introduction-page'));
 
+  const objects = ['red lamp', 'blue chair', 'orange bottle'];
+
+  // Phase one
   while (true) {
-
-    await countdown(8);
-
-    const player = await randomPlayerSelection("Who's next?");
-    if (player) {
-      player.classList.add('fullscreen');
-      player.style.left = '';
-      player.style.top = '';
-      await countdown(20);
-      player.classList.remove('fullscreen');
-      player.style.left = '0vw';
-      player.style.top = '0vh';
-    }
-    
-    await countdown(8);
-
-    await vote('Vote!');
+    await countdown(30, 'You must find: ' + randomInArray(objects));
   }
+  
+  // Phase two
+  
+  // Phase three
 })();
 
 async function showElement(element) {
@@ -248,4 +239,8 @@ async function cameraMode(player) {
   player.style.left = '';
   player.style.top  = '';
   player.style.transform = '';
+}
+
+function randomInArray(array) {
+  return array[Math.floor(Math.random() * array.length)];
 }
