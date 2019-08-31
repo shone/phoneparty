@@ -34,10 +34,10 @@ async function showVotingResult(text, seconds, backgroundColor) {
  {
    var children = players[i].children;
 
-   for (var i = 0; i < children.length; i++) {
-     if(children[i].tagName == "CANVAS")
+   for (var k = 0; k < children.length; k++) {
+     if(children[k].tagName == "CANVAS")
      {
-       children[i].style.display = "none";
+       children[k].style.display = "none";
        break;
      }
      // Do stuff

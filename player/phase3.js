@@ -158,7 +158,7 @@ function phase3(channels) {
       container.append(this.fakeButton);
 
       this.fakeButton.addEventListener("click", this.onImageIsFake.bind(this));
-      this.fakeButton.innerHTML = "Fake! This is not a " + this.selectedItemd;
+      this.fakeButton.innerHTML = "Fake! This is not a " + this.searchedItem;
       this.fakeButton.style.width = "25vw";
       this.fakeButton.style.height = "25vw";
       this.fakeButton.style.position = "absolute";
