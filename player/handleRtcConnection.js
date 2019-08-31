@@ -17,6 +17,12 @@ async function handleRtcConnection(rtcConnection, channels) {
     console.log("New Phase", event.data);
   }
 
+  channels.phaseTwo.onmessage = event => {
+    if (event.data === "COUNTDOWN") {
+      alert("COUNTDOWN 30s!");
+    }
+  };
+
   document.getElementById('take-photo-button').onclick = () => {
     playTone();
     const video = document.getElementById('video');
@@ -26,6 +32,8 @@ async function handleRtcConnection(rtcConnection, channels) {
     const context = canvas.getContext('2d');
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     document.body.querySelector('[data-formode="camera"]').classList.add('photo-taken');
+
+    channels.phaseTwo.send("TAKE");
   }
 
   channels.buttons.onopen = () => {

@@ -46,7 +46,8 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const modeChannel             = rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true});
-  player.currentPhaseChannel     = rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true});
+  player.currentPhaseChannel    = rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true});
+  player.phaseTwo               = rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -173,7 +174,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  player.currentPhaseChannel.onopen => {
+  player.currentPhaseChannel.onopen = () => {
     players.push(player);
     document.body.dispatchEvent(new Event('playerAdded'));
   }

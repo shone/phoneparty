@@ -1,21 +1,56 @@
 "use strict";
 
 (async function() {
-  await showElement(document.getElementById('introduction-page'));
+  await waitForPlayers(1);
+  //await showElement(document.getElementById('introduction-page'));
 
   const objects = ['red lamp', 'blue chair', 'orange bottle'];
 
   // Phase one
-  //await countdown(30, 'You must find: ' + randomInArray(objects));
+  /*while (true) {
+    await countdown(30, 'You must find: ' + randomInArray(objects));
+  }*/
 
   // Phase two
+  await initiatePhaseTwo();
 
   // Phase three
-  // Voting Phase
   Phase3().start()
-
   // Phase four
 })();
+
+
+async function initiatePhaseTwo() {
+  players.forEach(player => {
+    player.phaseTwo.onmessage = event => {
+      if (event.data === "TAKE") {
+        // player
+        const video = player.video;
+        const screenshotCanvas = document.createElement("canvas");
+        $(screenshotCanvas).css({
+          'position' : 'absolute',
+          'z-index' : '2',
+          'width'  : '100%',
+          'height' : '100%',
+          'object-fit' : 'cover',
+          'transform' : 'scaleX(-1)'
+        });
+        screenshotCanvas.width = video.videoWidth;
+        screenshotCanvas.height = video.videoHeight;
+        $(player).prepend(screenshotCanvas);
+        const context = screenshotCanvas.getContext('2d');
+        context.drawImage(video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
+
+      }
+    };
+
+    player.phaseTwo.send("COUNTDOWN");
+  });
+
+  return new Promise(resolve => {
+      resolve('resolved');
+  });
+}
 
 async function showElement(element) {
   element.classList.remove('hide');
