@@ -1,6 +1,10 @@
 body {
   margin: 0;
 }
+
+body * {
+    font-family: "Helvetica Neue", "Roboto";
+}
 body.chosen:before {
   content: '';
   position: fixed;
@@ -120,6 +124,7 @@ button.pressed {
   width:  100%;
   height: 100%;
   transform: scaleX(-1);
+  object-fit: cover;
 }
 [data-formode="camera"] h2 {
   position: absolute;
@@ -149,6 +154,11 @@ button.pressed {
   background: no-repeat center / 50% url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.9 16.9" height="64" width="64"><path d="M5.9.3c-1.3 0-2.3 1-2.3 2.2H2.3C1 2.6 0 3.6 0 4.9v8.7c0 1.3 1 2.3 2.3 2.3h12.4c1.2 0 2.2-1 2.2-2.3V4.8c0-1.2-1-2.2-2.2-2.2H13c0-1.3-1-2.3-2.2-2.3zM13.4 4h1.2a.7.7 0 1 1 0 1.5h-1.2a.7.7 0 1 1 0-1.5zM8.2 5.6a3.6 3.6 0 0 1 3.6 3.6 3.6 3.6 0 0 1-3.6 3.5 3.6 3.6 0 0 1-3.5-3.5 3.6 3.6 0 0 1 3.5-3.6z"/></svg>');
   border: 2vmin solid black;
   border-radius: 4vmin;
+  z-index: 6;
+}
+
+#photo-mode-headline {
+    z-index: 6;
 }
 [data-formode="camera"].photo-taken:after {
   content: '';

@@ -1,53 +1,21 @@
 "use strict";
 
+const numberOfPlayers = 2;
+
 (async function() {
-  await showElement(document.getElementById('introduction-page'));
+  //await showElement(document.getElementById('introduction-page'));
+  await waitForPlayers(numberOfPlayers);
 
-  await waitForPlayers(1);
+  //await phase1();
 
-  await phase1();
-
-  //   await initiatePhaseTwo();
   await phase2();
 
+  alert("Before phase 3");
   await phase3();
 
   await phase4();
 
 })();
-
-
-async function initiatePhaseTwo() {
-  players.forEach(player => {
-    player.phaseTwo.onmessage = event => {
-      if (event.data === "TAKE") {
-        // player
-        const video = player.video;
-        const screenshotCanvas = document.createElement("canvas");
-        $(screenshotCanvas).css({
-          'position' : 'absolute',
-          'z-index' : '2',
-          'width'  : '100%',
-          'height' : '100%',
-          'object-fit' : 'cover',
-          'transform' : 'scaleX(-1)'
-        });
-        screenshotCanvas.width = video.videoWidth;
-        screenshotCanvas.height = video.videoHeight;
-        $(player).prepend(screenshotCanvas);
-        const context = screenshotCanvas.getContext('2d');
-        context.drawImage(video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
-
-      }
-    };
-
-    player.phaseTwo.send("COUNTDOWN");
-  });
-
-  return new Promise(resolve => {
-      resolve('resolved');
-  });
-}
 
 async function showElement(element) {
   element.classList.remove('hide');
