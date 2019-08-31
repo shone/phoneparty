@@ -15,8 +15,14 @@ body.phase2 .player {
 }
 body.phase2 .player.has-taken-photo {
   visibility: visible;
+  position: relative;
+  width: 20vw;
+  height: 20vw;
+  margin-left: 2vw;
+  margin-top: 0;
 }
 body.phase2 #players {
+  top: 10vw;
   display: flex;
   flex-direction: row;
 }
