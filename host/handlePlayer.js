@@ -1,7 +1,5 @@
 "use strict";
 
-let playerImages =  [];
-
 async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 

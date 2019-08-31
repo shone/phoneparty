@@ -1,5 +1,4 @@
 async function phase1() {
-  debugger
   const phase1Element = document.getElementById('phase1');
   phase1Element.querySelector('.remaining-time').textContent = '';
   phase1Element.classList.remove('hide');
