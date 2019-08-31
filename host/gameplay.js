@@ -1,21 +1,68 @@
 "use strict";
 
-const numberOfPlayers = 2;
+const numberOfPlayers = 1;
+let playerImages = [];
 
 (async function() {
-  //await showElement(document.getElementById('introduction-page'));
+  await showElement(document.getElementById('introduction-page'));
+
   await waitForPlayers(numberOfPlayers);
-
-  //await phase1();
-
+  console.log("Before Phase 1");
+  document.body.className = 'phase1';
+  setAllPlayersToPhase(1);
+  await phase1();
+  console.log("Before Phase 2");
+  document.body.className = 'phase2';
+  setAllPlayersToPhase(2);
   await phase2();
-
-  alert("Before phase 3");
+  console.log("Before Phase 3");
+  document.body.className = 'phase3';
+  setAllPlayersToPhase(3);
   await phase3();
-
+  console.log("Before Phase 4");
+  document.body.className = 'phase4';
+  setAllPlayersToPhase(4);
   await phase4();
 
 })();
+
+function setAllPlayersToPhase(phaseNumber) {
+  for (const player of players) {
+    player.currentPhaseChannel.send(phaseNumber);
+  }
+}
+
+async function initiatePhaseTwo() {
+  players.forEach(player => {
+    player.phaseTwo.onmessage = event => {
+      if (event.data === "TAKE") {
+        // player
+        const video = player.video;
+        const screenshotCanvas = document.createElement("canvas");
+        $(screenshotCanvas).css({
+          'position' : 'absolute',
+          'z-index' : '2',
+          'width'  : '100%',
+          'height' : '100%',
+          'object-fit' : 'cover',
+          'transform' : 'scaleX(-1)'
+        });
+        screenshotCanvas.width = video.videoWidth;
+        screenshotCanvas.height = video.videoHeight;
+        $(player).prepend(screenshotCanvas);
+        const context = screenshotCanvas.getContext('2d');
+        context.drawImage(video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
+
+      }
+    };
+
+    player.phaseTwo.send("COUNTDOWN");
+  });
+
+  return new Promise(resolve => {
+      resolve('resolved');
+  });
+}
 
 async function showElement(element) {
   element.classList.remove('hide');
@@ -198,7 +245,8 @@ async function showText(text, seconds, backgroundColor) {
 }
 
 async function waitForPlayers(n = 1) {
-  return new Promise(resolve => {
+  document.getElementById('waiting-for-players').classList.remove('hide');
+  const result = await new Promise(resolve => {
     if (players.length >= n) {
       resolve();
     } else {
@@ -210,6 +258,8 @@ async function waitForPlayers(n = 1) {
       });
     }
   });
+  document.getElementById('waiting-for-players').classList.add('hide');
+  return result;
 }
 
 function waitForNSeconds(seconds) {
