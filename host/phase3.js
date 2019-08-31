@@ -45,7 +45,7 @@ async function phase3() {
         var terminator = "\n";
         var data = string_data;
         var dataSent = 0;
-        var intervalID = 0;
+        var intervalID = Math.floor(Math.random() * 100000);
 
         intervalID = setInterval(function(){
           var slideEndIndex = dataSent + charSlice;
@@ -58,7 +58,7 @@ async function phase3() {
             player.phaseThree.send("\n");
             clearInterval(intervalID);
           }
-        }, delay);
+        }.bind(this), delay);
 
         //player.phaseThree.send(string_data)
       }

@@ -8,7 +8,10 @@ function phase3(channels) {
 
     // Add callbacks
     this.onPhaseThreeMessage = function(event) {
+      console.log("chukn");
       if (event.data == "\n") {
+
+        console.log(bigData);
         var allData = JSON.parse(bigData)
         this.data = allData.data;
         this.color = allData.color;
