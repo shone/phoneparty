@@ -2,6 +2,7 @@
 
 const numberOfPlayers = 1;
 let playerImages = [];
+let imageResults = {};
 
 (async function() {
   await showElement(document.getElementById('introduction-page'));
