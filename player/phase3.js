@@ -128,7 +128,8 @@ function phase3(channels) {
 
           this.response_send = true;
         }
-        this.preview.image.style.display = "hidden"
+        this.preview.image.style.display = "none";
+        $("body").append('<h1 style="text-align: center;">All votes given!</h1>');
       } else {
         this.preview.image.src = next_image;
       }
