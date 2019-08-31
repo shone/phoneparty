@@ -32,7 +32,7 @@ async function phase3() {
 
           console.log(this.images, image_owner);
 
-          data.push({"image_owner": image_owner, "image_blob": this.images[parseInt(image_owner)].croppedImage});
+          data.push({"image_owner": this.images[image_owner].playerId, "image_blob": this.images[image_owner].croppedImage});
         }
 
         var string_data = JSON.stringify(data)
@@ -74,28 +74,41 @@ async function phase3() {
       var final_results = {};
       for(var response of this.player_responses) {
         for(var image_result of response) {
+          console.log(final_results);
+          console.log(image_result.image_owner);
+          final_results[image_result.image_owner] = final_results[image_result.image_owner] || {id: image_result.image_owner, realCount: 0, fakeCount: 0, wrongCount: 0}
           switch (image_result.result) {
             case "0":
-              final_results[image_result.image_owner].realCount = (final_results[image_result.image_owner] || 0) + 1
+              final_results[image_result.image_owner].realCount += 1
               break;
             case "1":
-              final_results[image_result.image_owner].fakeCount = (final_results[image_result.image_owner] || 0) + 1
+              final_results[image_result.image_owner].fakeCount += 1
               break;
             case "2":
-              final_results[image_result.image_owner].wrongCount = (final_results[image_result.image_owner] || 0) + 1
+              final_results[image_result.image_owner].wrongCount += 1
               break;
             default:
           }
         }
       }
 
-      var wrongImages = [];
-      var fakestImage = final_results[0];
+      var wrongImageIds = [];
+      var fakestImage = {id: "fake", realCount: 100, fakeCount: -100, wrongCount: -100}
 
       console.log(final_results);
-      for(var result of final_results) {
-
+      for(var result_id in final_results) {
+        var result = final_results[result_id];
+        if(result.wrongCount >= 2) {
+          wrongImageIds.push(result_id);
+        } else {
+          if (result.realCount - result.fakeCount < fakestImage.realCount - fakestImage.fakeCount) {
+            console.log("New fakes image");
+            fakestImage = result;
+          }
+        }
       }
+
+      return {worstPlayerIds: fakestImage.id, wrongColorPlayerIds: wrongImageIds}
     }
 
     this.start = async function() {
@@ -111,4 +124,5 @@ async function phase3() {
 
   await phase.start();
   var results = phase.getResults();
+  imageResults = results;
 }
