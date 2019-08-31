@@ -34,6 +34,8 @@ function phase3(channels) {
       //Remove existing things
       var phase1 = document.getElementById("phase1");
       if(phase1) {phase1.remove();}
+      var phase2 = document.getElementById("camera-screen");
+      if(phase2) {phase2.remove();}
 
       var container = document.createElement("div");
       document.body.append(container);
@@ -107,7 +109,7 @@ function phase3(channels) {
     }
 
     this.setCurrentImageAs = function(type) {
-      this.response.push({"owner_id": this.data[this.image_counter - 1].image_owner, "result": type});
+      this.response.push({"image_owner": this.data[this.image_counter - 1].image_owner, "result": type});
 
       window.setTimeout(this.displayNextImage.bind(this), 1000);
       this.block_input = true;

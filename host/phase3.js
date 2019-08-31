@@ -4,7 +4,7 @@ async function phase3() {
 
     this.sendImagesToPlayers = async function() {
       //clientid, image
-      var images = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
+      this.images = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
       var player_list = [...players];
 
       //Shuffle player list
@@ -35,10 +35,17 @@ async function phase3() {
 
     this.onPlayerVoteResponse = function(event) {
       console.log(event.data);
+      this.player_responses.push(JSON.parse(event.data));
+    }
+
+    this.getResults = function() {
+      console.log("get results");
     }
 
     this.start = async function() {
       console.log("Start Phase Three");
+
+      this.player_responses = [];
 
       await this.sendImagesToPlayers();
 
@@ -47,4 +54,5 @@ async function phase3() {
   }
 
   await phase.start();
+  var results = phase.getResults();
 }
