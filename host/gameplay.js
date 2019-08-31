@@ -1,21 +1,19 @@
 "use strict";
 
 (async function() {
+  await showElement(document.getElementById('introduction-page'));
+
   await waitForPlayers(1);
-  //await showElement(document.getElementById('introduction-page'));
 
-  const objects = ['red lamp', 'blue chair', 'orange bottle'];
+  await phase1();
 
-  // Phase one
-  /*while (true) {
-    await countdown(30, 'You must find: ' + randomInArray(objects));
-  }*/
+  //   await initiatePhaseTwo();
+  await phase2();
 
-  // Phase two
-  await initiatePhaseTwo();
+  await phase3();
 
-  // Phase three
-  // Phase four
+  await phase4();
+
 })();
 
 
@@ -275,8 +273,4 @@ async function cameraMode(player) {
   player.style.left = '';
   player.style.top  = '';
   player.style.transform = '';
-}
-
-function randomInArray(array) {
-  return array[Math.floor(Math.random() * array.length)];
 }
