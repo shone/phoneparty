@@ -1,13 +1,11 @@
 "use strict";
 
-const numberOfPlayers = 1;
 let playerImages = [];
 let imageResults = {};
 
 (async function() {
   await showElement(document.getElementById('introduction-page'));
 
-  await waitForPlayers(numberOfPlayers);
   console.log("Before Phase 1");
   document.body.className = 'phase1';
   setAllPlayersToPhase(1);

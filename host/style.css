@@ -1,5 +1,24 @@
+#players {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
 body.phase1 .player {
   display: none !important;
+}
+
+body.phase2 .player {
+  visibility: hidden;
+}
+body.phase2 .player.has-taken-photo {
+  visibility: visible;
+}
+body.phase2 #players {
+  display: flex;
+  flex-direction: row;
 }
 
 body * {
