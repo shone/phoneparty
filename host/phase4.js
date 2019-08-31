@@ -21,7 +21,7 @@ async function showVotingResult(text, seconds, backgroundColor) {
   var workplayercanvas = document.getElementById("worstplayer");
 
   //workimage.src =
-  var worstplayerid     = players[imageResults.worstPlayerIds - 1].id;
+  var worstplayerid     = imageResults.worstPlayerIds;
   var worstplayervideoin  = null;
 
 
