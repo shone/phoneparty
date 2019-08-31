@@ -5,6 +5,10 @@
     <link href="style.css" rel="stylesheet">
   </head>
   <body>
+    <div id="phase1" class="hide">
+      <h1>You must find...</h1>
+      <h2>Get ready!<h2>
+    </div>
     <div data-formode="camera">
       <video id="video" playsinline autoplay muted></video>
       <canvas id="camera-canvas"></canvas>
@@ -150,6 +154,7 @@
               close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
               mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
               currentPhaseChannel:rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true}),
+              phaseOne:         rtcConnection.createDataChannel('phaseOne',        {negotiated: true, id: 42, ordered: true}),
               phaseTwo:         rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true}),
               phaseThree:         rtcConnection.createDataChannel('phaseThree',        {negotiated: true, id: 12, ordered: true}),
             }

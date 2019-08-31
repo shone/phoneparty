@@ -250,3 +250,7 @@ button[data-button="ping"]:after {
 [data-mode="camera"] #fullscreen-button {
   display: none;
 }
+
+.hide {
+  display: none !important;
+}

@@ -49,6 +49,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const modeChannel             = rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true});
   player.currentPhaseChannel    = rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true});
+  player.phaseOne               = rtcConnection.createDataChannel('phaseOne',        {negotiated: true, id: 42, ordered: true});
   player.phaseTwo               = rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true});
   player.phaseThree             = rtcConnection.createDataChannel('phaseThree',        {negotiated: true, id: 12, ordered: true});
 
