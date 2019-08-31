@@ -238,7 +238,8 @@ async function showText(text, seconds, backgroundColor) {
 }
 
 async function waitForPlayers(n = 1) {
-  return new Promise(resolve => {
+  document.getElementById('waiting-for-players').classList.remove('hide');
+  const result = await new Promise(resolve => {
     if (players.length >= n) {
       resolve();
     } else {
@@ -250,6 +251,8 @@ async function waitForPlayers(n = 1) {
       });
     }
   });
+  document.getElementById('waiting-for-players').classList.add('hide');
+  return result;
 }
 
 function waitForNSeconds(seconds) {
