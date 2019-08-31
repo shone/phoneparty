@@ -26,7 +26,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  websocket.addEventListener('message', function callback() {
+  websocket.addEventListener('message', function callback(event) {
     const message = JSON.parse(event.data);
     if (message.playerId === playerId) {
       if (message.type === 'playerDisconnected') {
