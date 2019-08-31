@@ -86,7 +86,7 @@ async function handleRtcConnection(rtcConnection, channels) {
         phase1(channels);
         break;
       case 2:
-        phase2(channels);
+        //phase2(channels);
         break;
       case 3:
         phase3(channels);

@@ -23,7 +23,7 @@ async function phase3() {
         for(var i = 0; i < this.NUMBER_OF_IMAGES; i++) {
           var image_owner = (player_index + 1 + i); // % player_list.length
 
-          data.push({"image_owner": image_owner, "image_blob": images[image_owner]});
+          data.push({"image_owner": image_owner, "image_blob": this.images[image_owner]});
         }
 
         var string_data = JSON.stringify(data)
