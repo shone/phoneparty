@@ -1,6 +1,6 @@
 async function phase3() {
   var phase = new function() {
-    this.NUMBER_OF_IMAGES = 5
+    this.NUMBER_OF_IMAGES = Math.min(5, players.length);
 
     this.sendImagesToPlayers = async function() {
       //clientid, image
@@ -38,7 +38,29 @@ async function phase3() {
         var string_data = JSON.stringify(data)
         console.log(string_data);
 
-        player.phaseThree.send(string_data)
+
+        var delay = 10;
+        var charSlice = 10000;
+        var terminator = "\n";
+        var data = string_data;
+        var dataSent = 0;
+        var intervalID = 0;
+
+        intervalID = setInterval(function(){
+          var slideEndIndex = dataSent + charSlice;
+          if (slideEndIndex > data.length) {
+            slideEndIndex = data.length;
+          }
+          player.phaseThree.send(data.slice(dataSent, slideEndIndex));
+          dataSent = slideEndIndex;
+          if (dataSent + 1 >= data.length) {
+            console.log("send");
+            player.phaseThree.send("\n");
+            clearInterval(intervalID);
+          }
+        }, delay);
+
+        //player.phaseThree.send(string_data)
       }
     }
 

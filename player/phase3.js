@@ -1,3 +1,4 @@
+bigData = "";
 function phase3(channels) {
   new function(channels) {
     console.log("Starting phase 3");
@@ -6,13 +7,19 @@ function phase3(channels) {
 
     // Add callbacks
     this.onPhaseThreeMessage = function(event) {
-      this.data = JSON.parse(event.data);
-      this.image_counter = 0;
-      console.log(this.data);
+      if (event.data == "\n") {
+        this.data = JSON.parse(bigData)
+        this.image_counter = 0;
+        console.log(this.data);
 
-      this.response = [];
+        this.response = [];
 
-      this.displayNextImage();
+        this.displayNextImage();
+      } else {
+        bigData += event.data;
+        //trace("Data chunk received");
+      }
+      //this.data = JSON.parse(event.data);
     }.bind(this);
 
 
