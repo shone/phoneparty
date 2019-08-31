@@ -254,3 +254,43 @@ button[data-button="ping"]:after {
 .hide {
   display: none !important;
 }
+
+.swipeLeft {
+  animation-name: swipeLeft;
+  animation-duration: 4s;
+  animation-timing-function: : ease-out;
+
+  position: absolute;
+}
+
+@keyframes swipeLeft {
+  from {left: 0}
+  to {left: -20000px}
+}
+
+.swipeRight {
+  animation-name: swipeLeft;
+  animation-duration: 4s;
+  animation-timing-function: : ease-out;
+
+  position: absolute;
+}
+
+@keyframes swipeLeft {
+  from {left: 0}
+  to {left: -20000px}
+}
+
+
+.swipeLeft {
+  animation-name: swipeLeft;
+  animation-duration: 4s;
+  animation-timing-function: : ease-out;
+
+  position: absolute;
+}
+
+@keyframes swipeLeft {
+  from {left: 0}
+  to {left: -20000px}
+}
