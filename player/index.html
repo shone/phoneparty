@@ -29,8 +29,12 @@
   </body>
   <script src="utils.js"></script>
   <script src="audio.js"></script>
-  <script src="handleRtcConnection.js"></script>
+  <script src="phase1.js"></script>
+  <script src="phase2.js"></script>
+  <script src="phase3.js"></script>
+  <script src="phase4.js"></script>
   <script src="jquery.js"></script>
+  <script src="handleRtcConnection.js"></script>
   <script>
     "use strict";
 
@@ -156,6 +160,7 @@
               mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
               currentPhaseChannel:rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true}),
               phaseTwo:         rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true}),
+              phaseThree:         rtcConnection.createDataChannel('phaseThree',        {negotiated: true, id: 12, ordered: true}),
             }
 
             try {
