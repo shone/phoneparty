@@ -4,6 +4,8 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
   player.id = idCounter.getUniqueId();
+  
+  if (document.body.className = "" || document.body.className  === 'phase1') return;
 
   const rtcConnection = new RTCPeerConnection();
   let hasSentSdp = false;

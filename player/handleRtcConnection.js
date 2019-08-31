@@ -79,6 +79,8 @@ async function handleRtcConnection(rtcConnection, channels) {
     }
   }
 
+  let lastPhase = 0;
+
   channels.currentPhaseChannel.onmessage = function(event) {
     console.log("New Phase", event.data);
     switch (parseInt(event.data)) {

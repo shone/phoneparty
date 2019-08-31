@@ -1,5 +1,6 @@
 "use strict";
 
+let gameStarted = false;
 const numberOfPlayers = 1;
 let playerImages = [];
 let imageResults = {};
@@ -10,6 +11,7 @@ let imageResults = {};
   await waitForPlayers(numberOfPlayers);
   console.log("Before Phase 1");
   document.body.className = 'phase1';
+  gameStarted = true;
   setAllPlayersToPhase(1);
   await phase1();
   console.log("Before Phase 2");
