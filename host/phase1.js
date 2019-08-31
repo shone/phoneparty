@@ -2,6 +2,7 @@ async function phase1() {
   const phase1Element = document.getElementById('phase1');
   phase1Element.querySelector('.remaining-time').textContent = '';
   phase1Element.classList.remove('hide');
+  phase1Element.style.backgroundColor = null;
   
   phase1Element.querySelector('h1').textContent = 'Choosing object...';
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
@@ -11,8 +12,10 @@ async function phase1() {
     {name: 'lamp',   color: 'red',    colorCode: '#ff0000'},
     {name: 'bottle', color: 'blue',   colorCode: '#0000ff'},
     {name: 'jacket', color: 'orange', colorCode: '#ffa500'},
+    {name: 'door',   color: 'red',    colorCode: '#ff0000'},
   ];
   const object = randomInArray(objects);
+  phase1Element.style.backgroundColor = object.colorCode;
   phase1Element.querySelector('.item').textContent = `A ${object.color} ${object.name}`;
   for (const player of players) {
     player.phaseOne.send(JSON.stringify(object));

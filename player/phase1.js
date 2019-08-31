@@ -8,4 +8,15 @@ async function phase1(channels) {
   });
   object = JSON.parse(object);
   phaseElement.querySelector('h1').textContent = `You must find: a ${object.color} ${object.name}!`;
+  
+  // Wait for phase to change
+  await new Promise(resolve => {
+    channels.currentPhaseChannel.addEventListener('message', function callback(event) {
+      if (event.data !== 1) {
+        resolve();
+        channels.currentPhaseChannel.removeEventListener('message', callback);
+      }
+    });
+  });
+  phaseElement.classList.add('hide');
 }
