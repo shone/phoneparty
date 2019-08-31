@@ -54,7 +54,6 @@ async function phase3() {
           player.phaseThree.send(data.slice(dataSent, slideEndIndex));
           dataSent = slideEndIndex;
           if (dataSent + 1 >= data.length) {
-            console.log("send");
             player.phaseThree.send("\n");
             clearInterval(intervalID);
           }
