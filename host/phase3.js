@@ -4,15 +4,14 @@ async function phase3() {
 
     this.sendImagesToPlayers = async function() {
       //clientid, image
-      this.images = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
-      var player_list = [...players];
+      this.images = playerImages;
 
       //Shuffle player list
-      player_list.sort(() => Math.random() - 0.5);
+      this.images.sort(() => Math.random() - 0.5);
 
-      for(player_index in player_list) {
+      for(player_index in players) {
         console.log("Send data to player");
-        var player = player_list[player_index];
+        var player = players[player_index];
         console.log(this);
         //Add onmessage callback to every player
         player.phaseThree.onmessage = this.onPlayerVoteResponse.bind(this);
@@ -20,10 +19,20 @@ async function phase3() {
         // For image
         var data = [];
 
-        for(var i = 0; i < this.NUMBER_OF_IMAGES; i++) {
-          var image_owner = (player_index + 1 + i); // % player_list.length
+        var own_image_id = -1;
 
-          data.push({"image_owner": image_owner, "image_blob": this.images[image_owner]});
+        for (image_index in this.images) {
+          if(image_index == player.id) {
+            own_image_id = image_index;
+          }
+        }
+
+        for(var i = 0; i < this.NUMBER_OF_IMAGES; i++) {
+          var image_owner = (own_image_id + 1 + i) % this.images.length;
+
+          console.log(this.images, image_owner);
+
+          data.push({"image_owner": image_owner, "image_blob": this.images[parseInt(image_owner)].croppedImage});
         }
 
         var string_data = JSON.stringify(data)

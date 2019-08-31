@@ -37,10 +37,11 @@ async function phase2() {
         console.log(imageCode);
         console.log(croppedCode);
 
-        playerImages[player.id] = {
+        playerImages.push({
+          playerId: player.id,
           image: imageCode,
           croppedImage: croppedCode
-        };
+        });
 
         document.body.dispatchEvent(new Event('imageAdded'));
       }
