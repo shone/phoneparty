@@ -1,4 +1,7 @@
 async function phase2() {
+  const phase2Element = document.getElementById('phase2');
+  phase2Element.classList.remove('hide');
+
   players.forEach(player => {
 
     player.phaseTwo.onmessage = event => {
@@ -43,6 +46,10 @@ async function phase2() {
           croppedImage: croppedCode
         });
 
+        player.classList.add('has-taken-photo');
+        player.style.left = '';
+        player.style.top = '';
+        player.style.transform = '';
         document.body.dispatchEvent(new Event('imageAdded'));
       }
     };
@@ -51,16 +58,21 @@ async function phase2() {
 
   });
 
-  return new Promise(resolve => {
-    if (playerImages.length >= numberOfPlayers) {
+  await new Promise(resolve => {
+    if (playerImages.length >= players.length) {
       resolve();
     } else {
       document.body.addEventListener('imageAdded', function callback() {
-        if (playerImages.length >= numberOfPlayers) {
+        if (playerImages.length >= players.length) {
           resolve();
           document.body.removeEventListener('imageAdded', callback);
         }
       });
     }
   });
+  phase2Element.querySelector('h1').textContent = 'All pictures taken';
+
+  await Promise.race([waitForNSeconds(10), waitForKeypress(' ')]);
+
+  phase2Element.classList.add('hide');
 }

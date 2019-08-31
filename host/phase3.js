@@ -91,6 +91,13 @@ async function phase3() {
         }
       }
 
+      //Fix if no one has answered
+      for(var image of this.images) {
+        if(final_results[image.playerId] == undefined) {
+          final_results[image.playerId] = final_results[image.playerId] || {id: image.playerId, realCount: 0, fakeCount: 0, wrongCount: 0}
+        }
+      }
+
       var wrongImageIds = [];
       var fakestImage = {id: "fake", realCount: 100, fakeCount: -100, wrongCount: -100}
 
@@ -117,7 +124,7 @@ async function phase3() {
 
       await this.sendImagesToPlayers();
 
-      await showText('Phase 3', 999, 'blue');
+      await countdown(20, 'It\'s voting time!', 999);
     }
   }
 
