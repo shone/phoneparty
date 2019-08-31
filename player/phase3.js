@@ -78,15 +78,16 @@ function phase3(channels) {
 
           this.response_send = true;
         }
+        this.preview.image.style.display = "hidden"
       } else {
-        this.preview.image.src = "https://loremflickr.com/cache/resized/65535_48234486291_3d66356db3_350_225_nofilter.jpg";
+        this.preview.image.src = next_image;
       }
     }
 
     this.getNextImage = function() {
       if (this.image_counter < this.data.length) {
         console.log("Image " + this.image_counter + " out of " + this.data.length);
-        return this.data[this.image_counter++];
+        return this.data[this.image_counter++].image_blob;
       }
       return null;
     }
