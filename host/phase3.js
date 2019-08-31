@@ -71,6 +71,31 @@ async function phase3() {
 
     this.getResults = function() {
       console.log("get results");
+      var final_results = {};
+      for(var response of this.player_responses) {
+        for(var image_result of response) {
+          switch (image_result.result) {
+            case "0":
+              final_results[image_result.image_owner].realCount = (final_results[image_result.image_owner] || 0) + 1
+              break;
+            case "1":
+              final_results[image_result.image_owner].fakeCount = (final_results[image_result.image_owner] || 0) + 1
+              break;
+            case "2":
+              final_results[image_result.image_owner].wrongCount = (final_results[image_result.image_owner] || 0) + 1
+              break;
+            default:
+          }
+        }
+      }
+
+      var wrongImages = [];
+      var fakestImage = final_results[0];
+
+      console.log(final_results);
+      for(var result of final_results) {
+
+      }
     }
 
     this.start = async function() {
