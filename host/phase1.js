@@ -3,10 +3,10 @@ async function phase1() {
   phase1Element.querySelector('.remaining-time').textContent = '';
   phase1Element.classList.remove('hide');
   phase1Element.style.backgroundColor = null;
-  
+
   phase1Element.querySelector('h1').textContent = 'Choosing object...';
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
-  
+
   phase1Element.querySelector('h1').textContent = 'You must find:';
   const objects = [
     {name: 'lamp',   color: 'red',    colorCode: '#ff0000'},
@@ -15,6 +15,9 @@ async function phase1() {
     {name: 'door',   color: 'red',    colorCode: '#ff0000'},
   ];
   const object = randomInArray(objects);
+  searchedItem.name = object.name;
+  searchedItem.color = object.color;
+  searchedItem.colorCode = object.colorCode;
   phase1Element.style.backgroundColor = object.colorCode;
   phase1Element.querySelector('.item').textContent = `A ${object.color} ${object.name}`;
   for (const player of players) {

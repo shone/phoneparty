@@ -17,7 +17,7 @@ async function phase3() {
         player.phaseThree.onmessage = this.onPlayerVoteResponse.bind(this);
 
         // For image
-        var data = [];
+        var data = {data:[], item: searchedItem.name, color: searchedItem.color, colorCode: searchedItem.colorCode};
 
         var own_image_id = -1;
 
@@ -32,7 +32,7 @@ async function phase3() {
 
           console.log(this.images, image_owner);
 
-          data.push({"image_owner": this.images[image_owner].playerId, "image_blob": this.images[image_owner].croppedImage});
+          data.data.push({"image_owner": this.images[image_owner].playerId, "image_blob": this.images[image_owner].croppedImage});
         }
 
         var string_data = JSON.stringify(data)
@@ -124,7 +124,7 @@ async function phase3() {
 
       await this.sendImagesToPlayers();
 
-      await countdown(20, 'It\'s voting time!', 999);
+      await countdown(20, 'It\'s voting time!', 'Please vote if this is a ' + searchedItem.color + " " + searchedItem.name);
     }
   }
 

@@ -9,12 +9,18 @@ function phase3(channels) {
     // Add callbacks
     this.onPhaseThreeMessage = function(event) {
       if (event.data == "\n") {
-        this.data = JSON.parse(bigData)
+        var allData = JSON.parse(bigData)
+        this.data = allData.data;
+        this.color = allData.color;
+        this.colorCode = allData.colorCode;
+        console.log("colorCode", allData.colorCode);
+        this.searchedItem = allData.item;
         this.image_counter = 0;
         console.log(this.data);
 
         this.response = [];
 
+        this.createDisplay();
         this.displayNextImage();
       } else {
         bigData += event.data;
@@ -96,17 +102,74 @@ function phase3(channels) {
 
       var container = document.createElement("div");
       document.body.append(container);
-      container.id = "phase3"
+      container.id = "phase3";
+      container.style.position = "absolute";
 
       this.preview = document.createElement("div");
       container.append(this.preview);
       this.preview.style.overflow = "hidden";
-      this.preview.style.height = "60%";
-      this.preview.style.width = "60%";
+      this.preview.style.height = "80vw";
+      this.preview.style.width = "80vw";
+      this.preview.style.marginLeft = "10vw";
+      this.preview.style.marginTop = "10vw";
+      this.preview.border = "5px solid gray"
+      this.preview.boxShadow = "2px 2px 5px black"
 
       this.preview.image = document.createElement("img");
+      this.preview.image.style.height = "100%";
+      this.preview.image.style.width = "200%";
 
       this.preview.append(this.preview.image);
+
+      this.realButton = document.createElement("button");
+      container.append(this.realButton);
+
+      this.realButton.addEventListener("click", this.onImageIsReal.bind(this));
+      this.realButton.innerHTML = "Real " + this.searchedItem;
+      this.realButton.style.width = "25vw";
+      this.realButton.style.height = "25vw";
+      this.realButton.style.position = "absolute";
+      this.realButton.style.bottom = "10vw";
+      this.realButton.style.left = "10vw";
+      this.realButton.style.fontSize = "15px";
+      this.realButton.style.backgroundColor = "green";
+      this.realButton.style.color = "black";
+      this.realButton.style.fontFamily = "arial";
+
+      this.wrongButton = document.createElement("button");
+      container.append(this.wrongButton);
+
+      this.wrongButton.addEventListener("click", this.onImageIsWrongColor.bind(this));
+      this.wrongButton.innerHTML = "This is not even " + this.color;
+      this.wrongButton.style.width = "25vw";
+      this.wrongButton.style.height = "25vw";
+      this.wrongButton.style.position = "absolute";
+      this.wrongButton.style.bottom = "15vw";
+      this.wrongButton.style.left = "37.5vw";
+      this.wrongButton.style.fontSize = "15px";
+      this.wrongButton.style.backgroundColor = "blue";
+      this.wrongButton.style.color = "black";
+      this.wrongButton.style.fontFamily = "arial";
+
+      this.fakeButton = document.createElement("button");
+      container.append(this.fakeButton);
+
+      this.fakeButton.addEventListener("click", this.onImageIsFake.bind(this));
+      this.fakeButton.innerHTML = "Fake! This is not a " + this.selectedItemd;
+      this.fakeButton.style.width = "25vw";
+      this.fakeButton.style.height = "25vw";
+      this.fakeButton.style.position = "absolute";
+      this.fakeButton.style.bottom = "10vw";
+      this.fakeButton.style.left = "65vw";
+      this.fakeButton.style.fontSize = "15px";
+      this.fakeButton.style.backgroundColor = "red";
+      this.fakeButton.style.color = "black";
+      this.fakeButton.style.fontFamily = "arial";
+
+      container.style.width = "100%";
+      container.style.height = "100%";
+      console.log(this.colorCode);
+      container.style.backgroundColor = this.colorCode;
     }
 
     this.displayNextImage = function() {
@@ -128,7 +191,7 @@ function phase3(channels) {
 
           this.response_send = true;
         }
-        this.preview.image.style.display = "hidden"
+        this.preview.image.style.display = "none";
       } else {
         this.preview.image.src = next_image;
       }
@@ -173,7 +236,6 @@ function phase3(channels) {
       this.block_input = true;
     }
 
-    this.createDisplay();
     document.addEventListener("keypress", this.onKeyPress.bind(this));
     channels.phaseThree.onmessage = this.onPhaseThreeMessage;
   }(channels);
