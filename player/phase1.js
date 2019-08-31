@@ -1,3 +1,3 @@
-function phase1() {
+function phase1(channels) {
   console.log("Foo");
 }

@@ -15,18 +15,18 @@ async function handleRtcConnection(rtcConnection, channels) {
 
   channels.currentPhaseChannel.onmessage = function(event) {
     console.log("New Phase", event.data);
-    switch (event.data) {
+    switch (parseInt(event.data)) {
       case 1:
-        phase1();
+        phase1(channels);
         break;
       case 2:
-        phase2();
+        phase2(channels);
         break;
       case 3:
-        phase3();
+        phase3(channels);
         break;
       case 4:
-        phase4();
+        phase4(channels);
         break;
     }
 
