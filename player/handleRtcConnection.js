@@ -19,9 +19,40 @@ async function handleRtcConnection(rtcConnection, channels) {
 
   channels.phaseTwo.onmessage = event => {
     if (event.data === "COUNTDOWN") {
-      alert("COUNTDOWN 30s!");
+      phase2.showCamera();
+      phase2.countDown();
     }
   };
+
+  class Phase2 {
+    timeLeft = 30;
+
+    showCamera() {
+      const mode = 'camera';
+      document.body.dataset.mode = mode;
+      for (const elementWithMode of document.querySelectorAll('[data-formode]')) {
+        const matchesMode = elementWithMode.dataset.formode === mode;
+        elementWithMode.style.visibility = matchesMode ? 'visible' : 'hidden';
+      }
+    }
+
+    countDown() {
+      if (this.timeLeft > 0) {
+        $("#photo-mode-headline").text(`Hurry! ${this.timeLeft}s left!`);
+        this.timeLeft--;
+
+        window.setTimeout(() => { this.countDown() }, 1000);
+      }
+    }
+
+    pictureTaken() {
+      this.timeLeft = 0;
+      $("#photo-mode-headline").text(`Picture taken!`);
+    }
+  }
+
+  let phase2 = new Phase2();
+
 
   document.getElementById('take-photo-button').onclick = () => {
     playTone();
@@ -34,6 +65,8 @@ async function handleRtcConnection(rtcConnection, channels) {
     document.body.querySelector('[data-formode="camera"]').classList.add('photo-taken');
 
     channels.phaseTwo.send("TAKE");
+
+    phase2.pictureTaken();
   }
 
   channels.buttons.onopen = () => {
