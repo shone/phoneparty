@@ -14,7 +14,7 @@ async function phase3() {
 
 async function sendImagesToPlayers() {
   //clientid, image
-  var images = {0: .., 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
+  var images = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
   var player_list = [...players];
 
   //Shuffle player list
