@@ -5,17 +5,25 @@
 
   await waitForPlayers(1);
 
+  setAllPlayersToPhase(1);
   await phase1();
 
-  //   await initiatePhaseTwo();
+  setAllPlayersToPhase(2);
   await phase2();
 
+  setAllPlayersToPhase(3);
   await phase3();
 
+  setAllPlayersToPhase(4);
   await phase4();
 
 })();
 
+function setAllPlayersToPhase(phaseNumber) {
+  for (const player of players) {
+    player.currentPhaseChannel.send(phaseNumber);
+  }
+}
 
 async function initiatePhaseTwo() {
   players.forEach(player => {

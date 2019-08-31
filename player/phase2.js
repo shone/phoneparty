@@ -1,3 +1,3 @@
 function phase2(channels) {
-  console.log("Foo");
+  console.log("Phase 2 function called");
 }
