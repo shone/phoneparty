@@ -6,13 +6,15 @@
   const objects = ['red lamp', 'blue chair', 'orange bottle'];
 
   // Phase one
-  while (true) {
-    await countdown(30, 'You must find: ' + randomInArray(objects));
-  }
-  
+  //await countdown(30, 'You must find: ' + randomInArray(objects));
+
   // Phase two
-  
+
   // Phase three
+  // Voting Phase
+  Phase3().start()
+
+  // Phase four
 })();
 
 async function showElement(element) {
@@ -155,7 +157,7 @@ async function vote(topic = '', optionA = 'no', optionB = 'yes', countdownSecond
       return null;
     }
   }
-  
+
   let isVoting = true;
   window.requestAnimationFrame(function handleFrame() {
     if (!isVoting) return;

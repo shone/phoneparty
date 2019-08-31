@@ -13,6 +13,10 @@ async function handleRtcConnection(rtcConnection, channels) {
     }
   }
 
+  channels.currentPhaseChannel.onmessage = function(event) {
+    console.log("New Phase", event.data);
+  }
+
   document.getElementById('take-photo-button').onclick = () => {
     playTone();
     const video = document.getElementById('video');

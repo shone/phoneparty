@@ -46,6 +46,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const modeChannel             = rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true});
+  player.currentPhaseChannel     = rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -141,7 +142,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
       if (buttonStates['right']) momentum.x += playerMovementSpeed * delta;
       if (buttonStates['down'])  momentum.y -= playerMovementSpeed * delta;
       if (buttonStates['up'])    momentum.y += playerMovementSpeed * delta;
-      
+
       if (!(player.classList.contains('not-player-moveable') || player.classList.contains('fullscreen'))) {
         player.style.left = ((parseFloat(player.style.left) || 0) + momentum.x) + 'vw';
         player.style.top  = ((parseFloat(player.style.top) || 0) - momentum.y) + 'vh';

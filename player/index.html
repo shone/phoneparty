@@ -119,14 +119,14 @@
 
         while (true) {
           await waitForPageToBeVisible();
-          
+
           try {
             if (!hasHost) {
               connectionStatus.className = 'connecting';
               connectionStatus.textContent = '(waiting for host..)';
               await waitForHost(websocket);
             }
-            
+
             connectionStatus.className = 'connecting';
             connectionStatus.textContent = '(WebRTC)';
 
@@ -153,6 +153,7 @@
               hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
               close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
               mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
+              currentPhaseChannel:rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true})
             }
 
             try {
@@ -207,7 +208,7 @@
               throw error;
             }
           }
-          
+
           connectionStatus.className = 'connected';
           connectionStatus.textContent = '';
 
