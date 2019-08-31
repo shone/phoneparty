@@ -47,18 +47,20 @@ async function phase3() {
         var dataSent = 0;
         var intervalID = Math.floor(Math.random() * 100000);
 
-        intervalID = setInterval(function(){
-          var slideEndIndex = dataSent + charSlice;
-          if (slideEndIndex > data.length) {
-            slideEndIndex = data.length;
-          }
-          player.phaseThree.send(data.slice(dataSent, slideEndIndex));
-          dataSent = slideEndIndex;
-          if (dataSent + 1 >= data.length) {
-            player.phaseThree.send("\n");
-            clearInterval(intervalID);
-          }
-        }.bind(this), delay);
+        var done = false;
+        while(!done) {
+            var slideEndIndex = dataSent + charSlice;
+            if (slideEndIndex > data.length) {
+              slideEndIndex = data.length;
+            }
+            player.phaseThree.send(data.slice(dataSent, slideEndIndex));
+            dataSent = slideEndIndex;
+            if (dataSent + 1 >= data.length) {
+              player.phaseThree.send("\n");
+              done = true;
+            }
+        }
+
 
         //player.phaseThree.send(string_data)
       }
