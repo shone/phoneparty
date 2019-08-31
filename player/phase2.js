@@ -1,3 +1,3 @@
-async function phase2() {
+function phase2() {
   console.log("Foo");
 }

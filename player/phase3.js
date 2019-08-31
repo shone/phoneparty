@@ -1,4 +1,4 @@
-async function phase3() {
+function phase3() {
 
 
   channels.phaseThree.onmessage = function(event) {
