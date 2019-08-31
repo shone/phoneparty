@@ -51,63 +51,6 @@ async function handleRtcConnection(rtcConnection, channels) {
     channels.phaseTwo.send("TAKE");
   }
 
-  channels.buttons.onopen = () => {
-    for (const button of document.getElementById('movement-buttons').getElementsByTagName('button')) {
-      button.ontouchstart = event => {
-        event.preventDefault();
-        if (!button.classList.contains('pressed')) {
-          button.classList.add('pressed');
-          channels.buttons.send(button.dataset.button + ' true');
-          function handleTouchend(event) {
-            if (![...event.touches].some(touch => touch.target === button)) {
-              button.classList.remove('pressed');
-              if (channels.buttons.readyState === 'open') {
-                channels.buttons.send(button.dataset.button + ' false');
-              }
-              window.removeEventListener('touchend',    handleTouchend);
-              window.removeEventListener('touchcancel', handleTouchend);
-            }
-          }
-          window.addEventListener('touchend',    handleTouchend);
-          window.addEventListener('touchcancel', handleTouchend);
-        }
-        return false;
-      }
-    }
-    for (const button of document.getElementById('movement-buttons').getElementsByTagName('button')) {
-      button.onmousedown = event => {
-        button.classList.add('pressed');
-        channels.buttons.send(button.dataset.button + ' true');
-        window.addEventListener('mouseup', event => {
-          button.classList.remove('pressed');
-          if (channels.buttons.readyState === 'open') {
-            channels.buttons.send(button.dataset.button + ' false');
-          }
-        }, {once: true});
-      }
-    }
-    function handleKey(event) {
-      const button = document.querySelector(`button[data-key="${event.key}"]`);
-      if (button) {
-        event.preventDefault();
-        button.classList.toggle('pressed', event.type === 'keydown');
-        channels.buttons.send(button.dataset.button + ((event.type === 'keydown') ? ' true' : ' false'));
-        return false;
-      }
-    }
-    window.addEventListener('keydown', handleKey);
-    window.addEventListener('keyup',   handleKey);
-    channels.buttons.onclose = event => {
-      window.removeEventListener('keydown', handleKey);
-      window.removeEventListener('keyup',   handleKey);
-      for (const button of document.getElementById('movement-buttons').getElementsByTagName('button')) {
-        button.onmousedown  = null;
-        button.ontouchstart = null;
-        button.classList.remove('pressed');
-      }
-    }
-  }
-
   channels.wheel.onmessage = event => {
     document.body.classList.toggle('chosen',       event.data.startsWith('chosen'));
     document.body.classList.toggle('chosen-final', event.data.endsWith('final'));
