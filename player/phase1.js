@@ -3,8 +3,9 @@ async function phase1(channels) {
   const phaseElement = document.getElementById('phase1')
   phaseElement.querySelector('h1').textContent = 'Choosing object...';
   phaseElement.classList.remove('hide');
-  const object = await new Promise(resolve => {
+  let object = await new Promise(resolve => {
     channels.phaseOne.onmessage = event => resolve(event.data);
   });
-  phaseElement.querySelector('h1').textContent = `You must find: ${object}!`;
+  object = JSON.parse(object);
+  phaseElement.querySelector('h1').textContent = `You must find: a ${object.color} ${object.name}!`;
 }
