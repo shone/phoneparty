@@ -15,7 +15,6 @@
   await initiatePhaseTwo();
 
   // Phase three
-  Phase3().start()
   // Phase four
 })();
 

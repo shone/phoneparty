@@ -174,10 +174,9 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  player.currentPhaseChannel.onopen = () => {
-    players.push(player);
-    document.body.dispatchEvent(new Event('playerAdded'));
-  }
+  await waitForDataChannelOpen(player.currentPhaseChannel);
+  players.push(player);
+  document.body.dispatchEvent(new Event('playerAdded'));
 
   const rtcConnectionClosed = new Promise(resolve => {
     rtcConnection.addEventListener('connectionstatechange', function callback() {
