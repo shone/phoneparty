@@ -5,7 +5,7 @@
     <link href="style.css" rel="stylesheet">
   </head>
   <body>
-    <div id="buttons">
+    <div data-formode="moving" id="movement-buttons">
       <div id="arrow-buttons">
         <button data-button="up"    class="arrow-button" data-key="ArrowUp">   </button>
         <button data-button="down"  class="arrow-button" data-key="ArrowDown"> </button>
@@ -14,9 +14,22 @@
       </div>
       <button data-button="ping" data-key=" "></button>
     </div>
+    <div data-formode="camera">
+      <video id="video" playsinline autoplay muted></video>
+      <canvas id="camera-canvas"></canvas>
+      <h2>PHOTO MODE</h2>
+      <div class="corner top-left"></div>
+      <div class="corner top-right"></div>
+      <div class="corner bottom-left"></div>
+      <div class="corner bottom-right"></div>
+      <button id="take-photo-button"></button>
+    </div>
     <button id="fullscreen-button"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
+  <script src="utils.js"></script>
+  <script src="audio.js"></script>
+  <script src="handleRtcConnection.js"></script>
   <script>
     "use strict";
 
@@ -27,31 +40,12 @@
 
     const connectionStatus = document.getElementById('connection_status');
 
-    // Setup audio
-    const audioContext = new (window.AudioContext || window.webkitAudioContext);
-    const personalToneFrequency = 180 + (200 * Math.random());
-    const envelope = audioContext.createGain();
-    envelope.gain.setValueAtTime(0, audioContext.currentTime);
-    envelope.connect(audioContext.destination);
-    const osc = audioContext.createOscillator();
-    osc.frequency.setValueAtTime(personalToneFrequency, audioContext.currentTime);
-    osc.type = 'square';
-    osc.connect(envelope);
-    osc.start();
-    function resumeAudio() {
-      if (audioContext.state === 'suspended') {
-        // The AudioContext will initially be in a suspended state, and is only allowed
-        // to be resumed in response to a user gesture.
-        // See https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#Autoplay_policy
-        audioContext.resume();
-      }
+    for (const elementWithMode of document.querySelectorAll('[data-formode]')) {
+      elementWithMode.style.visibility = 'hidden';
     }
-    window.addEventListener('mousedown',  resumeAudio);
-    window.addEventListener('touchstart', resumeAudio);
-    window.addEventListener('keydown',    resumeAudio);
 
     (async function() {
-    
+
       // Setup video
       let stream = null;
       while (!stream) {
@@ -75,6 +69,10 @@
         }
       }
 
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+
+      // Setup fullscreen button
       if (document.body.requestFullscreen) {
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
@@ -92,7 +90,7 @@
       } else {
         document.getElementById('fullscreen-button').remove();
       }
-      
+
       while (true) {
         await waitForPageToBeVisible();
         connectionStatus.className = 'connecting';
@@ -147,12 +145,15 @@
               }
             });
 
-            var buttonsChannel         = rtcConnection.createDataChannel('buttons',         {negotiated: true, id: 1, ordered: true});
-            var wheelChannel           = rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true});
-            var accelerometerChannel   = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
-            var visibilityChannel      = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
-            var hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
-            var closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
+            var channels = {
+              buttons:          rtcConnection.createDataChannel('buttons',         {negotiated: true, id: 1, ordered: true}),
+              wheel:            rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true}),
+              accelerometer:    rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0}),
+              visibility:       rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true}),
+              hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
+              close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
+              mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
+            }
 
             try {
               var rtcOffer = await rtcConnection.createOffer();
@@ -192,6 +193,9 @@
                 throw error;
               }
             }
+            if (result === 'websocket_disconnected') {
+              throw 'websocket disconnected before RTC connection could be established';
+            }
           } catch(error) {
             if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
               rtcConnection.close();
@@ -207,114 +211,16 @@
           connectionStatus.className = 'connected';
           connectionStatus.textContent = '';
 
+          handleRtcConnection(rtcConnection, channels);
+
           window.onunload = window.onbeforeunload = () => {
-            if (closeChannel.readyState === 'open') {
-              closeChannel.send('true');
-            }
-          }
-          
-          buttonsChannel.onopen = () => {
-            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-              button.ontouchstart = event => {
-                event.preventDefault();
-                if (!button.classList.contains('pressed')) {
-                  button.classList.add('pressed');
-                  buttonsChannel.send(button.dataset.button + ' true');
-                  function handleTouchend(event) {
-                    if (![...event.touches].some(touch => touch.target === button)) {
-                      button.classList.remove('pressed');
-                      if (buttonsChannel.readyState === 'open') {
-                        buttonsChannel.send(button.dataset.button + ' false');
-                      }
-                      window.removeEventListener('touchend',    handleTouchend);
-                      window.removeEventListener('touchcancel', handleTouchend);
-                    }
-                  }
-                  window.addEventListener('touchend',    handleTouchend);
-                  window.addEventListener('touchcancel', handleTouchend);
-                }
-                return false;
-              }
-            }
-            for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-              button.onmousedown = event => {
-                button.classList.add('pressed');
-                buttonsChannel.send(button.dataset.button + ' true');
-                window.addEventListener('mouseup', event => {
-                  button.classList.remove('pressed');
-                  if (buttonsChannel.readyState === 'open') {
-                    buttonsChannel.send(button.dataset.button + ' false');
-                  }
-                }, {once: true});
-              }
-            }
-            function handleKey(event) {
-              const button = document.querySelector(`button[data-key="${event.key}"]`);
-              if (button) {
-                event.preventDefault();
-                button.classList.toggle('pressed', event.type === 'keydown');
-                buttonsChannel.send(button.dataset.button + ((event.type === 'keydown') ? ' true' : ' false'));
-                return false;
-              }
-            }
-            window.addEventListener('keydown', handleKey);
-            window.addEventListener('keyup',   handleKey);
-            buttonsChannel.onclose = event => {
-              window.removeEventListener('keydown', handleKey);
-              window.removeEventListener('keyup',   handleKey);
-              for (const button of document.getElementById('buttons').getElementsByTagName('button')) {
-                button.onmousedown  = null;
-                button.ontouchstart = null;
-                button.classList.remove('pressed');
-              }
+            if (channels.close.readyState === 'open') {
+              channels.close.send('true');
             }
           }
 
-          wheelChannel.onmessage = event => {
-            document.body.classList.toggle('chosen',       event.data.startsWith('chosen'));
-            document.body.classList.toggle('chosen-final', event.data.endsWith('final'));
-            if (event.data.startsWith('chosen')) {
-              if (event.data.endsWith('final')) {
-                for (let i=0; i<5; i++) {
-                  playTone(i*0.2);
-                }
-              } else {
-                playTone();
-              }
-              if (navigator.vibrate) {
-                try { navigator.vibrate(200); } catch(error) { }
-              }
-            }
-          }
-          wheelChannel.onclose = () => {
-            document.body.classList.remove('chosen');
-            document.body.classList.remove('chosen-final');
-          }
+          const waitForCloseChannel = new Promise(resolve => channels.close.onmessage = () => resolve('close_channel'));
 
-          function handleDeviceMotion(event) { accelerometerChannel.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
-          accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
-          accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
-
-          function handleVisibilityChange() { visibilityChannel.send(document.visibilityState); }
-          visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
-          visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-
-          hostInteractionChannel.onmessage = event => {
-            if (event.data === 'drag start') {
-              document.body.classList.add('host-dragging');
-              playTone();
-              if (navigator.vibrate) {
-                try { navigator.vibrate(200); } catch(error) { }
-              }
-            } else if (event.data === 'drag end') {
-              document.body.classList.remove('host-dragging');
-            }
-          }
-
-          const waitForCloseChannel = new Promise(resolve => closeChannel.onmessage = event => {
-            resolve('close_channel');
-          });
-          
           var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForCloseChannel]);
           if (result === 'close_channel') {
             hasHost = false;
@@ -328,131 +234,5 @@
         }
       }
     })();
-
-    function playTone(timeOffset = 0) {
-      envelope.gain.setValueAtTime(0, audioContext.currentTime);
-      envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
-      envelope.gain.setTargetAtTime(0, audioContext.currentTime + timeOffset, 0.2);
-    }
-
-    function waitForWebsocketToConnect(websocket) {
-      return new Promise((resolve, reject) => {
-        if (websocket.readyState === websocket.OPEN) {
-          resolve();
-        } else if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-          reject();
-        } else {
-          websocket.addEventListener('open',  event => resolve(event),           {once: true});
-          websocket.addEventListener('close', event => reject('WebsocketError'), {once: true});
-          websocket.addEventListener('error', event => reject('WebsocketError'), {once: true});
-        }
-      });
-    }
-
-    function waitForWebsocketToDisconnect(websocket) {
-      return new Promise(resolve => {
-        if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-          resolve('websocket_disconnected');
-        } else {
-          websocket.addEventListener('close', event => resolve('websocket_disconnected'), {once: true});
-          websocket.addEventListener('error', event => resolve('websocket_disconnected'), {once: true});
-        }
-      });
-    }
-
-    function waitForMessageFromWebsocket(websocket) {
-      return new Promise((resolve, reject) => {
-        websocket.addEventListener('message', event => { resolve(event.data); }, {once: true});
-        websocket.addEventListener('close',   event => { reject(event); },       {once: true});
-        websocket.addEventListener('error',   event => { reject(event); },       {once: true});
-      });
-    }
-
-    function waitForHost(websocket) {
-      return new Promise((resolve, reject) => {
-        if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-          reject('websocket_disconnected');
-        } else {
-          function callback(event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'host' && message.message === 'connected') {
-              resolve('host_connected');
-              websocket.removeEventListener('message', callback);
-            }
-          }
-          websocket.addEventListener('message', callback);
-          websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-          websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-        }
-      });
-    }
-
-    function waitForHostDisconnect(websocket) {
-      return new Promise((resolve, reject) => {
-        function callback(event) {
-          if (event.data === 'Host disconnected') {
-            resolve('host_disconnected');
-            websocket.removeEventListener('message', callback);
-          }
-        }
-        websocket.addEventListener('message', callback);
-        websocket.addEventListener('close',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-        websocket.addEventListener('error',   event => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-      });
-    }
-
-    function waitForRtcConnection(rtcConnection) {
-      return new Promise((resolve, reject) => {
-        if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
-          resolve();
-        } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          reject('rtc_disconnected');
-        } else {
-          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-            if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
-              resolve();
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-              reject();
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            }
-          });
-        }
-      });
-    }
-
-    function waitForRtcToDisconnect(rtcConnection) {
-      return new Promise((resolve, reject) => {
-        if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          resolve('webrtc_disconnected');
-        } else {
-          rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-            if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-              resolve('webrtc_disconnected');
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-            }
-          });
-        }
-      });
-    }
-
-    function waitForNSeconds(seconds) {
-      return new Promise(resolve => { setTimeout(resolve, 1000 * seconds); });
-    }
-
-    function waitForPageToBeVisible() {
-      return new Promise(resolve => {
-        if (document.visibilityState === 'visible') {
-          resolve();
-        } else {
-          document.addEventListener('visibilitychange', function callback(event) {
-            if (document.visibilityState === 'visible') {
-              resolve();
-              document.removeEventListener('visibilitychange', callback);
-            }
-          });
-        }
-      });
-    }
   </script>
 </html>

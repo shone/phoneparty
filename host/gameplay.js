@@ -241,3 +241,11 @@ function waitForKeypress(key) {
     });
   });
 }
+
+async function cameraMode(player) {
+  player.classList.add('camera-mode');
+  player.classList.add('not-player-moveable')
+  player.style.left = '';
+  player.style.top  = '';
+  player.style.transform = '';
+}

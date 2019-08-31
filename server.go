@@ -20,9 +20,16 @@ type MessageWithPlayerId struct {
   Message  string `json:"message"`
 }
 
+func NoCache(handler http.Handler) http.Handler {
+  return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+    writer.Header().Set("Cache-Control", "must-revalidate")
+    handler.ServeHTTP(writer, request)
+  })
+}
+
 func main() {
-  http.Handle("/", http.FileServer(http.Dir("./player")))
-  http.Handle("/host/", http.StripPrefix("/host/", http.FileServer(http.Dir("./host"))))
+  http.Handle("/", NoCache(http.FileServer(http.Dir("./player"))))
+  http.Handle("/host/", http.StripPrefix("/host/", NoCache(http.FileServer(http.Dir("./host")))))
 
   var hostConn *websocket.Conn
   var playerConns sync.Map

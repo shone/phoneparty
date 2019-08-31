@@ -1,0 +1,19 @@
+Instant-join multiplayer games
+- No app download
+- No creating/joining menu
+- No usernames
+- Instantly begin playing after going to the website
+
+Modes:
+  lobby
+  moving
+  fullscreen
+  photo
+
+The camoflage game:
+
+  One player is chosen to take a photo, and it covers the main screen. While that player isn't looking, the other players must move around on top of the photo, attempting to 'blend-in'. When everyone has chosen a hiding place, the photo-taking player is allowed to look once again. They move crosshairs around on the photo, and shoot. If they hit another player, that player is eliminated.
+  
+Remote Control Buddies:
+
+  Each player is either controlling another player or is being controlled by another player. Controlling players press buttons to give instructions like move in a direction or jump. Controlled players receive these instructions as text on their phones, and must perform those actions. The first controlling player to find their "RC Buddy" is the winner.
