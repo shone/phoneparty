@@ -1,6 +1,6 @@
 "use strict";
 
-const numberOfPlayers = 1;
+let gameStarted = false;
 let playerImages = [];
 let imageResults = {};
 let searchedItem = {};
@@ -8,9 +8,9 @@ let searchedItem = {};
 (async function() {
   await showElement(document.getElementById('introduction-page'));
 
-  await waitForPlayers(numberOfPlayers);
   console.log("Before Phase 1");
   document.body.className = 'phase1';
+  gameStarted = true;
   setAllPlayersToPhase(1);
   await phase1();
   console.log("Before Phase 2");

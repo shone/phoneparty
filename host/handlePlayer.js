@@ -4,6 +4,8 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
   player.id = idCounter.getUniqueId();
+  
+  if (document.body.className = "" || document.body.className  === 'phase1') return;
 
   const rtcConnection = new RTCPeerConnection();
   let hasSentSdp = false;
@@ -76,25 +78,24 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.style.top  = 30 + (Math.random() * 70) + 'vh';
 
   player.onpointerdown = event => {
-    player.setMode('camera');
-//     player.setPointerCapture(event.pointerId);
-//     if (player.hostInteractionChannel.readyState === 'open') {
-//       player.hostInteractionChannel.send('drag start');
-//     }
-//     function mousemove(event) {
-//       player.style.left = ((event.pageX / window.innerWidth)  * 100) + 'vw';
-//       player.style.top  = ((event.pageY / window.innerHeight) * 100) + 'vh';
-//     }
-//     window.addEventListener('pointermove', mousemove);
-//     window.addEventListener('pointerup', event => {
-//       window.removeEventListener('pointermove', mousemove);
-//       if (player.hostInteractionChannel.readyState === 'open') {
-//         player.hostInteractionChannel.send('drag end');
-//       }
-//     });
+    player.setPointerCapture(event.pointerId);
+    if (player.hostInteractionChannel.readyState === 'open') {
+      player.hostInteractionChannel.send('drag start');
+    }
+    function mousemove(event) {
+      player.style.left = ((event.pageX / window.innerWidth)  * 100) + 'vw';
+      player.style.top  = ((event.pageY / window.innerHeight) * 100) + 'vh';
+    }
+    window.addEventListener('pointermove', mousemove);
+    window.addEventListener('pointerup', event => {
+      window.removeEventListener('pointermove', mousemove);
+      if (player.hostInteractionChannel.readyState === 'open') {
+        player.hostInteractionChannel.send('drag end');
+      }
+    });
   }
 
-  document.body.appendChild(player);
+  document.getElementById('players').appendChild(player);
 
   const buttonStates = {};
   buttonsChannel.onmessage = event => {
@@ -116,7 +117,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
       }
     }
   }
-  player.setMode('moving');
+//   player.setMode('moving');
 
   modeChannel.onopen = () => {
     if (player.dataset.mode) {

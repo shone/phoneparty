@@ -1,5 +1,40 @@
+#players {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
 body.phase1 .player {
   display: none !important;
+}
+
+body.phase2 .player {
+  visibility: hidden;
+}
+body.phase2 .player.has-taken-photo {
+  visibility: visible;
+  position: relative;
+  width: 20vw;
+  height: 20vw;
+  margin-left: 2vw;
+  margin-top: 0;
+}
+body.phase2 .player.has-taken-photo video {
+  display: none;
+}
+body.phase2 .player.has-taken-photo .fullsize-canvas {
+  display: none;
+}
+body.phase2 .player.has-taken-photo .cropped-canvas {
+  width: 238%;
+  transform: scale(-1, 1) translateX(58%);
+}
+body.phase2 #players {
+  top: 10vw;
+  display: flex;
+  flex-direction: row;
 }
 
 body * {

@@ -1,7 +1,7 @@
 async function phase3() {
   var phase = new function() {
     this.NUMBER_OF_IMAGES = Math.min(5, players.length);
-
+    console.log(this.NUMBER_OF_IMAGES);
     this.sendImagesToPlayers = async function() {
       //clientid, image
       this.images = playerImages;

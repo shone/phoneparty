@@ -304,3 +304,15 @@ button[data-button="ping"]:after {
   from {top: 0}
   to {top: -20000px}
 }
+
+#wait-for-new-round {
+  z-index: 10;
+  background-color: #aa5555;
+  color: #fff;
+}
+
+#wait-for-new-round h1 {
+  color: #fff;
+  text-align: center;
+  font-size: 7vw;
+}
