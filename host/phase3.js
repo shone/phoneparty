@@ -9,9 +9,8 @@ async function phase3() {
       //Shuffle player list
       this.images.sort(() => Math.random() - 0.5);
 
-      for(player_index in players) {
+      for(player of players) {
         console.log("Send data to player");
-        var player = players[player_index];
         console.log(this);
         //Add onmessage callback to every player
         player.phaseThree.onmessage = this.onPlayerVoteResponse.bind(this);
@@ -37,6 +36,8 @@ async function phase3() {
 
         var string_data = JSON.stringify(data)
         console.log(string_data);
+
+        console.log("send to player", player);
 
 
         var delay = 10;
