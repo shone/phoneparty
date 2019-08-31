@@ -90,7 +90,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   }
 
   document.body.appendChild(player);
-  players.push(player);
 
   const buttonStates = {};
   buttonsChannel.onmessage = event => {
@@ -174,7 +173,10 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  document.body.dispatchEvent(new Event('playerAdded'));
+  player.currentPhaseChannel.onopen => {
+    players.push(player);
+    document.body.dispatchEvent(new Event('playerAdded'));
+  }
 
   const rtcConnectionClosed = new Promise(resolve => {
     rtcConnection.addEventListener('connectionstatechange', function callback() {
