@@ -10,6 +10,7 @@ async function phase2() {
       if (data.message === "TAKEN") {
         const video = player.video;
         const screenshotCanvas = document.createElement("canvas");
+        screenshotCanvas.classList.add('fullsize-canvas');
         $(screenshotCanvas).css({
           'position' : 'absolute',
           'z-index' : '2',
@@ -27,6 +28,9 @@ async function phase2() {
 
         const boxSize = data.boxSize;
         let croppedCanvas = document.createElement("canvas");
+        croppedCanvas.classList.add('cropped-canvas');
+        croppedCanvas.width = video.videoWidth;
+        croppedCanvas.height = video.videoHeight;
         let croppedContext = croppedCanvas.getContext("2d");
         croppedContext.drawImage(screenshotCanvas,
           (screenshotCanvas.width - boxSize) / 2,   // sx
@@ -46,6 +50,8 @@ async function phase2() {
           croppedImage: croppedCode
         });
 
+        $(player).prepend(croppedCanvas);
+        
         player.classList.add('has-taken-photo');
         player.style.left = '';
         player.style.top = '';
