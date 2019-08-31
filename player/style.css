@@ -279,28 +279,28 @@ button[data-button="ping"]:after {
 }
 
 .swipeRight {
-  animation-name: swipeLeft;
+  animation-name: swipeRight;
   animation-duration: 4s;
   animation-timing-function: : ease-out;
 
   position: absolute;
 }
 
-@keyframes swipeLeft {
+@keyframes swipeRight {
   from {left: 0}
-  to {left: -20000px}
+  to {left: 20000px}
 }
 
 
-.swipeLeft {
-  animation-name: swipeLeft;
+.swipeUp {
+  animation-name: swipeUp;
   animation-duration: 4s;
   animation-timing-function: : ease-out;
 
   position: absolute;
 }
 
-@keyframes swipeLeft {
-  from {left: 0}
-  to {left: -20000px}
+@keyframes swipeUp {
+  from {top: 0}
+  to {top: -20000px}
 }
