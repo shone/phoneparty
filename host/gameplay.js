@@ -10,7 +10,6 @@ let searchedItem = {};
 
   await showElement(document.getElementById('introduction-page'));
 
-
   await AllTheThings();
 })();
 

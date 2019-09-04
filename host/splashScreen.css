@@ -18,6 +18,13 @@
   justify-content: center;
   align-items: center;
 }
+.phone-party-splash-screen.finished .inner-container {
+  animation: 2s fade-out-splash-screen forwards;
+}
+@keyframes fade-out-splash-screen {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 
 .phone-party-splash-screen .white-box {
   position: absolute;

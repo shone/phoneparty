@@ -21,6 +21,13 @@ async function splashScreen() {
   `);
   const splashScreen = document.body.lastElementChild;
 
+  const timeAtSplashStart = performance.now();
+  
   await waitForKeypress(' ');
+  splashScreen.classList.add('finished');
+
+  if ((performance.now() - timeAtSplashStart) > 2000) {
+    await waitForNSeconds(2);
+  }
   splashScreen.remove();
 }
