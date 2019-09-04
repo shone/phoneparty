@@ -53,25 +53,27 @@ async function AllTheThings() {
     thing.svgString = await response.text();
   }));
 
-  const thingSvgs = [];
+  const thingElements = [];
   for (const thing of things) {
     for (const color of colors) {
+      const thingElement = document.createElement('div');
       const parser = new DOMParser();
       const svg = parser.parseFromString(thing.svgString, 'image/svg+xml').documentElement;
       for (const colorableElement of svg.getElementsByClassName('colorable')) {
         colorableElement.style.fill = color;
       }
-      svg.classList.add('thing');
-      svg.thing = thing;
-      svg.color = color;
-      svg.style.left = (Math.random() * 100) + 'vw';
-      svg.style.bottom = '-10vh';
-      document.body.appendChild(svg);
-      thingSvgs.push(svg);
+      thingElement.appendChild(svg);
+      thingElement.classList.add('thing');
+      thingElement.thing = thing;
+      thingElement.color = color;
+      thingElement.style.left = (Math.random() * 100) + 'vw';
+      thingElement.style.bottom = '-10vh';
+      document.body.appendChild(thingElement);
+      thingElements.push(thingElement);
     }
   }
 
-  const stopJuggling = juggleElements(thingSvgs);
+  const stopJuggling = juggleElements(thingElements);
 
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
   
@@ -84,31 +86,33 @@ async function AllTheThings() {
 
   stopJuggling();
 
-  const chosenThingSvg = getClosestThingToCenterOfScreen(thingSvgs);
-  chosenThingSvg.classList.add('chosen');
+  const chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
+  chosenThingElement.classList.add('chosen');
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
   thingChoosingScreen.classList.add('fade-out');
   setTimeout(() => thingChoosingScreen.remove(), 1000);
 
-  for (const thingSvg of thingSvgs) {
-    if (thingSvg !== chosenThingSvg) {
-      thingSvg.remove();
+  for (const thingElement of thingElements) {
+    if (thingElement !== chosenThingElement) {
+      thingElement.remove();
     }
   }
 
-  chosenThingSvg.classList.add('present-in-center');
+  chosenThingElement.classList.add('present-in-center');
 
   const thingLabel = document.createElement('label');
   thingLabel.classList.add('thing-label');
-  thingLabel.textContent = `${chosenThingSvg.color} ${chosenThingSvg.thing.name}`;
+  thingLabel.textContent = `${chosenThingElement.color} ${chosenThingElement.thing.name}`;
   document.body.appendChild(thingLabel);
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
+  chosenThingElement.classList.remove('chosen');  
+  chosenThingElement.classList.add('show-in-top-right');
+  chosenThingElement.classList.remove('present-in-center');
   thingLabel.remove();
-  chosenThingSvg.classList.add('hide');
 
   // Goal screen
   document.body.insertAdjacentHTML('beforeend', `
@@ -129,14 +133,19 @@ async function AllTheThings() {
     </div>
   `);
   const goalScreen = document.body.lastElementChild;
-  goalScreen.querySelector('.thing-text').textContent = `${chosenThingSvg.color} ${chosenThingSvg.thing.name}`;
+  goalScreen.querySelector('.thing-text').textContent = `${chosenThingElement.color} ${chosenThingElement.thing.name}`;
   const phoneBackground = goalScreen.querySelector('.phone-background');
-  phoneBackground.appendChild(chosenThingSvg);
-  chosenThingSvg.classList.remove('hide');
-  chosenThingSvg.classList.remove('present-in-center');
-  chosenThingSvg.classList.remove('chosen');
-  chosenThingSvg.style.left   = '';
-  chosenThingSvg.style.bottom = '';
+  const parser = new DOMParser();
+  const phoneBackgroundContent = parser.parseFromString(chosenThingElement.thing.svgString, 'image/svg+xml').documentElement;
+  for (const colorableElement of phoneBackgroundContent.getElementsByClassName('colorable')) {
+    colorableElement.style.fill = chosenThingElement.color;
+  }
+  phoneBackground.appendChild(phoneBackgroundContent);
+  phoneBackgroundContent.classList.remove('hide');
+  phoneBackgroundContent.classList.remove('show-in-top-right');
+  phoneBackgroundContent.classList.remove('chosen');
+  phoneBackgroundContent.style.left   = '';
+  phoneBackgroundContent.style.bottom = '';
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
   goalScreen.querySelector('h1').classList.add('fade-in-text');
@@ -167,10 +176,10 @@ async function AllTheThings() {
   function waitForPlayerGoalConfirm(player, channel) {
     return new Promise(resolve => {
       channel.onmessage = event => {
-        const answerElement = document.createElement('div');
-        answerElement.classList.add('speech-bubble');
-        answerElement.textContent = event.data;
-        player.appendChild(answerElement);
+        const speechBubble = document.createElement('div');
+        speechBubble.classList.add('speech-bubble');
+        speechBubble.textContent = event.data;
+        player.appendChild(speechBubble);
         if (event.data === 'yes') {
           resolve();
         }
@@ -313,16 +322,16 @@ async function countdownPieTimer(timerElement, seconds) {
   }
 }
 
-function getClosestThingToCenterOfScreen(thingSvgs) {
+function getClosestThingToCenterOfScreen(thingElements) {
   let closestThing = null;
   let closestThingDistance = null;
-  for (const thingSvg of thingSvgs) {
-    const deltaX = parseFloat(thingSvg.style.left)   - 50;
-    const deltaY = parseFloat(thingSvg.style.bottom) - 50;
+  for (const thingElement of thingElements) {
+    const deltaX = parseFloat(thingElement.style.left)   - 50;
+    const deltaY = parseFloat(thingElement.style.bottom) - 50;
     const distance = (deltaX*deltaX) + (deltaY*deltaY);
     if (!closestThingDistance || (distance < closestThingDistance)) {
       closestThingDistance = distance;
-      closestThing = thingSvg;
+      closestThing = thingElement;
     }
   }
   return closestThing;
