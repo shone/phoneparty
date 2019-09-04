@@ -3,32 +3,21 @@
     <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <link href="style.css" rel="stylesheet">
+    <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
   </head>
   <body>
-    <div id="phase1" class="hide">
-      <h1>You must find...</h1>
-      <h2>Get ready!<h2>
-    </div>
-    <div id="wait-for-new-round" class="hide">
-        <h1>Please wait for the next round to start ...</h1>
-    </div>
     <div data-formode="camera" id="camera-screen">
       <button id="take-photo-button"></button>
       <video id="video" playsinline autoplay muted></video>
       <canvas id="camera-canvas"></canvas>
-      <h2 id="photo-mode-headline">PHOTO MODE</h2>
     </div>
     <button id="fullscreen-button"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
   <script src="utils.js"></script>
   <script src="audio.js"></script>
-  <script src="phase1.js"></script>
-  <script src="phase2.js"></script>
-  <script src="phase3.js"></script>
-  <script src="phase4.js"></script>
-  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
   <script src="handleRtcConnection.js"></script>
+  <script src="/games/all-the-things/player/allTheThings.js"></script>
   <script>
     "use strict";
 
@@ -43,10 +32,11 @@
       elementWithMode.style.visibility = 'hidden';
     }
 
+    let stream = null;
+
     (async function() {
 
       // Setup video
-      let stream = null;
       while (!stream) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
@@ -152,10 +142,6 @@
               hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
               close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
               mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
-              currentPhaseChannel:rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true}),
-              phaseOne:         rtcConnection.createDataChannel('phaseOne',        {negotiated: true, id: 42, ordered: true}),
-              phaseTwo:         rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true}),
-              phaseThree:         rtcConnection.createDataChannel('phaseThree',        {negotiated: true, id: 12, ordered: true}),
             }
 
             try {

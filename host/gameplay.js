@@ -8,24 +8,25 @@ let searchedItem = {};
 (async function() {
   await showElement(document.getElementById('introduction-page'));
 
-  console.log("Before Phase 1");
-  document.body.className = 'phase1';
-  gameStarted = true;
-  setAllPlayersToPhase(1);
-  await phase1();
-  console.log("Before Phase 2");
-  document.body.className = 'phase2';
-  setAllPlayersToPhase(2);
-  await phase2();
-  console.log("Before Phase 3");
-  document.body.className = 'phase3';
-  setAllPlayersToPhase(3);
-  await phase3();
-  console.log("Before Phase 4");
-  document.body.className = 'phase4';
-  setAllPlayersToPhase(4);
-  await phase4();
+  await AllTheThings();
 
+//   gameStarted = true;
+// 
+//   document.body.className = 'phase1';
+//   setAllPlayersToPhase(1);
+//   await phase1();
+// 
+//   document.body.className = 'phase2';
+//   setAllPlayersToPhase(2);
+//   await phase2();
+// 
+//   document.body.className = 'phase3';
+//   setAllPlayersToPhase(3);
+//   await phase3();
+// 
+//   document.body.className = 'phase4';
+//   setAllPlayersToPhase(4);
+//   await phase4();
 })();
 
 function setAllPlayersToPhase(phaseNumber) {

@@ -1,0 +1,82 @@
+.all-the-things.goal-confirm-screen {
+  position: fixed;
+  left:   0;
+  top:    0;
+  bottom: 0;
+  right:  0;
+  display: flex;
+  flex-direction: column;
+}
+
+.all-the-things.goal-confirm-screen h1 {
+  text-align: center;
+  font-size: 6vw;
+}
+
+.all-the-things.goal-confirm-screen button {
+  font-size: 8vh;
+  flex-grow: 1;
+}
+
+.all-the-things.photo-screen {
+  position: fixed;
+  left:   0;
+  top:    0;
+  bottom: 0;
+  right:  0;
+}
+.all-the-things.photo-screen video {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.all-the-things.photo-screen canvas {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.all-the-things.photo-screen .crop-guide {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  border-style: solid;
+  border-color: rgba(100, 100, 100, 0.8);
+  pointer-events: none;
+}
+.all-the-things.photo-screen button {
+  position: absolute;
+  bottom: 7vh;
+  width: 30vmin;
+  height: 20vmin;
+  left: calc(50vw - (30vmin / 2));
+  background: no-repeat center / 50% url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.9 16.9" height="64" width="64"><path d="M5.9.3c-1.3 0-2.3 1-2.3 2.2H2.3C1 2.6 0 3.6 0 4.9v8.7c0 1.3 1 2.3 2.3 2.3h12.4c1.2 0 2.2-1 2.2-2.3V4.8c0-1.2-1-2.2-2.2-2.2H13c0-1.3-1-2.3-2.2-2.3zM13.4 4h1.2a.7.7 0 1 1 0 1.5h-1.2a.7.7 0 1 1 0-1.5zM8.2 5.6a3.6 3.6 0 0 1 3.6 3.6 3.6 3.6 0 0 1-3.6 3.5 3.6 3.6 0 0 1-3.5-3.5 3.6 3.6 0 0 1 3.5-3.6z"/></svg>');
+  border: 2vmin solid black;
+  border-radius: 4vmin;
+}
+.all-the-things.photo-screen button:hover {
+  background-color: orange;
+}
+.all-the-things.photo-screen.photo-taken video {
+  display: none;
+}
+.all-the-things.photo-screen.photo-taken:after {
+  content: '';
+  display: block;
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  background: #fff;
+  animation: 0.5s camera-flash forwards;
+}
+@keyframes camera-flash {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

@@ -3,8 +3,6 @@
 async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
-  player.id = idCounter.getUniqueId();
-  
   if (document.body.className = "" || document.body.className  === 'phase1') return;
 
   const rtcConnection = new RTCPeerConnection();
@@ -50,10 +48,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const modeChannel             = rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true});
-  player.currentPhaseChannel    = rtcConnection.createDataChannel('currentPhaseChannel',{negotiated: true, id: 9, ordered: true});
-  player.phaseOne               = rtcConnection.createDataChannel('phaseOne',        {negotiated: true, id: 42, ordered: true});
-  player.phaseTwo               = rtcConnection.createDataChannel('phaseTwo',        {negotiated: true, id: 10, ordered: true});
-  player.phaseThree             = rtcConnection.createDataChannel('phaseThree',        {negotiated: true, id: 12, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -71,6 +65,8 @@ async function handleNewPlayer(playerId, sdp, websocket) {
       }
     }
   });
+
+  player.rtcConnection = rtcConnection;
 
   player.classList.add('player', 'new');
   setTimeout(() => player.classList.remove('new'), 4000);
@@ -162,14 +158,14 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     });
   }
 
-  accelerometerChannel.onmessage = event => {
-    if (player.classList.contains('not-player-moveable')) {
-      return;
-    }
-    const acceleration = JSON.parse(event.data);
-    const wiggle = 0.5;
-    player.style.transform = `translate(${(acceleration.x * wiggle) + 'vw'}, ${(acceleration.y * -wiggle) + 'vw'})`;
-  }
+//   accelerometerChannel.onmessage = event => {
+//     if (player.classList.contains('not-player-moveable')) {
+//       return;
+//     }
+//     const acceleration = JSON.parse(event.data);
+//     const wiggle = 0.5;
+//     player.style.transform = `translate(${(acceleration.x * wiggle) + 'vw'}, ${(acceleration.y * -wiggle) + 'vw'})`;
+//   }
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
@@ -179,7 +175,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  await waitForDataChannelOpen(player.currentPhaseChannel);
   players.push(player);
   document.body.dispatchEvent(new Event('playerAdded'));
 
