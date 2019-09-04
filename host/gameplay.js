@@ -6,65 +6,18 @@ let imageResults = {};
 let searchedItem = {};
 
 (async function() {
+  await splashScreen();
+
   await showElement(document.getElementById('introduction-page'));
 
-  await AllTheThings();
 
-//   gameStarted = true;
-// 
-//   document.body.className = 'phase1';
-//   setAllPlayersToPhase(1);
-//   await phase1();
-// 
-//   document.body.className = 'phase2';
-//   setAllPlayersToPhase(2);
-//   await phase2();
-// 
-//   document.body.className = 'phase3';
-//   setAllPlayersToPhase(3);
-//   await phase3();
-// 
-//   document.body.className = 'phase4';
-//   setAllPlayersToPhase(4);
-//   await phase4();
+  await AllTheThings();
 })();
 
 function setAllPlayersToPhase(phaseNumber) {
   for (const player of players) {
     player.currentPhaseChannel.send(phaseNumber);
   }
-}
-
-async function initiatePhaseTwo() {
-  players.forEach(player => {
-    player.phaseTwo.onmessage = event => {
-      if (event.data === "TAKE") {
-        // player
-        const video = player.video;
-        const screenshotCanvas = document.createElement("canvas");
-        $(screenshotCanvas).css({
-          'position' : 'absolute',
-          'z-index' : '2',
-          'width'  : '100%',
-          'height' : '100%',
-          'object-fit' : 'cover',
-          'transform' : 'scaleX(-1)'
-        });
-        screenshotCanvas.width = video.videoWidth;
-        screenshotCanvas.height = video.videoHeight;
-        $(player).prepend(screenshotCanvas);
-        const context = screenshotCanvas.getContext('2d');
-        context.drawImage(video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
-
-      }
-    };
-
-    player.phaseTwo.send("COUNTDOWN");
-  });
-
-  return new Promise(resolve => {
-      resolve('resolved');
-  });
 }
 
 async function showElement(element) {
