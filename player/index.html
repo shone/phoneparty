@@ -137,12 +137,10 @@
             });
 
             var channels = {
-              wheel:            rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true}),
               accelerometer:    rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0}),
               visibility:       rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true}),
               hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
               close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
-              mode:             rtcConnection.createDataChannel('mode',            {negotiated: true, id: 8, ordered: true}),
             }
 
             try {

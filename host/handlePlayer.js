@@ -50,7 +50,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
 
   await rtcConnection.setRemoteDescription({type: 'offer', sdp: sdp});
 
-  player.wheelChannel           = rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true});
   const accelerometerChannel    = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
   const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
