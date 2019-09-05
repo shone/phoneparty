@@ -93,15 +93,6 @@ button.pressed {
   transform: scale(1.4);
   background-color: orange;
 }
-.arrow-button:after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top:  0;
-  width:  100%;
-  height: 100%;
-  background-image: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="32" height="32"><path d="M 0,0.8 0.5,0.2 1,0.8 z" style="fill:black;stroke:none;" /></svg>');
-}
 
 [data-formode="camera"] {
   display: block;
@@ -174,77 +165,6 @@ button.pressed {
   0%   { opacity: 0.8; }
   20%  { opacity: 1;   }
   100% { opacity: 0;   }
-}
-
-#movement-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: fixed;
-  left:  0;
-  top:   0;
-  right: 0;
-  max-height: 100vh;
-}
-button[data-button="down"]:after  { transform: rotate(180deg); }
-button[data-button="left"]:after  { transform: rotate(-90deg); }
-button[data-button="right"]:after { transform: rotate(90deg);  }
-#arrow-buttons {
-  position: relative;
-  flex-shrink: 1;
-  flex-grow: 0;
-  flex-basis: 90vw;
-  width:      90vw;
-  max-width: calc(100vh - 42vw);
-}
-#arrow-buttons button {
-  position: absolute;
-  width:  30%;
-  height: 30%;
-  border-radius: 100%;
-}
-#arrow-buttons [data-button="up"]    { left:  50%; top:     0;  margin-left: -15%; }
-#arrow-buttons [data-button="down"]  { left:  50%; bottom:  0;  margin-left: -15%; }
-#arrow-buttons [data-button="left"]  { left:   0;  top:    50%; margin-top:  -15%; }
-#arrow-buttons [data-button="right"] { right:  0;  top:    50%; margin-top:  -15%; }
-button[data-button="ping"] {
-  flex-shrink: 0;
-  flex-grow:   0;
-  width:  80vw;
-  height: 30vw;
-  margin-top:    8vw;
-  margin-bottom: 8vw;
-  position: relative;
-}
-@media (orientation: landscape) {
-  #movement-buttons {
-    flex-direction: row;
-    align-items: center;
-    bottom: 0;
-  }
-  #arrow-buttons {
-    flex-grow: 0;
-    height:     90vh;
-    flex-basis: 90vh;
-    max-width: none;
-    margin-left:  calc(((100vw - 46vh) - 90vh) * 0.2);
-    margin-right: calc(((100vw - 46vh) - 90vh) * 0.8);
-  }
-  button[data-button="ping"] {
-    height: 80vh;
-    width:  30vh;
-    margin-left:   4vh;
-    margin-right: 12vh;
-  }
-}
-button[data-button="ping"]:after {
-  content: '';
-  left: 0;
-  top:  0;
-  width:  100%;
-  height: 100%;
-  position: absolute;
-  background-image: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8.467 4.233" height="16" width="32"><g transform="translate(0 -292.767)"><circle r=".926" cy="294.96" cx="4.206" style="marker:none"/><path d="M3.123 295.934a1.457 1.457 0 0 1-.042-1.9M2.34 296.316a2.308 2.308 0 0 1 .034-2.759M1.635 296.711a3.11 3.11 0 0 1 .037-3.555M5.282 295.934a1.457 1.457 0 0 0 .043-1.9M6.066 296.316a2.308 2.308 0 0 0-.035-2.759M6.77 296.711a3.11 3.11 0 0 0-.037-3.555" style="marker:none" fill="none" stroke="black" stroke-width=".441"/></g></svg>');
 }
 
 #fullscreen-button {

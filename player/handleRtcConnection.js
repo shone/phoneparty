@@ -2,37 +2,12 @@
 
 async function handleRtcConnection(rtcConnection, channels) {
 
-  channels.mode.onmessage = event => {
-    const mode = event.data;
-    if (document.body.dataset.mode !== mode) {
-      document.body.dataset.mode = mode;
-      for (const elementWithMode of document.querySelectorAll('[data-formode]')) {
-        const matchesMode = elementWithMode.dataset.formode === mode;
-        elementWithMode.style.visibility = matchesMode ? 'visible' : 'hidden';
-      }
+  rtcConnection.ondatachannel = event => {
+    if (event.channel.label === 'bubbleField') {
+      handleBubbleField(event.channel);
     }
   }
-
-//   let lastPhase = 0;
-// 
-//   channels.currentPhaseChannel.onmessage = function(event) {
-//     console.log("New Phase", event.data);
-//     switch (parseInt(event.data)) {
-//       case 1:
-//         phase1(channels);
-//         break;
-//       case 2:
-//         phase2(channels);
-//         break;
-//       case 3:
-//         phase3(channels);
-//         break;
-//       case 4:
-//         phase4(channels);
-//         break;
-//     }
-//   };
-
+  
   channels.wheel.onmessage = event => {
     document.body.classList.toggle('chosen',       event.data.startsWith('chosen'));
     document.body.classList.toggle('chosen-final', event.data.endsWith('final'));

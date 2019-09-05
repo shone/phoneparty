@@ -3,6 +3,7 @@
     <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <link href="style.css" rel="stylesheet">
+    <link href="bubbleField.css" rel="stylesheet">
     <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
   </head>
   <body>
@@ -17,6 +18,7 @@
   <script src="utils.js"></script>
   <script src="audio.js"></script>
   <script src="handleRtcConnection.js"></script>
+  <script src="bubbleField.js"></script>
   <script src="/games/all-the-things/player/allTheThings.js"></script>
   <script>
     "use strict";
@@ -135,7 +137,6 @@
             });
 
             var channels = {
-              buttons:          rtcConnection.createDataChannel('buttons',         {negotiated: true, id: 1, ordered: true}),
               wheel:            rtcConnection.createDataChannel('wheel',           {negotiated: true, id: 2, ordered: true}),
               accelerometer:    rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0}),
               visibility:       rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true}),
