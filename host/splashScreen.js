@@ -1,4 +1,5 @@
 async function splashScreen() {
+  document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
       <div class="inner-container">

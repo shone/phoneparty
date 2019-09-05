@@ -2,6 +2,7 @@
 
 async function AllTheThings() {
   document.body.style.backgroundColor = '#98947f';
+  await waitForNSeconds(1);
 
   for (const player of players) {
     player.classList.add('hide');

@@ -1,23 +1,11 @@
 "use strict";
 
-let gameStarted = false;
-let playerImages = [];
-let imageResults = {};
-let searchedItem = {};
-
 (async function() {
   await splashScreen();
-
-  await showElement(document.getElementById('introduction-page'));
+  await showJoinGameInstructions();
 
   await AllTheThings();
 })();
-
-function setAllPlayersToPhase(phaseNumber) {
-  for (const player of players) {
-    player.currentPhaseChannel.send(phaseNumber);
-  }
-}
 
 async function showElement(element) {
   element.classList.remove('hide');
