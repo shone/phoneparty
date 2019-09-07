@@ -1,0 +1,88 @@
+.goal-screen {
+  position: fixed;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.goal-screen h1 {
+  opacity: 0;
+  font-size: 6vw;
+  margin-top: 3vh;
+  margin-bottom: 0;
+}
+.goal-screen .goal-text {
+  opacity: 0;
+  margin-right: 4vw;
+}
+.goal-screen .goal-text .find-a-peice-of {
+  font-size: 4vw;
+}
+.goal-screen .goal-text .thing-text {
+  font-size: 5vw;
+  text-align: center;
+}
+.goal-screen .goal-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.goal-screen .phone {
+  transform: translateY(85vh);
+}
+.goal-screen .phone.reveal {
+  animation: 3s reveal-phone forwards;
+}
+@keyframes reveal-phone {
+  from { transform: translateY(85vh); }
+  to   { transform: translateY(0); }
+}
+.goal-screen .phone-background svg {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  transform: scale(0.5) translateY(-67vh);
+}
+.goal-screen .phone.reveal .phone-background svg {
+  animation: 3s reveal-phone-background forwards, 2s 3s zoom-phone-background forwards;
+}
+@keyframes reveal-phone-background {
+  from { transform: scale(0.5) translateY(-67vh); }
+  to   { transform: scale(0.5) translateY(0); }
+}
+@keyframes zoom-phone-background {
+  from { transform: scale(0.5); }
+  to   { transform: scale(1.5); }
+}
+.goal-screen .phone-background:after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 30%;
+  right: 31%;
+  top: 37%;
+  bottom: 40%;
+  background-color: #fff;
+  opacity: 0;
+}
+.goal-screen .phone.reveal .phone-background:after {
+  animation: 0.5s 5s flash-cropped-area alternate infinite;
+}
+@keyframes flash-cropped-area {
+  from { opacity: 0; }
+  to   { opacity: 0.8; }
+}
+.goal-screen h2 {
+  font-size: 3vw;
+  margin: 0;
+  opacity: 0;
+  margin-bottom: 14vw;
+}
+.fade-in-text {
+  animation: 1s fade-in forwards;
+}

@@ -28,9 +28,10 @@ func NoCache(handler http.Handler) http.Handler {
 }
 
 func main() {
-  http.Handle("/", NoCache(http.FileServer(http.Dir("./player"))))
-  http.Handle("/host/", http.StripPrefix("/host/", NoCache(http.FileServer(http.Dir("./host")))))
-  http.Handle("/games/", http.StripPrefix("/games/", NoCache(http.FileServer(http.Dir("./games")))))
+  http.Handle("/",                                     NoCache(http.FileServer(http.Dir("./player"))))
+  http.Handle("/host/",   http.StripPrefix("/host/",   NoCache(http.FileServer(http.Dir("./host")))))
+  http.Handle("/games/",  http.StripPrefix("/games/",  NoCache(http.FileServer(http.Dir("./games")))))
+  http.Handle("/assets/", http.StripPrefix("/assets/", NoCache(http.FileServer(http.Dir("./assets")))))
 
   var hostConn *websocket.Conn
   var playerConns sync.Map

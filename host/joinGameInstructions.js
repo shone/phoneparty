@@ -19,7 +19,6 @@ async function showJoinGameInstructions() {
   await waitForKeypress(' ');
   joinGameInstructions.classList.add('in-corner');
 
-  stopBubbleField();
-
   await waitForKeypress(' ');
+  stopBubbleField();
 }

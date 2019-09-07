@@ -73,6 +73,7 @@ function startBubbleField() {
     stopAcceptingPlayers();
     cancelAnimationFrame(frameRequestId);
     for (const player of players) {
+      player.classList.remove('pinging');
       player.removeEventListener('pointerdown', handlePlayerPointerdown);
     }
     for (const channel of channels) {

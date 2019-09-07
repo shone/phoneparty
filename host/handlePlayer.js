@@ -11,6 +11,25 @@ function stopAcceptingPlayers() {
   acceptPlayersCallback = null;
 }
 
+// const listenPlayersCallbacks = new Set();
+// function listenForAllPlayers(callback) {
+//   listenPlayersCallbacks.add(callback);
+// }
+// function stopListeningForAllPlayers(callback) {
+//   listenPlayersCallbacks.delete(callback);
+// }
+
+const newPlayerSound  = new Audio('/assets/new_player.mp3');
+const playerLeftSound = new Audio('/assets/player_left.mp3');
+
+const leavingPlayerCallbacks = new Set();
+function listenForLeavingPlayer(callback) {
+  leavingPlayerCallbacks.add(callback);
+}
+function stopListeningForLeavingPlayer(callback) {
+  leavingPlayerCallbacks.delete(callback);
+}
+
 async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
@@ -53,7 +72,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   const accelerometerChannel    = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
   const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
-  const closeChannel            = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
+  player.closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -77,8 +96,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.classList.add('player', 'new');
   setTimeout(() => player.classList.remove('new'), 4000);
 
-  document.getElementById('players').appendChild(player);
-
   accelerometerChannel.onmessage = event => {
     if (player.classList.contains('wiggleable')) {
       const acceleration = JSON.parse(event.data);
@@ -89,17 +106,16 @@ async function handleNewPlayer(playerId, sdp, websocket) {
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
-  window.onbeforeunload = () => {
-    if (closeChannel.readyState === 'open') {
-      closeChannel.send('true');
-    }
-  }
-
   players.push(player);
   if (acceptPlayersCallback) {
     acceptPlayersCallback(player);
   }
+//   for (const callback of listenPlayersCallbacks) {
+//     callback(player);
+//   }
   document.body.dispatchEvent(new Event('playerAdded'));
+
+  newPlayerSound.play();
 
   const rtcConnectionClosed = new Promise(resolve => {
     rtcConnection.addEventListener('connectionstatechange', function callback() {
@@ -110,14 +126,20 @@ async function handleNewPlayer(playerId, sdp, websocket) {
     });
   });
 
-  const rtcCloseSignalReceived = new Promise(resolve => closeChannel.onmessage = resolve);
+  const rtcCloseSignalReceived = new Promise(resolve => player.closeChannel.onmessage = resolve);
 
   await Promise.race([rtcConnectionClosed, rtcCloseSignalReceived]);
 
   rtcConnection.close();
 
+  playerLeftSound.play();
+
   player.classList.add('leaving');
   player.dataset.visibility = '';
   setTimeout(() => player.remove(), 200);
   players.splice(players.indexOf(player), 1);
+
+  for (const callback of leavingPlayerCallbacks) {
+    callback(player);
+  }
 }

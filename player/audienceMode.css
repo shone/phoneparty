@@ -1,0 +1,55 @@
+.audience-mode {
+  position: fixed;
+  left:   0;
+  right:  0;
+  bottom: 0;
+  margin: 3vmin;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.audience-mode .clear-button {
+  width: calc(100vw - 11vmin);
+  height: 16vmin;
+  border-radius: 3vmin;
+  font-size: 7vmin;
+}
+
+.audience-mode .speech-bubble {
+  background-color: #fff;
+  border-radius: 3vmin;
+  padding: 1vmin;
+  font-weight: bold;
+  min-width: 25vmin;
+  min-height: 15vmin;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0.6vmin solid black;
+  font-size: 7vmin;
+  position: relative;
+  margin: 2vmin;
+  flex-grow: 1;
+  cursor: pointer;
+}
+.audience-mode .speech-bubble:before {
+  content: '';
+  width: 4vmin;
+  height: 4vmin;
+  background: white;
+  border-left:   0.6vmin solid black;
+  border-bottom: 0.6vmin solid black;
+  transform: rotate(-45deg);
+  position: absolute;
+  top: calc(100% - 1.9vmin);
+  right: 3.5vmin;
+}
+.audience-mode .speech-bubble:hover        { background: #fff79c; }
+.audience-mode .speech-bubble:hover:before { background: #fff79c; }
+.audience-mode .speech-bubble.selected {
+  filter: drop-shadow(0 0 11px white);
+}

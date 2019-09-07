@@ -5,6 +5,8 @@ async function handleRtcConnection(rtcConnection, channels) {
   rtcConnection.ondatachannel = event => {
     if (event.channel.label === 'bubbleField') {
       handleBubbleField(event.channel);
+    } else if (event.channel.label === 'audienceMode') {
+      handleAudienceMode(event.channel);
     }
   }
 

@@ -1,31 +1,9 @@
 function allTheThings(rtcConnection) {
   rtcConnection.addEventListener('datachannel', event => {
-    if (event.channel.label === 'all-the-things_goal-confirm') {
-      goalConfirm(event.channel);
-    } else if(event.channel.label === 'all-the-things_photo') {
+    if(event.channel.label === 'all-the-things_photo') {
       photoMode(event.channel);
     }
   });
-}
-
-function goalConfirm(channel) {
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things goal-confirm-screen">
-      <h1>Ready to start looking?</h1>
-      <button data-answer="yes">Yes!</button>
-      <button data-answer="no">Nope</button>
-    </div>
-  `);
-  const goalConfirmScreen = document.body.lastElementChild;
-  goalConfirmScreen.addEventListener('click', event => {
-    if (event.target.tagName === 'BUTTON') {
-      channel.send(event.target.dataset.answer);
-    }
-  });
-
-  channel.onclose = () => {
-    goalConfirmScreen.remove();
-  }
 }
 
 function photoMode(channel) {
@@ -63,6 +41,7 @@ function photoMode(channel) {
   }
   window.addEventListener('resize', updateCropGuide);
   video.onloadedmetadata = updateCropGuide;
+  updateCropGuide();
 
   const shutterSound = new Audio('/games/all-the-things/assets/camera-shutter.ogg');
 

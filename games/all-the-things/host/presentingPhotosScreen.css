@@ -1,0 +1,42 @@
+.photo-container.fullscreen {
+  left: calc(50% - 30vmin) !important;
+  top:  calc(40% - 30vmin) !important;
+  width:  60vmin !important;
+  height: 60vmin !important;
+  z-index: 5;
+  transition: left 2s linear, top 2s linear, width 2s linear, height 2s linear;
+}
+.photo-container.reveal-full-photo {
+  left: 2vmin !important;
+  top:  2vmin !important;
+  width:  calc(100vw - 4vmin) !important;
+  height: calc(80vh  - 4vmin) !important;
+}
+.photo-container.fullscreen img {
+  transition: transform 2s linear;
+/*   animation: 2s show-cropped-photo-img linear forwards; */
+}
+/*@keyframes show-cropped-photo-img {
+  to { transform: scale(-3.2, 3.2); }
+}*/
+.photo-container.fullscreen.reveal-full-photo img {
+  transform: scale(-1, 1);
+/*   animation: 2s reveal-full-photo-img linear forwards; */
+}
+/*@keyframes reveal-full-photo-img {
+  to { transform: scale(-1, 1); }
+}*/
+.player.presenting-photo {
+  position: fixed;
+  left: calc(50vw - 45vmin) !important;
+  top: calc(50vh  - 45vmin) !important;
+  width:  90vmin;
+  height: 90vmin;
+}
+.player.reveal-full-photo img {
+  animation: 3s reveal-full-photo forwards;
+}
+@keyframes reveal-full-photo {
+  from { transform: scale(-4, 4); }
+  to   { transform: scale(-1, 1); }
+}
