@@ -4,25 +4,31 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <meta name="theme-color" content="#000">
     <link href="style.css" rel="stylesheet">
-    <link href="bubbleField.css" rel="stylesheet">
-    <link href="audienceMode.css" rel="stylesheet">
+    <link href="movement.css" rel="stylesheet">
+    <link href="messaging.css" rel="stylesheet">
     <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
   </head>
   <body>
+    <div id="panels">
+      <div class="panel" id="subject-panel"></div>
+      <div class="panel" id="messaging-panel">
+        <button class="clear-button">clear</button>
+      </div>
+    </div>
     <button id="fullscreen-button"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
   <script src="utils.js"></script>
   <script src="audio.js"></script>
   <script src="handleRtcConnection.js"></script>
-  <script src="bubbleField.js"></script>
-  <script src="audienceMode.js"></script>
+  <script src="movement.js"></script>
+  <script src="messaging.js"></script>
   <script src="/games/all-the-things/player/allTheThings.js"></script>
   <script>
     "use strict";
 
     // HTTPS redirect
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.')) {
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 

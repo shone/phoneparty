@@ -1,9 +1,9 @@
 "use strict";
 
-async function presentingPhotosScreen(audience) {
+async function presentingPhotosScreen(messaging) {
   await waitForNSeconds(2);
 
-  audience.setPossibleMessages(['real', 'fake']);
+  messaging.setPossibleMessages(['real', 'fake']);
 
   const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
   const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
@@ -28,12 +28,12 @@ async function presentingPhotosScreen(audience) {
 
     const otherPlayerResponses = new Map();
     const waitForOtherPlayers = new Promise(resolve => {
-      audience.listenForMessage(function callback(message, playerWithMessage) {
+      messaging.listenForMessage(function callback(message, playerWithMessage) {
         otherPlayerResponses.set(playerWithMessage, message);
         const otherPlayers = players.filter(p => p !== playerPresentingPhoto);
         if (otherPlayers.every(p => otherPlayerResponses.has(p))) {
           resolve();
-          audience.stopListeningForMessage(callback);
+          messaging.stopListeningForMessage(callback);
         }
       });
     });

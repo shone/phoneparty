@@ -1,19 +1,28 @@
 "use strict";
 
-function handleBubbleField(channel) {
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="bubble-field-buttons">
+function handleMovement(channel) {
+  const subjectPanel = document.getElementById('subject-panel');
+  subjectPanel.insertAdjacentHTML('beforeend', `
+    <div class="movement">
       <div class="arrow-buttons">
         <button data-button="up"    class="arrow-button" data-key="ArrowUp">   </button>
         <button data-button="down"  class="arrow-button" data-key="ArrowDown"> </button>
         <button data-button="left"  class="arrow-button" data-key="ArrowLeft"> </button>
         <button data-button="right" class="arrow-button" data-key="ArrowRight"></button>
       </div>
-      <button data-button="ping" data-key=" "></button>
     </div>
   `);
-  const buttons = document.body.lastElementChild;
-  
+  const container = subjectPanel.lastElementChild;
+  const buttons = container.querySelector('.arrow-buttons');
+  function updateContainerSize() {
+    const size = Math.min(Math.min(window.innerWidth, window.innerHeight), Math.max(window.innerWidth, window.innerHeight) / 2) + 'px';
+    buttons.style.width  = size;
+    buttons.style.height = size;
+  }
+  updateContainerSize();
+  window.addEventListener('resize', updateContainerSize);
+  subjectPanel.classList.add('active');
+
   for (const button of buttons.getElementsByTagName('button')) {
     button.ontouchstart = event => {
       event.preventDefault();
@@ -61,8 +70,10 @@ function handleBubbleField(channel) {
   window.addEventListener('keyup',   handleKey);
 
   channel.onclose = event => {
+    subjectPanel.classList.remove('active');
     buttons.remove();
     window.removeEventListener('keydown', handleKey);
     window.removeEventListener('keyup',   handleKey);
+    window.removeEventListener('resize', updateContainerSize);
   }
 }

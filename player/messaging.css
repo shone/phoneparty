@@ -1,24 +1,22 @@
-.audience-mode {
-  position: fixed;
-  left:   0;
-  right:  0;
-  bottom: 0;
-  margin: 3vmin;
+#messaging-panel {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: flex-end;
   flex-wrap: wrap;
 }
+#messaging-panel.active {
+  padding: 3vmin;
+}
 
-.audience-mode .clear-button {
+#messaging-panel .clear-button {
   width: calc(100vw - 11vmin);
   height: 16vmin;
   border-radius: 3vmin;
   font-size: 7vmin;
 }
 
-.audience-mode .speech-bubble {
+#messaging-panel .speech-bubble {
   background-color: #fff;
   border-radius: 3vmin;
   padding: 1vmin;
@@ -35,8 +33,14 @@
   margin: 2vmin;
   flex-grow: 1;
   cursor: pointer;
+  opacity: 0;
+  animation: 0.5s reveal-speech-bubble forwards;
 }
-.audience-mode .speech-bubble:before {
+@keyframes reveal-speech-bubble {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+#messaging-panel .speech-bubble:before {
   content: '';
   width: 4vmin;
   height: 4vmin;
@@ -48,8 +52,8 @@
   top: calc(100% - 1.9vmin);
   right: 3.5vmin;
 }
-.audience-mode .speech-bubble:hover        { background: #fff79c; }
-.audience-mode .speech-bubble:hover:before { background: #fff79c; }
-.audience-mode .speech-bubble.selected {
+#messaging-panel .speech-bubble:hover        { background: #fff79c; }
+#messaging-panel .speech-bubble:hover:before { background: #fff79c; }
+#messaging-panel .speech-bubble.selected {
   filter: drop-shadow(0 0 11px white);
 }

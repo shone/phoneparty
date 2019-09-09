@@ -2,25 +2,48 @@
 
 async function AllTheThings() {
   let audience = startAudienceMode();
+  let messaging = startMessaging();
 
   document.body.style.backgroundColor = '#98947f';
   await waitForNSeconds(1);
 
   await titleScreen();
 
-  const chosenThingElement = await thingChoosingScreen();
+  while(true) {
+    const chosenThingElement = await thingChoosingScreen();
 
-  await goalScreen(chosenThingElement, audience);
+    await goalScreen(chosenThingElement, messaging);
 
-  audience.stop();
+    audience.stop();
+    messaging.stop();
 
-  const playerGrid = await photoTakingScreen(chosenThingElement.dataset.name);
+    const playerGrid = await photoTakingScreen(chosenThingElement.dataset.name);
 
-  audience = startAudienceMode();
+    audience = startAudienceMode();
+    messaging = startMessaging();
 
-  await presentingPhotosScreen(audience);
-  await waitForKeypress(' ');
-  playerGrid.stop();
+    await presentingPhotosScreen(messaging);
+
+    await waitForKeypress(' ');
+    playerGrid.stop();
+    chosenThingElement.remove();
+
+    await playAnotherRoundQuestion(messaging)
+  }
+}
+
+async function playAnotherRoundQuestion(messaging) {
+  messaging.setPossibleMessages(['yes', 'no']);
+  const responses = new Map();
+  await new Promise(resolve => {
+    messaging.listenForMessage(function handleMessage(message, player) {
+      responses.set(player, message);
+      if (players.every(player => responses.get(player) === 'yes')) {
+        resolve(true);
+        messaging.stopListeningForMessage(handleMessage);
+      }
+    });
+  });
 }
 
 function startPlayerGrid() {

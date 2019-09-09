@@ -16,11 +16,13 @@ async function showJoinGameInstructions() {
   `);
   const joinGameInstructions = document.body.lastElementChild;
 
-  const stopBubbleField = startBubbleField();
-  
+  const bubbleField = startBubbleField();
+  const messaging = startMessaging(['👍', '👎', ':)', ':(', ':P']);
+
   await waitForKeypress(' ');
   joinGameInstructions.classList.add('in-corner');
 
   await waitForKeypress(' ');
-  stopBubbleField();
+  bubbleField.stop();
+  messaging.stop();
 }

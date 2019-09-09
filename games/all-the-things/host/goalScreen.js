@@ -1,6 +1,6 @@
 "use strict";
 
-async function goalScreen(chosenThingElement, audience) {
+async function goalScreen(chosenThingElement, messaging) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things goal-screen">
       <h1>THE GOAL:</h1>
@@ -47,10 +47,10 @@ async function goalScreen(chosenThingElement, audience) {
     }
   }
 
-  audience.setPossibleMessages(['👍', '👎']);
+  messaging.setPossibleMessages(['👍', '👎']);
 
   await new Promise(resolve => {
-    audience.listenForMessage((message, player) => {
+    messaging.listenForMessage((message, player) => {
       player.allTheThingsGoalResponse = message;
       if (players.every(p => p.allTheThingsGoalResponse === '👍')) {
         resolve();

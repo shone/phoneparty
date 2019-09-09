@@ -11,13 +11,16 @@ function stopAcceptingPlayers() {
   acceptPlayersCallback = null;
 }
 
-// const listenPlayersCallbacks = new Set();
-// function listenForAllPlayers(callback) {
-//   listenPlayersCallbacks.add(callback);
-// }
-// function stopListeningForAllPlayers(callback) {
-//   listenPlayersCallbacks.delete(callback);
-// }
+const listenPlayersCallbacks = new Set();
+function listenForAllPlayers(callback) {
+  for (const player of players) {
+    callback(player);
+  }
+  listenPlayersCallbacks.add(callback);
+}
+function stopListeningForAllPlayers(callback) {
+  listenPlayersCallbacks.delete(callback);
+}
 
 const newPlayerSound  = new Audio('/sounds/new_player.mp3');
 const playerLeftSound = new Audio('/sounds/player_left.mp3');
@@ -110,9 +113,9 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   if (acceptPlayersCallback) {
     acceptPlayersCallback(player);
   }
-//   for (const callback of listenPlayersCallbacks) {
-//     callback(player);
-//   }
+  for (const callback of listenPlayersCallbacks) {
+    callback(player);
+  }
   document.body.dispatchEvent(new Event('playerAdded'));
 
   newPlayerSound.play();

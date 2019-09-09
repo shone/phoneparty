@@ -3,7 +3,8 @@
 function startBubbleField() {
   const channels = [];
   acceptAllPlayers(player => {
-    const channel = player.rtcConnection.createDataChannel('bubbleField');
+    const movementChannel  = player.rtcConnection.createDataChannel('movement');
+    const messagingChannel = player.rtcConnection.createDataChannel('messaging');
     player.classList.add('bubble');
     player.classList.add('wiggleable');
     player.style.left = (Math.random() * 100) + 'vw';
@@ -11,14 +12,14 @@ function startBubbleField() {
     document.body.appendChild(player);
     player.momentum = {x: 0, y: 0};
     player.buttonStates = {};
-    channel.onmessage = event => {
+    movementChannel.onmessage = event => {
       const [button, state] = event.data.split(' ');
       player.buttonStates[button] = state === 'true';
       if (button === 'ping') {
         player.classList.toggle('pinging', state === 'true');
       }
     }
-    channels.push(channel);
+    channels.push(movementChannel);
     player.addEventListener('pointerdown', handlePlayerPointerdown);
   });
   let lastTimestamp = performance.now();
@@ -71,15 +72,17 @@ function startBubbleField() {
     });
   }
 
-  return function stopBubbleField() {
-    stopAcceptingPlayers();
-    cancelAnimationFrame(frameRequestId);
-    for (const player of players) {
-      player.classList.remove('pinging');
-      player.removeEventListener('pointerdown', handlePlayerPointerdown);
-    }
-    for (const channel of channels) {
-      channel.close();
+  return {
+    stop: () => {
+      stopAcceptingPlayers();
+      cancelAnimationFrame(frameRequestId);
+      for (const player of players) {
+        player.classList.remove('pinging');
+        player.removeEventListener('pointerdown', handlePlayerPointerdown);
+      }
+      for (const channel of channels) {
+        channel.close();
+      }
     }
   }
 }
