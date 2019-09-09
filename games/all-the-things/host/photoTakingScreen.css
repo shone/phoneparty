@@ -24,12 +24,16 @@
   from { transform: scale(0); }
   to   { transform: scale(1); }
 }
+.player.taking-photo.leaving {
+  transform: scale(1);
+  animation: 0.2s ease-in forwards scaledown;
+}
 .player.taking-photo[data-visibility="hidden"] .phone-switched-off-black {
   visibility: visible;
 }
 .player.moving-to-grid {
   position: fixed;
-  transition: left 2s, top 2s, margin-left 2s, margin-top 2s, width 2s, height 2s;
+  transition: left 1.5s, top 1.5s, margin-left 1.5s, margin-top 1.5s, width 1.5s, height 1.5s;
 }
 .player.taking-photo video {
   left: 24%;
@@ -59,10 +63,31 @@
 @keyframes question-mark-background-move-y {
   to { background-position-y: 50%; }
 }
+.player.video-not-visible video {
+  display: none;
+}
+.player.camera-shutter .phone-background {
+  background: white;
+  box-shadow: 0 0 5vmin white;
+  opacity: 1;
+}
 .player.scale-down {
   animation: 0.5s player-scale-down forwards;
 }
 @keyframes player-scale-down {
   from { transform: scale(1); }
   to   { transform: scale(0); }
+}
+
+body.all-the-things_all-photos-taken {
+  transition: background 0.3s;
+  background: white !important;
+}
+.photo-container.all-photos-taken-highlight {
+  animation: 0.8s all-photos-taken-highlight;
+}
+@keyframes all-photos-taken-highlight {
+  0%   { transform: scale(1);   }
+  50%  { transform: scale(1.2); }
+  100% { transform: scale(1);   }
 }

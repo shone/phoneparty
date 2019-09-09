@@ -19,8 +19,8 @@ function stopAcceptingPlayers() {
 //   listenPlayersCallbacks.delete(callback);
 // }
 
-const newPlayerSound  = new Audio('/assets/new_player.mp3');
-const playerLeftSound = new Audio('/assets/player_left.mp3');
+const newPlayerSound  = new Audio('/sounds/new_player.mp3');
+const playerLeftSound = new Audio('/sounds/player_left.mp3');
 
 const leavingPlayerCallbacks = new Set();
 function listenForLeavingPlayer(callback) {

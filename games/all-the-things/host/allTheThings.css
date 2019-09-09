@@ -3,7 +3,7 @@
   width:  10vmin;
   height: 10vmin;
 }
-.thing svg {
+.thing img {
   position: absolute;
   width:  100%;
   height: 100%;
@@ -30,12 +30,11 @@
   bottom: calc(100vh - 17vmin) !important;
   transition: all 1s ease-in-out;
 }
-
 .thing-label {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(50vh + 12vmin);
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  top: 105%;
   text-align: center;
   opacity: 0;
   animation: fade-in 1s 1s forwards;
@@ -53,7 +52,7 @@
   right:  40%;
   bottom: 48%;
   overflow: hidden;
-  animation: 1s 1s scale-up-taken-photo forwards;
+  animation: 0.5s 0.5s scale-up-taken-photo forwards;
   box-shadow: 0 0 2vmin black;
 }
 @keyframes scale-up-taken-photo {

@@ -1,17 +1,29 @@
+"use strict";
+
 function allTheThings(rtcConnection) {
+  let thing = null;
+  let photoCanvas = null;
   rtcConnection.addEventListener('datachannel', event => {
-    if(event.channel.label === 'all-the-things_photo') {
-      photoMode(event.channel);
+    if (event.channel.label === 'all-the-things_photo') {
+      photoMode(event.channel).then(results => {
+        [thing, photoCanvas] = results;
+      });
+    } else if (event.channel.label === 'all-the-things_photo-self-judgement') {
+      photoSelfJudgement(event.channel, thing, photoCanvas);
     }
   });
 }
 
-function photoMode(channel) {
+async function photoMode(channel) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-screen">
       <video playsinline autoplay muted></video>
       <canvas></canvas>
       <div class="crop-guide"></div>
+      <div class="goal">
+        <img>
+        <div class="label"></div>
+      </div>
       <button></button>
     </div>
   `);
@@ -21,6 +33,13 @@ function photoMode(channel) {
   const cropGuide = photoScreen.querySelector('.crop-guide');
   const button = photoScreen.querySelector('button')
 
+  let thing = null;
+  channel.onmessage = event => {
+    thing = event.data;
+    photoScreen.querySelector('.goal .label').textContent = thing;
+    photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
+  }
+  
   video.srcObject = stream;
 
   function updateCropGuide() {
@@ -43,22 +62,56 @@ function photoMode(channel) {
   video.onloadedmetadata = updateCropGuide;
   updateCropGuide();
 
-  const shutterSound = new Audio('/games/all-the-things/assets/camera-shutter.ogg');
-
-  button.onclick = async function() {
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    shutterSound.play();
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    photoScreen.classList.add('photo-taken');
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-    const arrayBuffer = await new Response(blob).arrayBuffer();
-    channel.send(arrayBuffer);
-  }
+  const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
 
   channel.onclose = () => {
     photoScreen.remove();
     window.removeEventListener('resize', updateCropGuide);
+  }
+
+  return await new Promise(resolve => {
+    button.onclick = async function() {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      shutterSound.play();
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      photoScreen.classList.add('photo-taken');
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+      channel.send(arrayBuffer);
+      button.remove();
+      resolve([thing, canvas]);
+    }
+  });
+}
+
+function photoSelfJudgement(channel, thing, photoCanvas) {
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="all-the-things photo-self-judgement-screen">
+      <h1>Is your photo really of:</h1>
+      <div class="goal">
+        <img src="/games/all-the-things/things/${thing}.svg">
+        <div class="label">${thing}</div>
+      </div>
+      <div class="be-honest">be honest</div>
+      <div class="buttons">
+        <button data-response="real">yes</button>
+        <button data-response="fake">no</button>
+      </div>
+    </div>
+  `);
+  const selfJudgementScreen = document.body.lastElementChild;
+  selfJudgementScreen.insertBefore(photoCanvas, selfJudgementScreen.firstChild);
+  selfJudgementScreen.onclick = event => {
+    if (event.target.tagName === 'BUTTON') {
+      channel.send(event.target.dataset.response);
+      event.target.classList.add('selected');
+      selfJudgementScreen.querySelector('.be-honest').remove();
+      selfJudgementScreen.onclick = null;
+    }
+  }
+  channel.onclose = () => {
+    selfJudgementScreen.remove();
   }
 }

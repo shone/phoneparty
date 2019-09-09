@@ -24,8 +24,9 @@ body {
 #connection-status.error::before      { content: 'Error';        }
 #warning-indicator {
   position: fixed;
-  top: 0;
+  top:   0;
   right: 0;
+  z-index: 8;
   background-color: #fff;
   color: red;
 }

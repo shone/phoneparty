@@ -42,13 +42,13 @@
   from { transform: translateY(85vh); }
   to   { transform: translateY(0); }
 }
-.goal-screen .phone-background svg {
+.goal-screen .phone-background .thing {
   position: absolute;
   width:  100%;
   height: 100%;
   transform: scale(0.5) translateY(-67vh);
 }
-.goal-screen .phone.reveal .phone-background svg {
+.goal-screen .phone.reveal .phone-background .thing {
   animation: 3s reveal-phone-background forwards, 2s 3s zoom-phone-background forwards;
 }
 @keyframes reveal-phone-background {

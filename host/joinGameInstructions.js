@@ -1,3 +1,5 @@
+"use strict";
+
 async function showJoinGameInstructions() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `

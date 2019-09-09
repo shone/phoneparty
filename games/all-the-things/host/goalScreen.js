@@ -18,19 +18,13 @@ async function goalScreen(chosenThingElement, audience) {
     </div>
   `);
   const goalScreen = document.body.lastElementChild;
-  goalScreen.querySelector('.thing-text').textContent = `${chosenThingElement.color} ${chosenThingElement.thing.name}`;
+  goalScreen.querySelector('.thing-text').textContent = chosenThingElement.dataset.name;
   const phoneBackground = goalScreen.querySelector('.phone-background');
-  const parser = new DOMParser();
-  const phoneBackgroundContent = parser.parseFromString(chosenThingElement.thing.svgString, 'image/svg+xml').documentElement;
-  for (const colorableElement of phoneBackgroundContent.getElementsByClassName('colorable')) {
-    colorableElement.style.fill = chosenThingElement.color;
-  }
+  const phoneBackgroundContent = document.createElement('img');
+  phoneBackgroundContent.src = chosenThingElement.querySelector('img').src;
+  phoneBackgroundContent.dataset.name = chosenThingElement.dataset.name;
+  phoneBackgroundContent.classList.add('thing');
   phoneBackground.appendChild(phoneBackgroundContent);
-  phoneBackgroundContent.classList.remove('hide');
-  phoneBackgroundContent.classList.remove('show-in-top-right');
-  phoneBackgroundContent.classList.remove('chosen');
-  phoneBackgroundContent.style.left   = '';
-  phoneBackgroundContent.style.bottom = '';
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
   goalScreen.querySelector('h1').classList.add('fade-in-text');

@@ -4,7 +4,11 @@
   width:  60vmin !important;
   height: 60vmin !important;
   z-index: 5;
-  transition: left 2s linear, top 2s linear, width 2s linear, height 2s linear;
+  transition: left 0.8s linear, top 0.8s linear, width 0.8s linear, height 0.8s linear;
+}
+.photo-container.de-emphasize {
+  opacity: 0.2;
+  transition: opacity 1s;
 }
 .photo-container.reveal-full-photo {
   left: 2vmin !important;
@@ -13,19 +17,11 @@
   height: calc(80vh  - 4vmin) !important;
 }
 .photo-container.fullscreen img {
-  transition: transform 2s linear;
-/*   animation: 2s show-cropped-photo-img linear forwards; */
+  transition: transform 0.8s linear;
 }
-/*@keyframes show-cropped-photo-img {
-  to { transform: scale(-3.2, 3.2); }
-}*/
 .photo-container.fullscreen.reveal-full-photo img {
   transform: scale(-1, 1);
-/*   animation: 2s reveal-full-photo-img linear forwards; */
 }
-/*@keyframes reveal-full-photo-img {
-  to { transform: scale(-1, 1); }
-}*/
 .player.presenting-photo {
   position: fixed;
   left: calc(50vw - 45vmin) !important;
@@ -39,4 +35,47 @@
 @keyframes reveal-full-photo {
   from { transform: scale(-4, 4); }
   to   { transform: scale(-1, 1); }
+}
+
+.player .all-the-things.fooled {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  text-align: center;
+  color: red;
+  font-size: 30%;
+  font-weight: bold;
+  text-shadow: 0 0 1vmin black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(-13deg);
+  animation: 0.3s fooled-stamp-animation linear forwards;
+}
+@keyframes fooled-stamp-animation {
+  from { opacity: 0; transform: rotate(-10deg) scale(1.3); }
+  to   { opacity: 1; transform: rotate(-13deg) scale(1); }
+}
+
+.player .all-the-things.not-fooled {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  text-align: center;
+  color: green;
+  font-size: 20%;
+  font-weight: bold;
+  text-shadow: 0 0 1vmin black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: 0.5s not-fooled-stamp-animation linear forwards;
+}
+@keyframes not-fooled-stamp-animation {
+  from { opacity: 0; transform: scale(1.3); }
+  to   { opacity: 1; transform: scale(1); }
 }

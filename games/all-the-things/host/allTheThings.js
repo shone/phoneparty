@@ -14,11 +14,11 @@ async function AllTheThings() {
 
   audience.stop();
 
-  const playerGrid = await photoTakingScreen();
+  const playerGrid = await photoTakingScreen(chosenThingElement.dataset.name);
 
   audience = startAudienceMode();
 
-  await presentingPhotosScreen();
+  await presentingPhotosScreen(audience);
   await waitForKeypress(' ');
   playerGrid.stop();
 }

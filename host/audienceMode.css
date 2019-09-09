@@ -4,16 +4,35 @@
   right: 0;
   bottom: 0;
   height: 20vh;
-  background: linear-gradient(to top, black, rgba(0, 0, 0, 0.65), transparent);
+  background: linear-gradient(to top, black, rgba(0, 0, 0, 0.58), transparent);
   z-index: 2;
+  animation: 0.2s reveal-audience-mode-background ease-out forwards;
+}
+@keyframes reveal-audience-mode-background {
+  from { bottom: -20vh; }
+  to   { bottom: 0; }
 }
 .player.audience-mode {
   margin-top:  0;
   margin-left: 0;
   overflow: visible;
+  transition: 0.5s transform, 0.5s box-shadow;
 }
 .player.audience-mode.transition-position {
   transition: left 1s, top 1s, width 1s, height 1s, margin-left 1s, margin-top 1s;
+}
+.player.new-player-in-audience {
+  transform: translateY(20vh);
+}
+.player.new-player-in-audience.revealing {
+  animation: 0.5s new-player-in-audience-reveal ease-out forwards;
+}
+@keyframes new-player-in-audience-reveal {
+  0%   { transform: translateY(20vh); }
+  50%  { transform: translateY(-6vh); }
+  80%  { transform: translateY(4vh); }
+  87%  { transform: translateY(2vh); }
+  100% { transform: translateY(0); }
 }
 
 .player .speech-bubble {
@@ -65,4 +84,10 @@
 }
 @keyframes highlight-speech-bubble {
   to { transform: scale(1.2); }
+}
+
+.player.highlight-in-audience {
+  transform: translateY(-4vh) scale(1.2);
+  box-shadow: 0 1vmin 5vmin #000000;
+  z-index: 8;
 }

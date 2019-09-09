@@ -1,3 +1,5 @@
+"use strict";
+
 async function splashScreen() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `

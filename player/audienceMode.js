@@ -1,3 +1,5 @@
+"use strict";
+
 function handleAudienceMode(channel) {
   const audienceMode = document.createElement('div');
   audienceMode.classList.add('audience-mode');

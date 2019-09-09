@@ -20,37 +20,17 @@ async function thingChoosingScreen() {
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
-  const things = [
-    {name: 'bag'},
-    {name: 'wallet'},
-  ];//, 'underwear', 'sock', 'key', 'shirt', 'pants', 'nose'];
-
-  const colors = ['green', 'purple', 'orange', 'grey'];
-
-  await Promise.all(things.map(async function(thing) {
-    const response = await fetch(`/games/all-the-things/things/${thing.name}.svg`);
-    thing.svgString = await response.text();
-  }));
-
-  const thingElements = [];
-  for (const thing of things) {
-    for (const color of colors) {
-      const thingElement = document.createElement('div');
-      const parser = new DOMParser();
-      const svg = parser.parseFromString(thing.svgString, 'image/svg+xml').documentElement;
-      for (const colorableElement of svg.getElementsByClassName('colorable')) {
-        colorableElement.style.fill = color;
-      }
-      thingElement.appendChild(svg);
-      thingElement.classList.add('thing');
-      thingElement.thing = thing;
-      thingElement.color = color;
-      thingElement.style.left = (Math.random() * 100) + 'vw';
-      thingElement.style.bottom = '-10vh';
-      document.body.appendChild(thingElement);
-      thingElements.push(thingElement);
-    }
-  }
+  const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
+  const thingElements = thingNames.map(thingName => {
+    const element = document.createElement('div');
+    element.classList.add('thing');
+    element.dataset.name = thingName;
+    const img = document.createElement('img');
+    img.src = `/games/all-the-things/things/${thingName}.svg`;
+    element.appendChild(img);
+    document.body.appendChild(element);
+    return element;
+  });
 
   const stopJuggling = juggleElements(thingElements);
 
@@ -83,15 +63,14 @@ async function thingChoosingScreen() {
 
   const thingLabel = document.createElement('label');
   thingLabel.classList.add('thing-label');
-  thingLabel.textContent = `${chosenThingElement.color} ${chosenThingElement.thing.name}`;
-  document.body.appendChild(thingLabel);
+  thingLabel.textContent = chosenThingElement.dataset.name;
+  chosenThingElement.appendChild(thingLabel);
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
   chosenThingElement.classList.remove('chosen');  
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
-  thingLabel.remove();
 
   return chosenThingElement;
 }
@@ -99,6 +78,8 @@ async function thingChoosingScreen() {
 function juggleElements(elements) {
   for (const element of elements) {
     element.momentum = {x: 0, y: 0};
+    element.style.left = (Math.random() * 100) + 'vw';
+    element.style.bottom = '-10vh';
   }
   let lastTimestamp = performance.now();
   let frameId = window.requestAnimationFrame(function callback(timestamp) {

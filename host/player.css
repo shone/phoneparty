@@ -40,7 +40,8 @@
   to   { transform: scale(0); }
 }
 .player.bubble video {
-  border-radius: 50%;
+/*   border-radius: 50%; */
+  clip-path: circle(50%);
 }
 .player.bubble.pinging {
   width:  30vw;

@@ -1,3 +1,5 @@
+"use strict";
+
 function handleBubbleField(channel) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="bubble-field-buttons">

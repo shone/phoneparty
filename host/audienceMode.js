@@ -1,35 +1,57 @@
+"use strict";
+
 function startAudienceMode() {
 
   let possibleMessages = ['👍', '👎', ':)', ':(', ':P'];
-  
+
   const background = document.createElement('div');
   background.classList.add('audience-mode-background');
   document.body.appendChild(background);
 
   const messageCallbacks = new Set();
 
-  const popSoundInstances = [new Audio('/assets/pop.mp3'), new Audio('/assets/pop.mp3'), new Audio('/assets/pop.mp3')];
+  const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
   function playPopSound() {
     const popSound = popSoundInstances.shift();
     popSound.play();
     popSoundInstances.push(popSound);
   }
 
-  const swooshSound = new Audio('/assets/swoosh.mp3');
+  const swooshSound = new Audio('/sounds/swoosh.mp3');
 
   const channels = [];
-  let timerId = null;
+  let transitionPositionTimer = null;
+  const newPlayerTimers = new Set();
+  let timeOnLastNewPlayer = null;
   acceptAllPlayers(player => {
     const channel = player.rtcConnection.createDataChannel('audienceMode');
     channels.push(channel);
     player.classList.add('bubble');
     player.classList.add('audience-mode');
-    player.classList.add('wiggleable');
     player.classList.remove('hide');
+    if (!player.parentElement) {
+      player.classList.add('new-player-in-audience');
+      let revealDelayMs = 0;
+      const now = performance.now();
+      if (timeOnLastNewPlayer !== null && ((now - timeOnLastNewPlayer) < 80)) {
+        revealDelayMs = (timeOnLastNewPlayer + 80) - now;
+      }
+      timeOnLastNewPlayer = now + revealDelayMs;
+      player.classList.add('revealing');
+      player.style.animationDelay = (revealDelayMs / 1000) + 's';
+      newPlayerTimers.add(setTimeout(() => {
+        player.classList.remove('new-player-in-audience');
+        player.classList.remove('revealing');
+        player.classList.add('wiggleable');
+      }, 1500));
+    } else {
+      player.classList.add('wiggleable');
+    }
     layoutPlayers();
     if (!player.parentElement) {
       document.body.appendChild(player);
     }
+    player.video.play();
     channel.onopen = () => {
       channel.send(JSON.stringify(possibleMessages));
     }
@@ -65,18 +87,19 @@ function startAudienceMode() {
     if (players.length === 0) {
       return;
     }
-    const playerWidth = Math.min(100 / players.length, 10)
+    const playerSize = Math.min(100 / players.length, 10);
     for (const [index, player] of players.entries()) {
       player.classList.add('transition-position');
-      player.style.top = `calc(100vh - ${playerWidth}vw)`;
-      player.style.left = ((50 - ((playerWidth * players.length) / 2)) + (playerWidth * index)) + 'vw';
-      player.style.width  = playerWidth + 'vw';
-      player.style.height = playerWidth + 'vw';
+      player.style.top  = `calc(100vh - ${playerSize}vw)`;
+      player.style.left = ((50 - ((playerSize * players.length) / 2)) + (playerSize * index)) + 'vw';
+      player.style.width  = playerSize + 'vw';
+      player.style.height = playerSize + 'vw';
+      player.style.fontSize = playerSize + 'vw';
     }
-    if (timerId) {
-      clearTimeout(timerId);
+    if (transitionPositionTimer) {
+      clearTimeout(transitionPositionTimer);
     }
-    timerId = setTimeout(() => {
+    transitionPositionTimer = setTimeout(() => {
       for (const player of players) {
         player.classList.remove('transition-position');
       }
@@ -86,6 +109,9 @@ function startAudienceMode() {
   return {
     listenForMessage: callback => {
       messageCallbacks.add(callback);
+    },
+    stopListeningForMessage: callback => {
+      messageCallbacks.delete(callback);
     },
     setPossibleMessages: messages => {
       possibleMessages = messages;
@@ -99,11 +125,19 @@ function startAudienceMode() {
       background.remove();
       stopAcceptingPlayers();
       stopListeningForLeavingPlayer(handlePlayerLeaving);
+      messageCallbacks.clear();
       for (const player of players) {
         player.classList.remove('audience-mode');
         player.classList.remove('transition-position');
+        player.classList.remove('revealing');
+        player.classList.remove('highlight-in-audience');
+        player.classList.remove('new-player-in-audience');
+        player.style.animationDelay = '';
       }
-      if (timerId) {
+      if (transitionPositionTimer) {
+        clearTimeout(transitionPositionTimer);
+      }
+      for (const timerId of newPlayerTimers) {
         clearTimeout(timerId);
       }
       for (const channel of channels) {
