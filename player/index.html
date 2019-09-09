@@ -2,17 +2,13 @@
   <head>
     <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <meta name="theme-color" content="#000">
     <link href="style.css" rel="stylesheet">
     <link href="bubbleField.css" rel="stylesheet">
     <link href="audienceMode.css" rel="stylesheet">
     <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
   </head>
   <body>
-    <div data-formode="camera" id="camera-screen">
-      <button id="take-photo-button"></button>
-      <video id="video" playsinline autoplay muted></video>
-      <canvas id="camera-canvas"></canvas>
-    </div>
     <button id="fullscreen-button"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
@@ -31,10 +27,6 @@
     }
 
     const connectionStatus = document.getElementById('connection_status');
-
-    for (const elementWithMode of document.querySelectorAll('[data-formode]')) {
-      elementWithMode.style.visibility = 'hidden';
-    }
 
     let stream = null;
 
@@ -62,26 +54,42 @@
         }
       }
 
-      const video = document.getElementById('video');
-      video.srcObject = stream;
-
       // Setup fullscreen button
+      const fullscreenButton = document.getElementById('fullscreen-button');
       if (document.body.requestFullscreen) {
+        const clickSound = new Audio('/sounds/click.mp3');
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
-            document.body.requestFullscreen();
+            document.body.requestFullscreen().then(() => {
+              fullscreenButton.classList.add('fullscreen');
+            });
           } else {
-            document.exitFullscreen();
+            document.exitFullscreen().then(() => {
+              fullscreenButton.classList.remove('fullscreen');
+            });
+          }
+          clickSound.play();
+        }
+        fullscreenButton.onclick = toggleFullscreen;
+        const touches = new Set();
+        fullscreenButton.ontouchstart = event => {
+          fullscreenButton.classList.add('active');
+          for (const touch of event.changedTouches) {
+            touches.add(touch.identifier);
           }
         }
-        document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
-        document.getElementById('fullscreen-button').addEventListener('touchstart', event => {
-          event.preventDefault();
-          toggleFullscreen();
-          return false;
-        });
+        function onTouchEndOrCancel(event) {
+          for (const touch of event.changedTouches) {
+            touches.delete(touch.identifier);
+            if (touches.size === 0) {
+              fullscreenButton.classList.remove('active');
+            }
+          }
+        }
+        window.addEventListener('touchend',    onTouchEndOrCancel);
+        window.addEventListener('touchcancel', onTouchEndOrCancel);
       } else {
-        document.getElementById('fullscreen-button').remove();
+        fullscreenButton.remove();
       }
 
       while (true) {
