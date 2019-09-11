@@ -2,7 +2,13 @@
 
 async function AllTheThings() {
   let audience = startAudienceMode();
-  let messaging = startMessaging();
+  let messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+
+  const channels = [];
+  listenForAllPlayers(player => {
+    const channel = player.rtcConnection.createDataChannel('all-the-things');
+    channels.push(channel);
+  });
 
   document.body.style.backgroundColor = '#98947f';
   await waitForNSeconds(1);
@@ -29,6 +35,10 @@ async function AllTheThings() {
     chosenThingElement.remove();
 
     await playAnotherRoundQuestion(messaging)
+  }
+
+  for (const channel of channels) {
+    channel.close();
   }
 }
 

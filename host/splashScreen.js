@@ -24,13 +24,28 @@ async function splashScreen() {
   `);
   const splashScreen = document.body.lastElementChild;
 
+  const channels = [];
+  acceptAllPlayers(player => {
+    channels.push(player.rtcConnection.createDataChannel('splash-screen'));
+  });
+
   const timeAtSplashStart = performance.now();
-  
+
   await waitForKeypress(' ');
   splashScreen.classList.add('finished');
+  for (const channel of channels) {
+    if (channel.readyState === 'open') {
+      channel.send('finished');
+    }
+  }
 
   if ((performance.now() - timeAtSplashStart) > 2000) {
     await waitForNSeconds(2);
   }
+
   splashScreen.remove();
+  stopAcceptingPlayers();
+  for (const channel of channels) {
+    channel.close();
+  }
 }

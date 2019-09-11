@@ -10,7 +10,7 @@ async function photoTakingScreen(thing) {
 
   for (const player of players) {
     player.classList.add('scale-down');
-  }  
+  }
   await waitForNSeconds(0.5);
 
   const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
@@ -91,7 +91,12 @@ async function photoTakingScreen(thing) {
         checkIfAllPhotosTaken();
       }
     });
-    listenForLeavingPlayer(checkIfAllPhotosTaken);
+    listenForLeavingPlayer(player => {
+      if (player.photo) {
+        player.photo.remove();
+      }
+      checkIfAllPhotosTaken();
+    });
   });
   photoTakingScreen.querySelector('h1').textContent = 'All photos taken';
   allPhotosTakenSound.play();

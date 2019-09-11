@@ -1,25 +1,28 @@
 "use strict";
 
+const listenPlayersCallbacks = [];
+
 let acceptPlayersCallback = null;
 function acceptAllPlayers(callback) {
-  for (const player of players) {
-    callback(player);
-  }
+  listenForAllPlayers(callback);
   acceptPlayersCallback = callback;
 }
 function stopAcceptingPlayers() {
+  stopListeningForAllPlayers(acceptPlayersCallback);
   acceptPlayersCallback = null;
 }
 
-const listenPlayersCallbacks = new Set();
 function listenForAllPlayers(callback) {
   for (const player of players) {
     callback(player);
   }
-  listenPlayersCallbacks.add(callback);
+  listenPlayersCallbacks.push(callback);
 }
 function stopListeningForAllPlayers(callback) {
-  listenPlayersCallbacks.delete(callback);
+  const index = listenPlayersCallbacks.indexOf(callback);
+  if (index !== -1) {
+    listenPlayersCallbacks.splice(index, 1);
+  }
 }
 
 const newPlayerSound  = new Audio('/sounds/new_player.mp3');

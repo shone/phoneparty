@@ -7,6 +7,10 @@ async function handleRtcConnection(rtcConnection, channels) {
       handleMovement(event.channel);
     } else if (event.channel.label === 'messaging') {
       handleMessaging(event.channel);
+    } else if (event.channel.label === 'splash-screen') {
+      splashScreen(event.channel);
+    } else if (event.channel.label === 'all-the-things') {
+      allTheThings(event.channel, rtcConnection);
     }
   }
 
@@ -29,7 +33,4 @@ async function handleRtcConnection(rtcConnection, channels) {
       document.body.classList.remove('host-dragging');
     }
   }
-
-  // Games
-  allTheThings(rtcConnection);
 }

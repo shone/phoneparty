@@ -1,0 +1,5 @@
+https://emojipedia.org/whatsapp/
+
+Creating emoji font subset:
+
+pyftsubset NotoColorEmoji.woff2 --text="😀😃😄😁😆😅🤣😂🙂😉 😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋👌✌️🤞👍👎" --flavor="woff2"

@@ -36,8 +36,6 @@ async function goalScreen(chosenThingElement, messaging) {
   goalScreen.querySelector('.phone').classList.add('reveal');
 
   await Promise.race([waitForNSeconds(7), waitForKeypress(' ')]);
-  
-  goalScreen.querySelector('h2').classList.add('fade-in-text');
 
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
@@ -47,16 +45,28 @@ async function goalScreen(chosenThingElement, messaging) {
     }
   }
 
+  goalScreen.querySelector('h2').classList.add('fade-in-text');
+  const channels = [];
+  function handlePlayer(player) {
+    channels.push(player.rtcConnection.createDataChannel('all-the-things_ready-to-start-looking'));
+  }
+  listenForAllPlayers(handlePlayer);
+
   messaging.setPossibleMessages(['👍', '👎']);
 
   await new Promise(resolve => {
     messaging.listenForMessage((message, player) => {
       player.allTheThingsGoalResponse = message;
-      if (players.every(p => p.allTheThingsGoalResponse === '👍')) {
+      if (players.length > 0 && players.every(p => p.allTheThingsGoalResponse === '👍')) {
         resolve();
       }
     });
   });
+
+  stopListeningForAllPlayers(handlePlayer);
+  for (const channel of channels) {
+    channel.close();
+  }
 
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');

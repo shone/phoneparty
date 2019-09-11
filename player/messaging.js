@@ -5,9 +5,10 @@ function handleMessaging(channel) {
   messagingPanel.classList.add('active');
 
   const clearButton = messagingPanel.querySelector('.clear-button');
+  const options = messagingPanel.querySelector('.options');
 
   channel.onmessage = event => {
-    const existingSpeechBubbles = [...messagingPanel.getElementsByClassName('speech-bubble')];
+    const existingSpeechBubbles = [...options.getElementsByClassName('speech-bubble')];
     for (const speechBubble of existingSpeechBubbles) {
       speechBubble.remove();
     }
@@ -19,15 +20,15 @@ function handleMessaging(channel) {
       speechBubble.classList.add('speech-bubble');
       speechBubble.textContent = message;
       speechBubble.style.animationDelay = (revealDurationSecs * (index / possibleMessages.length)) + 's';
-      messagingPanel.appendChild(speechBubble);
+      options.appendChild(speechBubble);
     }
   }
 
-  messagingPanel.onmousedown = messagingPanel.ontouchstart = event => {
+  options.onclick = event => {
     if (event.target.classList.contains('speech-bubble')) {
       event.preventDefault();
       channel.send(event.target.textContent);
-      const selectedBubble = messagingPanel.querySelector('.speech-bubble.selected');
+      const selectedBubble = options.querySelector('.speech-bubble.selected');
       if (selectedBubble) {
         selectedBubble.classList.remove('selected');
       }

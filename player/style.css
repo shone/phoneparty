@@ -1,8 +1,14 @@
 body {
   margin: 0;
   background: black;
+  transition: background-color 1s;
   font-family: "Helvetica Neue", "Roboto";
   user-select: none;
+}
+
+@font-face {
+  font-family: "NotoColorEmoji_subset";
+  src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
 }
 
 #panels {
@@ -24,8 +30,19 @@ body {
   position: relative;
   transition: flex-grow 0.5s, padding 0.5s;
 }
-.panel        { flex-grow: 0; }
-.panel.active { flex-grow: 1; }
+#messaging-panel        { flex-grow: 0; }
+#messaging-panel.active { flex-grow: 1; }
+
+#subject-panel:empty { flex-grow: 0; }
+#subject-panel       { flex-grow: 1; }
+
+#subject-panel > * {
+  opacity: 0;
+  animation: 0.5s fade-out forwards;
+}
+#subject-panel > .active {
+  animation: 0.5s 0.5s fade-in forwards;
+}
 
 body.host-dragging:after {
   content: '';
@@ -84,17 +101,30 @@ button.pressed {
   background-color: orange;
 }
 
+#fullscreen-button.unimplemented {
+  visibility: hidden;
+}
 #fullscreen-button {
   background: no-repeat center / 59% white url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 8.5 8.5"><g fill="none" stroke="black" stroke-width="1.3"><path d="M.7 3.5V.7h2.6M7.8 3.5V.7H5.2M.7 5v2.8h2.6M7.8 5v2.8H5.2"/></g></svg>');
   opacity: 1;
+  visibility: visible;
   border: none;
   border-radius: 6vmin;
+  box-shadow: 0 0 2vmin black;
   position: fixed;
   right: 0;
   top:   0;
   width:  12vmin;
   height: 12vmin;
+  padding: 0;
+  z-index: 3;
   -webkit-tap-highlight-color: transparent;
+  transform: scale(0);
+  animation: 0.5s reveal-fullscreen-button forwards;
+}
+@keyframes reveal-fullscreen-button {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
 }
 #fullscreen-button.fullscreen {
   background: no-repeat center / 59% white url('data:image/svg+xml;utf-8,<svg width="32" height="32" version="1.1" viewBox="0 0 8.5 8.5" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="black" stroke-width="1.3"><path d="m2.868 0.3038v2.8h-2.6m5.364-2.8v2.8h2.6m-5.364 5.164v-2.8h-2.6m5.364 2.8v-2.8h2.6"/></g></svg>');
@@ -110,3 +140,5 @@ button.pressed {
 .hide {
   display: none !important;
 }
+@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }

@@ -4,6 +4,7 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <meta name="theme-color" content="#000">
     <link href="style.css" rel="stylesheet">
+    <link href="/host/splashScreen.css" rel="stylesheet">
     <link href="movement.css" rel="stylesheet">
     <link href="messaging.css" rel="stylesheet">
     <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
@@ -13,14 +14,16 @@
       <div class="panel" id="subject-panel"></div>
       <div class="panel" id="messaging-panel">
         <button class="clear-button">clear</button>
+        <div class="options"></div>
       </div>
     </div>
-    <button id="fullscreen-button"></button>
+    <button id="fullscreen-button" class="unimplemented"></button>
     <div id="connection_status" class="connecting"></div>
   </body>
   <script src="utils.js"></script>
   <script src="audio.js"></script>
   <script src="handleRtcConnection.js"></script>
+  <script src="splashScreen.js"></script>
   <script src="movement.js"></script>
   <script src="messaging.js"></script>
   <script src="/games/all-the-things/player/allTheThings.js"></script>
@@ -62,11 +65,11 @@
 
       // Setup fullscreen button
       const fullscreenButton = document.getElementById('fullscreen-button');
-      if (document.body.requestFullscreen) {
+      if (document.documentElement.requestFullscreen) {
         const clickSound = new Audio('/sounds/click.mp3');
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
-            document.body.requestFullscreen().then(() => {
+            document.documentElement.requestFullscreen().then(() => {
               fullscreenButton.classList.add('fullscreen');
             });
           } else {
@@ -94,8 +97,7 @@
         }
         window.addEventListener('touchend',    onTouchEndOrCancel);
         window.addEventListener('touchcancel', onTouchEndOrCancel);
-      } else {
-        fullscreenButton.remove();
+        fullscreenButton.classList.remove('unimplemented');
       }
 
       while (true) {

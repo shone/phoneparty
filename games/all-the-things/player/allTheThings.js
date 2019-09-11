@@ -1,17 +1,44 @@
 "use strict";
 
-function allTheThings(rtcConnection) {
+function allTheThings(channel, rtcConnection) {
+  const previousBackgroundColor = document.body.style.backgroundColor;
+  document.body.style.backgroundColor = '#98947f';
+
   let thing = null;
   let photoCanvas = null;
-  rtcConnection.addEventListener('datachannel', event => {
-    if (event.channel.label === 'all-the-things_photo') {
+  function handleNewChannel(event) {
+    if (event.channel.label === 'all-the-things_ready-to-start-looking') {
+      readyToStartLooking(event.channel);
+    } else if (event.channel.label === 'all-the-things_photo') {
       photoMode(event.channel).then(results => {
         [thing, photoCanvas] = results;
       });
     } else if (event.channel.label === 'all-the-things_photo-self-judgement') {
       photoSelfJudgement(event.channel, thing, photoCanvas);
     }
-  });
+  }
+  rtcConnection.addEventListener('datachannel', handleNewChannel);
+
+  channel.onclose = () => {
+    rtcConnection.removeEventListener('datachannel', handleNewChannel);
+    document.body.style.backgroundColor = previousBackgroundColor;
+  }
+}
+
+function readyToStartLooking(channel) {
+  const subjectPanel = document.getElementById('subject-panel');
+  const heading = document.createElement('h1');
+  heading.classList.add('ready-to-start-looking');
+  heading.textContent = 'Ready to start looking?';
+  subjectPanel.appendChild(heading);
+  heading.classList.add('active');
+  channel.onclose = () => {
+    heading.classList.remove('active');
+    setTimeout(() => {
+      heading.remove();
+      subjectPanel.textContent = '';
+    }, 500);
+  }
 }
 
 async function photoMode(channel) {

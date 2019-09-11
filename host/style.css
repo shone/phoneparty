@@ -3,6 +3,12 @@ body {
   transition: background-color 1s;
   font-family: "Helvetica Neue", "Roboto";
 }
+
+@font-face {
+  font-family: "NotoColorEmoji_subset";
+  src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
+}
+
 #connection-status {
   position: fixed;
   width:  100%;

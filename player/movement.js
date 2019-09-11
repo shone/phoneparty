@@ -3,7 +3,7 @@
 function handleMovement(channel) {
   const subjectPanel = document.getElementById('subject-panel');
   subjectPanel.insertAdjacentHTML('beforeend', `
-    <div class="movement">
+    <div class="movement active">
       <div class="arrow-buttons">
         <button data-button="up"    class="arrow-button" data-key="ArrowUp">   </button>
         <button data-button="down"  class="arrow-button" data-key="ArrowDown"> </button>
@@ -70,10 +70,13 @@ function handleMovement(channel) {
   window.addEventListener('keyup',   handleKey);
 
   channel.onclose = event => {
-    subjectPanel.classList.remove('active');
-    buttons.remove();
+    container.classList.remove('active');
     window.removeEventListener('keydown', handleKey);
     window.removeEventListener('keyup',   handleKey);
     window.removeEventListener('resize', updateContainerSize);
+    setTimeout(() => {
+      container.remove();
+      subjectPanel.textContent = '';
+    }, 500);
   }
 }
