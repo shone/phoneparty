@@ -4,9 +4,10 @@
   right: 0;
   background-color: #fff;
   border-radius: 2vmin;
-  padding: 1vmin;
+  padding: 0.5vmin;
   font-family: NotoColorEmoji_subset;
   font-weight: bold;
+  font-size: 5vmin;
   min-width: 13vmin;
   min-height: 8vmin;
   box-sizing: border-box;
@@ -14,7 +15,6 @@
   justify-content: center;
   align-items: center;
   border: 0.6vmin solid black;
-  font-size: 3vmin;
   transform: scale(0);
   transform-origin: bottom;
   animation: 0.5s both pop-in;
@@ -25,12 +25,13 @@
   width: 3vmin;
   height: 3vmin;
   background: white;
-  border-left: 0.6vmin solid black;
+  border-left:   0.6vmin solid black;
   border-bottom: 0.6vmin solid black;
   transform: rotate(-45deg);
   position: absolute;
   top: calc(100% - 1.4vmin);
   right: 2.5vmin;
+  z-index: -1;
 }
 .player .speech-bubble.cleared {
   opacity: 1;
