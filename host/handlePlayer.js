@@ -113,9 +113,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
   players.push(player);
-  if (acceptPlayersCallback) {
-    acceptPlayersCallback(player);
-  }
   for (const callback of listenPlayersCallbacks) {
     callback(player);
   }

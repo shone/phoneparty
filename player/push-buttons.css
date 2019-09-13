@@ -1,0 +1,8 @@
+button.push-button {
+  box-shadow: inset -1vmin -1vmin 1vmin #888, inset 1vmin 1vmin 1vmin white;
+  background: #d6d6d6;
+}
+button.push-button.pressed {
+  box-shadow: inset -1vmin -1vmin 1vmin white, inset 1vmin 1vmin 1vmin black;
+  background: #a0a0a0;
+}

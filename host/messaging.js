@@ -61,6 +61,9 @@ function startMessaging(possibleMessages = []) {
     },
     stop: () => {
       stopListeningForAllPlayers(handlePlayer);
+      for (const channel of channels) {
+        channel.close();
+      }
     },
   }
 }

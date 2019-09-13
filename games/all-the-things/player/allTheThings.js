@@ -123,8 +123,8 @@ function photoSelfJudgement(channel, thing, photoCanvas) {
       </div>
       <div class="be-honest">be honest</div>
       <div class="buttons">
-        <button data-response="real">yes</button>
-        <button data-response="fake">no</button>
+        <button class="push-button" data-response="real">yes</button>
+        <button class="push-button" data-response="fake">no</button>
       </div>
     </div>
   `);

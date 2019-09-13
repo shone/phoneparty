@@ -2,10 +2,17 @@
 
 function handleMessaging(channel) {
   const messagingPanel = document.getElementById('messaging-panel');
-  messagingPanel.classList.add('active');
+  const container = document.createElement('div');
+  container.classList.add('container');
+  container.classList.add('active');
+  container.insertAdjacentHTML('beforeend', `
+    <button class="clear-button push-button">clear</button>
+    <div class="options"></div>
+  `);
+  messagingPanel.appendChild(container);
 
-  const clearButton = messagingPanel.querySelector('.clear-button');
-  const options = messagingPanel.querySelector('.options');
+  const clearButton = container.querySelector('.clear-button');
+  const options = container.querySelector('.options');
 
   channel.onmessage = event => {
     const existingSpeechBubbles = [...options.getElementsByClassName('speech-bubble')];
@@ -38,16 +45,16 @@ function handleMessaging(channel) {
   clearButton.onmousedown = clearButton.ontouchstart = event => {
     event.preventDefault();
     channel.send('clear');
-    const selectedBubble = messagingPanel.querySelector('.speech-bubble.selected');
+    const selectedBubble = container.querySelector('.speech-bubble.selected');
     if (selectedBubble) {
       selectedBubble.classList.remove('selected');
     }
   }
 
   channel.onclose = () => {
-    messagingPanel.classList.remove('active');
-    for (const speechBubble of [...messagingPanel.getElementsByClassName('speech-bubble')]) {
-      speechBubble.remove();
-    }
+    container.classList.remove('active');
+    setTimeout(() => {
+      container.remove();
+    });
   }
 }

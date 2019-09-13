@@ -30,18 +30,17 @@ body {
   position: relative;
   transition: flex-grow 0.5s, padding 0.5s;
 }
-#messaging-panel        { flex-grow: 0; }
-#messaging-panel.active { flex-grow: 1; }
+.panel:empty { flex-grow: 0; }
+.panel       { flex-grow: 1; }
 
-#subject-panel:empty { flex-grow: 0; }
-#subject-panel       { flex-grow: 1; }
-
-#subject-panel > * {
+.panel > * {
   opacity: 0;
   animation: 0.5s fade-out forwards;
+  pointer-events: none;
 }
-#subject-panel > .active {
+.panel > .active {
   animation: 0.5s 0.5s fade-in forwards;
+  pointer-events: auto;
 }
 
 body.host-dragging:after {
@@ -80,25 +79,13 @@ body.host-dragging:after {
 }
 
 button {
-  font-size: 15vw;
-  background-color: grey;
-  border-radius: 10vw;
-  border: 1vw solid white;
-  opacity: 0.8;
   outline: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
 }
-button:hover {
-  background-color: #b3b3b3;
-}
-button:after {
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 70%;
-}
-button.pressed {
-  transform: scale(1.4);
-  background-color: orange;
+button::-moz-focus-inner {
+  border: 0;
 }
 
 #fullscreen-button.unimplemented {
@@ -118,7 +105,6 @@ button.pressed {
   height: 12vmin;
   padding: 0;
   z-index: 3;
-  -webkit-tap-highlight-color: transparent;
   transform: scale(0);
   animation: 0.5s reveal-fullscreen-button forwards;
 }
@@ -128,9 +114,6 @@ button.pressed {
 }
 #fullscreen-button.fullscreen {
   background: no-repeat center / 59% white url('data:image/svg+xml;utf-8,<svg width="32" height="32" version="1.1" viewBox="0 0 8.5 8.5" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="black" stroke-width="1.3"><path d="m2.868 0.3038v2.8h-2.6m5.364-2.8v2.8h2.6m-5.364 5.164v-2.8h-2.6m5.364 2.8v-2.8h2.6"/></g></svg>');
-}
-#fullscreen-button::-moz-focus-inner {
-  border: 0;
 }
 #fullscreen-button.active {
   background-color: orange;

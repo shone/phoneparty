@@ -4,6 +4,7 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <meta name="theme-color" content="#000">
     <link href="style.css" rel="stylesheet">
+    <link href="push-buttons.css" rel="stylesheet">
     <link href="/host/splashScreen.css" rel="stylesheet">
     <link href="movement.css" rel="stylesheet">
     <link href="messaging.css" rel="stylesheet">
@@ -12,10 +13,7 @@
   <body>
     <div id="panels">
       <div class="panel" id="subject-panel"></div>
-      <div class="panel" id="messaging-panel">
-        <button class="clear-button">clear</button>
-        <div class="options"></div>
-      </div>
+      <div class="panel" id="messaging-panel"></div>
     </div>
     <button id="fullscreen-button" class="unimplemented"></button>
     <div id="connection_status" class="connecting"></div>
@@ -23,6 +21,7 @@
   <script src="utils.js"></script>
   <script src="audio.js"></script>
   <script src="handleRtcConnection.js"></script>
+  <script src="push-buttons.js"></script>
   <script src="splashScreen.js"></script>
   <script src="movement.js"></script>
   <script src="messaging.js"></script>
@@ -153,6 +152,7 @@
                 }
               }
             });
+            // TODO: handle rtcConnection.onicecandidateerror
 
             var channels = {
               accelerometer:    rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0}),

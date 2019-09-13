@@ -4,7 +4,6 @@ function startBubbleField() {
   const channels = [];
   acceptAllPlayers(player => {
     const movementChannel  = player.rtcConnection.createDataChannel('movement');
-    const messagingChannel = player.rtcConnection.createDataChannel('messaging');
     player.classList.add('bubble');
     player.classList.add('wiggleable');
     player.style.left = (Math.random() * 100) + 'vw';
