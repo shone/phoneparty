@@ -3,12 +3,12 @@
 async function presentingPhotosScreen(messaging) {
   await waitForNSeconds(2);
 
-  messaging.setPossibleMessages(['real', 'fake']);
-
   const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
   const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
 
   for (const playerPresentingPhoto of players) {
+    playerPresentingPhoto.classList.remove('wiggleable');
+    playerPresentingPhoto.style.transform = '';
     playerPresentingPhoto.photo.player.classList.add('highlight-in-audience');
     await waitForNSeconds(0.7);
     playerPresentingPhoto.photo.classList.add('fullscreen');
@@ -26,6 +26,14 @@ async function presentingPhotosScreen(messaging) {
       }
     });
 
+    for (const player of players) {
+      const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
+      if (speechBubble) {
+        speechBubble.classList.add('cleared');
+        setTimeout(() => speechBubble.remove(), 500);
+      }
+    }
+    messaging.setPossibleMessages(['real', 'fake']);
     const otherPlayerResponses = new Map();
     const waitForOtherPlayers = new Promise(resolve => {
       messaging.listenForMessage(function callback(message, playerWithMessage) {
@@ -39,6 +47,8 @@ async function presentingPhotosScreen(messaging) {
     });
 
     await Promise.all([waitForPresentingPlayer, waitForOtherPlayers]);
+
+    messaging.stop();
 
     const otherPlayers = players.filter(p => p !== playerPresentingPhoto);
     for (const otherPlayer of otherPlayers) {
@@ -54,6 +64,7 @@ async function presentingPhotosScreen(messaging) {
     playerPresentingPhoto.photo.classList.add('reveal-full-photo');
     await waitForNSeconds(1);
 
+    // Reveal fooled/not-fooled state for each player
     for (const player of otherPlayers) {
       const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
       speechBubble.classList.add('cleared');
@@ -78,6 +89,8 @@ async function presentingPhotosScreen(messaging) {
       await waitForNSeconds(1);
     }
 
+    messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+
     await waitForNSeconds(2);
 
     selfJudgementChannel.close();
@@ -93,6 +106,7 @@ async function presentingPhotosScreen(messaging) {
     }
 
     playerPresentingPhoto.classList.remove('highlight-in-audience');
+    playerPresentingPhoto.classList.add('wiggleable');
     playerPresentingPhoto.photo.classList.remove('reveal-full-photo');
     await waitForNSeconds(2);
     playerPresentingPhoto.photo.classList.remove('fullscreen');
@@ -105,4 +119,6 @@ async function presentingPhotosScreen(messaging) {
   for (const photoContainer of [...document.getElementsByClassName('photo-container')]) {
     photoContainer.remove();
   }
+
+  return messaging;
 }

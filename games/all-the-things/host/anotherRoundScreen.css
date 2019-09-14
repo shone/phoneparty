@@ -1,0 +1,13 @@
+.all-the-things.another-round-screen {
+  position: fixed;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+}
+
+.all-the-things.another-round-screen h1 {
+  text-align: center;
+  font-size: 6vw;
+  margin-top: 3vh;
+}

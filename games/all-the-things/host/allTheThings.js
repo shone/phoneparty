@@ -5,10 +5,11 @@ async function AllTheThings() {
   let messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
 
   const channels = [];
-  listenForAllPlayers(player => {
+  function handlePlayer(player) {
     const channel = player.rtcConnection.createDataChannel('all-the-things');
     channels.push(channel);
-  });
+  }
+  listenForAllPlayers(handlePlayer);
 
   document.body.style.backgroundColor = '#98947f';
   await waitForNSeconds(1);
@@ -28,32 +29,18 @@ async function AllTheThings() {
     audience = startAudienceMode();
     messaging = startMessaging();
 
-    await presentingPhotosScreen(messaging);
+    messaging = await presentingPhotosScreen(messaging);
 
-    await waitForKeypress(' ');
     playerGrid.stop();
     chosenThingElement.remove();
 
-    await playAnotherRoundQuestion(messaging)
+    await anotherRoundScreen(messaging);
   }
 
+  stopListeningForAllPlayers(handlePlayer);
   for (const channel of channels) {
     channel.close();
   }
-}
-
-async function playAnotherRoundQuestion(messaging) {
-  messaging.setPossibleMessages(['yes', 'no']);
-  const responses = new Map();
-  await new Promise(resolve => {
-    messaging.listenForMessage(function handleMessage(message, player) {
-      responses.set(player, message);
-      if (players.every(player => responses.get(player) === 'yes')) {
-        resolve(true);
-        messaging.stopListeningForMessage(handleMessage);
-      }
-    });
-  });
 }
 
 function startPlayerGrid() {

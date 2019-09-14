@@ -55,31 +55,35 @@ async function goalScreen(chosenThingElement, messaging) {
   messaging.setPossibleMessages(['👍', '👎']);
 
   await new Promise(resolve => {
+    const playerResponses = new Map();
     messaging.listenForMessage((message, player) => {
-      player.allTheThingsGoalResponse = message;
-      if (players.length > 0 && players.every(p => p.allTheThingsGoalResponse === '👍')) {
+      playerResponses.set(player, message);
+      if (players.length > 0 && players.every(p => playerResponses.get(p) === '👍')) {
         resolve();
       }
     });
   });
+  for (const player of players) {
+    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
+    if (speechBubble) {
+      speechBubble.classList.add('highlight');
+    }
+  }
 
   stopListeningForAllPlayers(handlePlayer);
   for (const channel of channels) {
     channel.close();
   }
 
-  for (const player of players) {
-    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    speechBubble.classList.add('highlight');
-  }
-
   await waitForNSeconds(1.5);
 
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    speechBubble.classList.remove('highlight');
-    speechBubble.classList.add('cleared');
-    setTimeout(() => speechBubble.remove(), 500);
+    if (speechBubble) {
+      speechBubble.classList.remove('highlight');
+      speechBubble.classList.add('cleared');
+      setTimeout(() => speechBubble.remove(), 500);
+    }
   }
   await waitForNSeconds(0.5);
 

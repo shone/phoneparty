@@ -6,7 +6,7 @@ async function photoTakingScreen(thing) {
   }
 
   const playerGrid = startPlayerGrid();
-//   await waitForNSeconds(2.5);
+  await waitForNSeconds(2.5);
 
   for (const player of players) {
     player.classList.add('scale-down');
@@ -16,7 +16,6 @@ async function photoTakingScreen(thing) {
   const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
   const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
 
-  // Photo taking screen
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-taking-screen">
       <h1>Take your photos!</h1>
