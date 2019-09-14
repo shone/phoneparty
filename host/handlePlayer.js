@@ -131,8 +131,16 @@ async function handleNewPlayer(playerId, sdp, websocket) {
 
   const rtcCloseSignalReceived = new Promise(resolve => player.closeChannel.onmessage = resolve);
 
-  await Promise.race([rtcConnectionClosed, rtcCloseSignalReceived]);
+  const waitForPlayerKicked = new Promise(resolve => {
+    player.addEventListener('contextmenu', event => {
+      resolve();
+      event.preventDefault();
+    }, {once: true});
+  });
 
+  await Promise.race([rtcConnectionClosed, rtcCloseSignalReceived, waitForPlayerKicked]);
+
+  player.closeChannel.send('true');
   rtcConnection.close();
 
   playerLeftSound.play();

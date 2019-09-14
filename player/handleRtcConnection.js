@@ -33,4 +33,7 @@ async function handleRtcConnection(rtcConnection, channels) {
       document.body.classList.remove('host-dragging');
     }
   }
+  channels.hostInteraction.onclose = () => {
+    document.body.classList.remove('host-dragging');
+  }
 }

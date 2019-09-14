@@ -229,6 +229,7 @@
 
           var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForCloseChannel]);
           if (result === 'close_channel') {
+            rtcConnection.close();
             hasHost = false;
             continue;
           } else {
