@@ -9,6 +9,8 @@
     <link href="movement.css" rel="stylesheet">
     <link href="messaging.css" rel="stylesheet">
     <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
+    <link href="/games/all-the-things/player/photoTakingScreen.css" rel="stylesheet">
+    <link href="/games/all-the-things/player/photoJudgementScreen.css" rel="stylesheet">
   </head>
   <body>
     <div id="panels">
@@ -26,6 +28,8 @@
   <script src="movement.js"></script>
   <script src="messaging.js"></script>
   <script src="/games/all-the-things/player/allTheThings.js"></script>
+  <script src="/games/all-the-things/player/photoTakingScreen.js"></script>
+  <script src="/games/all-the-things/player/photoJudgementScreen.js"></script>
   <script>
     "use strict";
 
@@ -43,7 +47,7 @@
       // Setup video
       while (!stream) {
         try {
-          stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+          stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
         } catch(error) {
           if (location.hostname === 'localhost') {
             break;

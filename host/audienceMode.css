@@ -19,7 +19,7 @@
   transition: 0.5s transform, 0.5s box-shadow;
 }
 .player.audience-mode.transition-position {
-  transition: left 1s, top 1s, width 1s, height 1s, margin-left 1s, margin-top 1s;
+  transition: left 1s, top 1s, width 1s, height 1s, margin-left 1s, margin-top 1s, 0.5s box-shadow;
 }
 .player.new-player-in-audience {
   transform: translateY(20vh);
@@ -39,4 +39,18 @@
   transform: translateY(-4vh) scale(1.2);
   box-shadow: 0 1vmin 5vmin #000000;
   z-index: 8;
+}
+.player.transitioning-to-fullscreen-in-audience {
+  transition: 0.5s top, 0.5s left, 0.5s width, 0.5s height;
+}
+.player.fullscreen-in-audience {
+  top: 25vmin !important;
+  left: calc(50vw - (45vmin / 2)) !important;
+  width:  45vmin !important;
+  height: 45vmin !important;
+  font-size: 60vmin !important;
+  transform: none;
+  margin-left: 0;
+  margin-top:  0;
+  box-shadow: 0 1vmin 5vmin #000000;
 }

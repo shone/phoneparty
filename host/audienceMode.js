@@ -52,11 +52,13 @@ function startAudienceMode() {
     const playerSize = Math.min(100 / players.length, 10);
     for (const [index, player] of players.entries()) {
       player.classList.add('transition-position');
-      player.style.top  = `calc(100vh - ${playerSize}vw)`;
-      player.style.left = ((50 - ((playerSize * players.length) / 2)) + (playerSize * index)) + 'vw';
-      player.style.width  = playerSize + 'vw';
-      player.style.height = playerSize + 'vw';
-      player.style.fontSize = playerSize + 'vw';
+      if (!player.classList.contains('fullscreen-in-audience')) {
+        player.style.top  = `calc(100vh - ${playerSize}vw)`;
+        player.style.left = ((50 - ((playerSize * players.length) / 2)) + (playerSize * index)) + 'vw';
+        player.style.width  = playerSize + 'vw';
+        player.style.height = playerSize + 'vw';
+        player.style.fontSize = playerSize + 'vw';
+      }
     }
     if (transitionPositionTimer) {
       clearTimeout(transitionPositionTimer);

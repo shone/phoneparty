@@ -37,7 +37,7 @@
   to   { transform: scale(-1, 1); }
 }
 
-.player .all-the-things.fooled {
+.player .all-the-things.fooled-stamp {
   position: absolute;
   left: 0;
   top:  0;
@@ -59,7 +59,29 @@
   to   { opacity: 1; transform: rotate(-13deg) scale(1); }
 }
 
-.player .all-the-things.not-fooled {
+.player .all-the-things.fooled-overlay {
+  position: absolute;
+  left: -5%;
+  top:  -64%;
+  width:  110%;
+  height: 110%;
+  background: no-repeat center / contain url('/games/all-the-things/images/fooled-overlay.svg');
+}
+
+.player .all-the-things.lightbulb {
+  position: absolute;
+  left: 50%;
+  top:  50%;
+  width:  0.3em;
+  height: 0.3em;
+  margin-left: -0.15em;
+  margin-top:  -0.15em;
+  background: no-repeat center / contain url('/games/all-the-things/images/lightbulb.svg');
+  opacity: 0;
+  animation: 0.5s fade-in forwards;
+}
+
+.player .all-the-things.not-fooled-stamp {
   position: absolute;
   left: 0;
   top:  0;

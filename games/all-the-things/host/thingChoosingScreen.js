@@ -20,7 +20,7 @@ async function thingChoosingScreen() {
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
-  const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
+  const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food', 'pig']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
     const element = document.createElement('div');
     element.classList.add('thing');
@@ -73,6 +73,18 @@ async function thingChoosingScreen() {
   chosenThingElement.classList.remove('present-in-center');
 
   return chosenThingElement;
+}
+
+function chooseThing(thingName) {
+  const element = document.createElement('div');
+  element.classList.add('thing');
+  element.dataset.name = thingName;
+  const img = document.createElement('img');
+  img.src = `/games/all-the-things/things/${thingName}.svg`;
+  element.appendChild(img);
+  element.classList.add('show-in-top-right');
+  document.body.appendChild(element);
+  return element;
 }
 
 function juggleElements(elements) {

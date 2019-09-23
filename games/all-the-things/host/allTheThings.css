@@ -1,7 +1,7 @@
 .thing {
   position: fixed;
-  width:  10vmin;
-  height: 10vmin;
+  width:  16vmin;
+  height: 16vmin;
 }
 .thing img {
   position: absolute;

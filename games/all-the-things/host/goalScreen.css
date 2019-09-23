@@ -81,7 +81,7 @@
   font-size: 3vw;
   margin: 0;
   opacity: 0;
-  margin-bottom: 14vw;
+  margin-bottom: 16vw;
 }
 .fade-in-text {
   animation: 1s fade-in forwards;

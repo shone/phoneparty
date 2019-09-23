@@ -18,6 +18,7 @@ async function AllTheThings() {
 
   while(true) {
     const chosenThingElement = await thingChoosingScreen();
+//     const chosenThingElement = chooseThing('pig');
 
     await goalScreen(chosenThingElement, messaging);
 

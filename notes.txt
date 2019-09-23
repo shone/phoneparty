@@ -26,3 +26,24 @@ TODO:
 [x] Bug: refreshing player while on photo taking screen causes phone element on host to remain after photos taken
 [x] Make speech-bubble font bigger
 [x] Use :empty selector to hide subject panel on player
+[ ] Wait for enough players before starting game
+[ ] If all players leave, restart the game
+[ ] Save id for each tab and drop stuck players if the same tab id reconnects
+
+BUGS:
+[ ] Speech bubbles can remain after starting photo taking screen
+[ ] If presenting player leaves, other players must be moved on to the next presenting player
+
+New game assets:
+
+[ ] Picture that appears over fooled players
+    Ideas: silly hat, facepalm
+[ ] Picture that appears over not fooled players
+    Ideas: sunglasses, grinning smile, big brain, "nuh uh" finger back-and-forth, albert einstein with toungue out
+[ ] Electric scooter
+[ ] Pig
+[ ] 80s hairstyle
+[ ] "Ready to start" graphic
+[ ] "Take a photo" graphic
+    Ideas: person on top of mountain with camera, person doing "searching" gesture, camera with lots of objects scrolling across viewfinder
+[ ] "Play another round" graphic

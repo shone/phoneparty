@@ -13,6 +13,19 @@
   flex-grow: 0;
 }
 
+.piggy {
+  position: fixed;
+  width:  80vmin;
+  height: 80vmin;
+  object-fit: cover;
+  left: 100%;
+  animation: 3s piggy forwards;
+}
+@keyframes piggy {
+  from { left: 100%;    }
+  to   { left: -80vmin; }
+}
+
 .player.taking-photo {
   overflow: visible;
   border-radius: 0;

@@ -1,6 +1,15 @@
 "use strict";
 
 async function photoTakingScreen(thing) {
+  await waitForNSeconds(1);
+
+  const piggy = document.createElement('img');
+  piggy.classList.add('piggy');
+  piggy.src = '/games/all-the-things/images/piggy_on_scooter.svg';
+  document.body.appendChild(piggy);
+  await waitForNSeconds(4);
+  piggy.remove();
+
   for (const player of players) {
     player.classList.add('moving-to-grid');
   }
@@ -67,6 +76,7 @@ async function photoTakingScreen(thing) {
         photoContainer.classList.add('all-the-things');
         photoContainer.classList.add('photo-container');
         photoContainer.player = player;
+        photoContainer.arrayBuffer = arrayBuffer;
         const cropContainer = document.createElement('div');
         cropContainer.classList.add('crop-container');
         cropContainer.appendChild(image);
