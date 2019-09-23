@@ -20,7 +20,7 @@ async function thingChoosingScreen() {
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
-  const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food', 'pig']; // 'person', 'underwear', 'key', 'shirt', 'pants'
+  const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
     const element = document.createElement('div');
     element.classList.add('thing');
