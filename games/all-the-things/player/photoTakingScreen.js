@@ -21,12 +21,11 @@ async function photoTakingScreen(channel) {
   const takePhotoButton = photoScreen.querySelector('.take-photo-button')
   const switchCamerasButton = photoScreen.querySelector('.switch-cameras-button')
 
-  let thing = null;
-  channel.onmessage = event => {
-    thing = event.data;
-    photoScreen.querySelector('.goal .label').textContent = thing;
-    photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
-  }
+  const thing = await new Promise(resolve => {
+    channel.onmessage = event => resolve(event.data);
+  });
+  photoScreen.querySelector('.goal .label').textContent = thing;
+  photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
 
   try {
     const alternateStream = await navigator.mediaDevices.getUserMedia({ video: {facingMode: { exact: "environment"}  }, audio: false});
