@@ -3,14 +3,14 @@
     <title>Phone Party</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <meta name="theme-color" content="#000">
-    <link href="style.css" rel="stylesheet">
-    <link href="push-buttons.css" rel="stylesheet">
-    <link href="/host/splashScreen.css" rel="stylesheet">
-    <link href="movement.css" rel="stylesheet">
-    <link href="messaging.css" rel="stylesheet">
-    <link href="/games/all-the-things/player/allTheThings.css" rel="stylesheet">
-    <link href="/games/all-the-things/player/photoTakingScreen.css" rel="stylesheet">
-    <link href="/games/all-the-things/player/photoJudgementScreen.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="push-buttons.css">
+    <link rel="stylesheet" href="/host/splashScreen.css">
+    <link rel="stylesheet" href="movement.css">
+    <link rel="stylesheet" href="messaging.css">
+    <link rel="stylesheet" href="/games/all-the-things/player/allTheThings.css">
+    <link rel="stylesheet" href="/games/all-the-things/player/photoTakingScreen.css">
+    <link rel="stylesheet" href="/games/all-the-things/player/photoJudgementScreen.css">
   </head>
   <body>
     <div id="panels">
@@ -18,7 +18,20 @@
       <div class="panel" id="messaging-panel"></div>
     </div>
     <button id="fullscreen-button" class="unimplemented"></button>
-    <div id="connection_status" class="connecting"></div>
+    <div id="status-container" class="waiting">
+      <div class="phone-party-logo">
+        <div class="phone-party-text"></div>
+        <div class="bubbles">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <div class="separator"></div>
+      <div id="status"></div>
+      <div id="status-detail"></div>
+    </div>
   </body>
   <script src="utils.js"></script>
   <script src="audio.js"></script>
@@ -38,7 +51,9 @@
       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
     }
 
-    const connectionStatus = document.getElementById('connection_status');
+    const statusContainer = document.getElementById('status-container');
+    const status          = document.getElementById('status');
+    const statusDetail    = document.getElementById('status-detail');
 
     let stream = null;
 
@@ -46,23 +61,28 @@
 
       // Setup video
       while (!stream) {
+        statusContainer.className = 'waiting';
+        status.textContent = 'Accessing camera..';
+        statusDetail.textContent = '';
         try {
           stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
         } catch(error) {
           if (location.hostname === 'localhost') {
             break;
           }
-          connectionStatus.className = 'error';
+          statusContainer.className = 'error';
           if (error && error.name === 'NotFoundError') {
-            connectionStatus.textContent = 'No camera found';
+            status.textContent = 'no camera found';
           } else {
-            connectionStatus.textContent = 'Could not get camera';
+            status.textContent = 'Could not get camera';
           }
           const retryButton = document.createElement('button');
-          retryButton.textContent = 'Retry';
-          connectionStatus.appendChild(retryButton);
+          retryButton.className = 'push-button';
+          retryButton.textContent = 'retry';
+          statusDetail.appendChild(retryButton);
           await new Promise(resolve => retryButton.onclick = resolve);
           retryButton.remove();
+          break;
         }
       }
 
@@ -105,8 +125,9 @@
 
       while (true) {
         await waitForPageToBeVisible();
-        connectionStatus.className = 'connecting';
-        connectionStatus.textContent = '(websocket)';
+        statusContainer.className = 'waiting';
+        status.textContent = 'Connecting..';
+        statusDetail.textContent = 'Opening websocket';
 
         const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
 
@@ -123,8 +144,9 @@
         try {
           await waitForWebsocketToConnect(websocket);
         } catch(error) {
-          connectionStatus.className = 'error';
-          connectionStatus.textContent = 'Could not establish websocket, retrying in 2 seconds..';
+          statusContainer.className = 'error';
+          status.textContent = 'failed to connect';
+          statusDetail.textContent = 'Could not establish websocket, retrying in 2 seconds..';
           await waitForNSeconds(2);
           continue;
         }
@@ -134,13 +156,15 @@
 
           try {
             if (!hasHost) {
-              connectionStatus.className = 'connecting';
-              connectionStatus.textContent = '(waiting for host..)';
+              statusContainer.className = 'waiting';
+              status.textContent = 'Waiting for host...';
+              statusDetail.textContent = '';
               await waitForHost(websocket);
             }
 
-            connectionStatus.className = 'connecting';
-            connectionStatus.textContent = '(WebRTC)';
+            statusContainer.className = 'waiting';
+            status.textContent = 'Connecting..';
+            statusDetail.textContent = 'Establishing WebRTC connection';
 
             var rtcConnection = new RTCPeerConnection();
             if (stream) {
@@ -168,8 +192,9 @@
             try {
               var rtcOffer = await rtcConnection.createOffer();
             } catch(error) {
-              connectionStatus.className = 'error';
-              connectionStatus.textContent = 'Could not create WebRTC offer';
+              statusContainer.className = 'error';
+              status.textContent = 'Could not connect';
+              statusDetail.textContent = 'WebRTC offer creation failed';
               return;
             }
 
@@ -195,8 +220,9 @@
               var result = await Promise.race([waitForRtcConnection(rtcConnection), waitForWebsocketToDisconnect(websocket)]);
             } catch(error) {
               if (error === 'rtc_disconnected') {
-                connectionStatus.className = 'error';
-                connectionStatus.textContent = 'Could not establish WebRTC connection, retrying in 2 seconds..';
+                statusContainer.className = 'error';
+                status.textContent = 'Could not connect';
+                statusDetail.textContent = 'WebRTC disconnected. Retrying in 2 seconds..';
                 await waitForNSeconds(2);
                 continue;
               } else {
@@ -209,8 +235,9 @@
           } catch(error) {
             if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
               rtcConnection.close();
-              connectionStatus.className = 'error';
-              connectionStatus.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
+              statusContainer.className = 'error';
+              status.textContent = 'Could not connect';
+              statusDetail.textContent = 'Websocket disconnected, reconnecting in 2 seconds..';
               await waitForNSeconds(2);
               break;
             } else {
@@ -218,8 +245,9 @@
             }
           }
 
-          connectionStatus.className = 'connected';
-          connectionStatus.textContent = '';
+          statusContainer.className = '';
+          status.textContent = '';
+          statusDetail.textContent = '';
 
           handleRtcConnection(rtcConnection, channels);
 
@@ -235,10 +263,15 @@
           if (result === 'close_channel') {
             rtcConnection.close();
             hasHost = false;
+            statusContainer.className = 'error';
+            status.textContent = 'Host disconnected';
+            statusDetail.textContent = '';
+            await waitForNSeconds(2);
             continue;
           } else {
-            connectionStatus.className = 'error';
-            connectionStatus.textContent = 'WebRTC Disconnected, reconnecting in 5 seconds..';
+            statusContainer.className = 'error';
+            status.textContent = 'Disconnected';
+            status.textContent = 'WebRTC disconnected, reconnecting in 5 seconds..';
             await waitForNSeconds(5);
             continue;
           }
