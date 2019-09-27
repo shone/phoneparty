@@ -46,6 +46,8 @@
 }
 .player.moving-to-grid {
   position: fixed;
+  margin-left: 0;
+  margin-top:  0;
   transition: left 1.5s, top 1.5s, margin-left 1.5s, margin-top 1.5s, width 1.5s, height 1.5s;
 }
 .player.taking-photo video {

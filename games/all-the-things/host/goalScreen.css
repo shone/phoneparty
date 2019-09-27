@@ -36,7 +36,7 @@
   transform: translateY(85vh);
 }
 .goal-screen .phone.reveal {
-  animation: 3s reveal-phone forwards;
+  animation: 2s reveal-phone forwards;
 }
 @keyframes reveal-phone {
   from { transform: translateY(85vh); }
@@ -49,7 +49,7 @@
   transform: scale(0.5) translateY(-67vh);
 }
 .goal-screen .phone.reveal .phone-background .thing {
-  animation: 3s reveal-phone-background forwards, 2s 3s zoom-phone-background forwards;
+  animation: 2s reveal-phone-background forwards, 1.5s 2s zoom-phone-background forwards;
 }
 @keyframes reveal-phone-background {
   from { transform: scale(0.5) translateY(-67vh); }
@@ -71,7 +71,7 @@
   opacity: 0;
 }
 .goal-screen .phone.reveal .phone-background:after {
-  animation: 0.5s 5s flash-cropped-area alternate infinite;
+  animation: 0.5s 3s flash-cropped-area alternate 3 forwards;
 }
 @keyframes flash-cropped-area {
   from { opacity: 0; }
@@ -82,6 +82,14 @@
   margin: 0;
   opacity: 0;
   margin-bottom: 16vw;
+  color: #d03e3e;
+}
+.goal-screen h2.fade-in-text {
+  animation: 0.5s flash-ready-to-start-looking ease-in-out alternate infinite;
+}
+@keyframes flash-ready-to-start-looking {
+  from { opacity: 1; }
+  to   { opacity: 0.2; }
 }
 .fade-in-text {
   animation: 1s fade-in forwards;

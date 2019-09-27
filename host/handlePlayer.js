@@ -1,7 +1,5 @@
 "use strict";
 
-const listenPlayersCallbacks = [];
-
 let acceptPlayersCallback = null;
 function acceptAllPlayers(callback) {
   listenForAllPlayers(callback);
@@ -12,6 +10,18 @@ function stopAcceptingPlayers() {
   acceptPlayersCallback = null;
 }
 
+const listenForNewPlayersCallbacks = [];
+function listenForNewPlayers(callback) {
+  listenForNewPlayersCallbacks.push(callback);
+}
+function stopListeningForNewPlayers(callback) {
+  const index = listenForNewPlayersCallbacks.indexOf(callback);
+  if (index !== -1) {
+    listenForNewPlayersCallbacks.splice(index, 1);
+  }
+}
+
+const listenPlayersCallbacks = [];
 function listenForAllPlayers(callback) {
   for (const player of players) {
     callback(player);
@@ -116,9 +126,12 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   for (const callback of listenPlayersCallbacks) {
     callback(player);
   }
+  for (const callback of listenForNewPlayersCallbacks) {
+    callback(player);
+  }
   document.body.dispatchEvent(new Event('playerAdded'));
 
-  newPlayerSound.play();
+  newPlayerSound.play().catch(() => {});
 
   const rtcConnectionClosed = new Promise(resolve => {
     rtcConnection.addEventListener('connectionstatechange', function callback() {
@@ -143,7 +156,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   player.closeChannel.send('true');
   rtcConnection.close();
 
-  playerLeftSound.play();
+  playerLeftSound.play().catch(() => {});
 
   player.classList.add('leaving');
   player.dataset.visibility = '';

@@ -26,16 +26,16 @@ async function goalScreen(chosenThingElement, messaging) {
   phoneBackgroundContent.classList.add('thing');
   phoneBackground.appendChild(phoneBackgroundContent);
 
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
   goalScreen.querySelector('h1').classList.add('fade-in-text');
 
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(1.2), waitForKeypress(' ')]);
   goalScreen.querySelector('.goal-text').classList.add('fade-in-text');
 
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(0.5), waitForKeypress(' ')]);
   goalScreen.querySelector('.phone').classList.add('reveal');
 
-  await Promise.race([waitForNSeconds(7), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(4.5), waitForKeypress(' ')]);
 
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');

@@ -10,12 +10,16 @@ async function photoTakingScreen(thing) {
   await waitForNSeconds(4);
   piggy.remove();
 
-  for (const player of players) {
+  acceptAllPlayers(player => {
+    player.classList.add('bubble');
     player.classList.add('moving-to-grid');
-  }
-
+    if (!player.parentElement) {
+      document.body.appendChild(player);
+    }
+  });
   const playerGrid = startPlayerGrid();
   await waitForNSeconds(2.5);
+  stopAcceptingPlayers();
 
   for (const player of players) {
     player.classList.add('scale-down');
