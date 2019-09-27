@@ -6,7 +6,12 @@ async function presentingPhotosScreen(messaging) {
   const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
   const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
 
-  for (const playerPresentingPhoto of players) {
+  const playersWithPhotos = players.filter(player => player.photo);
+
+  for (const playerPresentingPhoto of playersWithPhotos) {
+    if (players.indexOf(playerPresentingPhoto) === -1) {
+      continue; // Player has left, continue to next player
+    }
     playerPresentingPhoto.classList.remove('wiggleable');
     playerPresentingPhoto.style.transform = '';
     playerPresentingPhoto.photo.player.classList.add('highlight-in-audience');

@@ -65,6 +65,7 @@ async function photoTakingScreen(channel) {
   video.onloadedmetadata = updateCropGuide;
   updateCropGuide();
 
+  // TODO: convert to mp3
   const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
 
   channel.onclose = () => {
