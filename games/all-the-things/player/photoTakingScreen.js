@@ -11,7 +11,7 @@ async function photoTakingScreen(channel) {
         <div class="label"></div>
       </div>
       <button class="take-photo-button"></button>
-      <button class="push-button switch-cameras-button"></button>
+      <button class="push-button switch-cameras-button hide"></button>
     </div>
   `);
   const photoScreen = document.body.lastElementChild;
@@ -39,10 +39,10 @@ async function photoTakingScreen(channel) {
         video.classList.remove('flip');
       }
     }
+    switchCamerasButton.classList.remove('hide');
   } catch(error) {
     video.srcObject = stream;
     video.classList.add('flip');
-    switchCamerasButton.remove();
   }
 
   function updateCropGuide() {
