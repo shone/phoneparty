@@ -104,6 +104,7 @@ async function photoTakingScreen(thing) {
         checkIfAllPhotosTaken();
       }
     });
+    // TODO: This callback isn't cleaned up!
     listenForLeavingPlayer(player => {
       if (player.photo) {
         player.photo.remove();
