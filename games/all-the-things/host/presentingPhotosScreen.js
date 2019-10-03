@@ -1,27 +1,29 @@
 "use strict";
 
-async function presentingPhotosScreen(messaging) {
+async function presentingPhotosScreen(playerPhotos) {
   await waitForNSeconds(2);
 
-  const playersWithPhotos = players.filter(player => player.photo);
+  const playersWithPhotos = players.filter(player => playerPhotos.has(player));
 
   for (const playerPresentingPhoto of playersWithPhotos) {
     if (players.indexOf(playerPresentingPhoto) === -1) {
       continue; // Player has left, continue to next player
     }
+
     playerPresentingPhoto.classList.remove('wiggleable');
     playerPresentingPhoto.style.transform = '';
-    playerPresentingPhoto.photo.player.classList.add('highlight-in-audience');
+    playerPresentingPhoto.classList.add('highlight-in-audience');
 
-    messaging = await presentPhoto(playerPresentingPhoto, messaging);
+    const photo = playerPhotos.get(playerPresentingPhoto);
+    await presentPhoto(playerPresentingPhoto, photo);
 
     playerPresentingPhoto.classList.remove('highlight-in-audience');
     playerPresentingPhoto.classList.add('wiggleable');
-    playerPresentingPhoto.photo.classList.remove('reveal-full-photo');
+    photo.classList.remove('reveal-full-photo');
     await waitForNSeconds(2);
-    playerPresentingPhoto.photo.classList.remove('fullscreen');
-    for (const photo of [...document.getElementsByClassName('photo-container')]) {
-      photo.classList.remove('de-emphasize');
+    photo.classList.remove('fullscreen');
+    for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+      otherPhoto.classList.remove('de-emphasize');
     }
     await waitForNSeconds(2);
   }
@@ -29,87 +31,35 @@ async function presentingPhotosScreen(messaging) {
   for (const photoContainer of [...document.getElementsByClassName('photo-container')]) {
     photoContainer.remove();
   }
-
-  return messaging;
 }
 
-async function presentPhoto(playerPresentingPhoto, messaging) {
-  const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
-  const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
-  
-  const waitForPresentingPlayerToLeave = new Promise(resolve => {
-    listenForLeavingPlayer(function handlePlayerLeaving(player) {
-      if (player === playerPresentingPhoto) {
-        resolve('presenting_player_left');
-        stopListeningForLeavingPlayer(handlePlayerLeaving);
-      }
-    });
-  });
+const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
+const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
 
-  await waitForNSeconds(0.7);
-  playerPresentingPhoto.photo.classList.add('fullscreen');
-  for (const photo of [...document.getElementsByClassName('photo-container')]) {
-    photo.classList.toggle('de-emphasize', photo.player !== playerPresentingPhoto);
+async function presentPhoto(playerPresentingPhoto, photo) {
+  // Show photo full-screen
+  photo.classList.add('fullscreen');
+  for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+    otherPhoto.classList.toggle('de-emphasize', otherPhoto.player !== playerPresentingPhoto);
   }
-  let result = await Promise.race([waitForNSeconds(2), waitForPresentingPlayerToLeave]);
-  if (result === 'presenting_player_left') {
+  let result = await Promise.race([waitForNSeconds(2), waitForPlayerToLeave(playerPresentingPhoto)]);
+  if (result === 'player_left') {
     return;
   }
 
-  const selfJudgementChannel = playerPresentingPhoto.rtcConnection.createDataChannel('all-the-things_photo-self-judgement');
-  let selfJudgementResult = null;
-  const waitForPresentingPlayer = new Promise(resolve => {
-    selfJudgementChannel.onmessage = event => {
-      selfJudgementResult = event.data;
-      resolve();
-    }
-  });
+  result = await judgePhoto(playerPresentingPhoto, photo);
 
-  for (const player of players) {
-    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    if (speechBubble) {
-      speechBubble.classList.add('cleared');
-      setTimeout(() => speechBubble.remove(), 500);
+  if (result === 'player_left') {
+    for (const player of players) {
+      clearSpeechBubblesFromPlayer(player);
     }
+    return;
   }
-  const judgementChannels = players.map(player => {
-    const channel = player.rtcConnection.createDataChannel('all-the-things_photo-judgement');
-    const arrayBuffer = playerPresentingPhoto.photo.arrayBuffer;
-    channel.onopen = () => channel.send(arrayBuffer);
-    return channel;
-  });
-  messaging.setPossibleMessages(['real', 'fake']);
-  const otherPlayerResponses = new Map();
-  const waitForOtherPlayers = new Promise(resolve => {
-    messaging.listenForMessage(function callback(message, playerWithMessage) {
-      if (playerWithMessage === playerPresentingPhoto) {
-        return;
-      }
-      otherPlayerResponses.set(playerWithMessage, message);
-      const otherPlayers = players.filter(p => p !== playerPresentingPhoto);
-      if (otherPlayers.every(p => otherPlayerResponses.has(p))) {
-        resolve();
-        messaging.stopListeningForMessage(callback);
-      }
-    });
-  });
-
-  result = await Promise.race([
-    Promise.all([waitForPresentingPlayer, waitForOtherPlayers]),
-    waitForPresentingPlayerToLeave
-  ]);
-  selfJudgementChannel.close();
-  for (const channel of judgementChannels) {
-    channel.close();
-  }
-  messaging.stop();
-  if (result === 'presenting_player_left') {
-    messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
-    return messaging;
-  }
+  const [selfJudgementResult, otherPlayerResponses] = result;
 
   const otherPlayersWithResponses = players.filter(player => otherPlayerResponses.has(player));
 
+  // Highlight responses
   for (const otherPlayer of otherPlayersWithResponses) {
     const speechBubble = otherPlayer.querySelector('.speech-bubble:not(.cleared)');
     if (speechBubble) {
@@ -124,7 +74,7 @@ async function presentPhoto(playerPresentingPhoto, messaging) {
     }
   }
 
-  playerPresentingPhoto.photo.classList.add('reveal-full-photo');
+  photo.classList.add('reveal-full-photo');
   await waitForNSeconds(1);
 
   // Reveal fooled/not-fooled state for each player
@@ -139,41 +89,18 @@ async function presentPhoto(playerPresentingPhoto, messaging) {
       speechBubble.remove();
     }
 
-    for (const photo of [...document.getElementsByClassName('photo-container')]) {
-      photo.classList.add('de-emphasize');
+    for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+      otherPhoto.classList.add('de-emphasize');
     }
 
     player.classList.add('transitioning-to-fullscreen-in-audience');
     player.classList.add('fullscreen-in-audience');
     await waitForNSeconds(1);
 
-    if (otherPlayerResponses.get(player) !== selfJudgementResult) {
-      fooledSound.play();
-      const fooledStamp = document.createElement('div');
-      fooledStamp.classList.add('all-the-things');
-      fooledStamp.classList.add('fooled-stamp');
-      fooledStamp.textContent = 'FOOLED';
-      player.appendChild(fooledStamp);
-      const fooledOverlay = document.createElement('div');
-      fooledOverlay.classList.add('all-the-things');
-      fooledOverlay.classList.add('fooled-overlay');
-      player.appendChild(fooledOverlay);
+    if (otherPlayerResponses.get(player) === selfJudgementResult) {
+      setPlayerNotFooled(player);
     } else {
-      notFooledSound.play();
-      const notFooledStamp = document.createElement('div');
-      notFooledStamp.classList.add('all-the-things');
-      notFooledStamp.classList.add('not-fooled-stamp');
-      notFooledStamp.textContent = 'not fooled';
-      player.appendChild(notFooledStamp);
-      const lightbulbsCount = 6;
-      for (let i=0; i < lightbulbsCount; i++) {
-        const lightbulb = document.createElement('div');
-        lightbulb.classList.add('all-the-things');
-        lightbulb.classList.add('lightbulb');
-        lightbulb.style.animationDelay = (0.7 * (i / lightbulbsCount)) + 's';
-        lightbulb.style.transform = `translate(${((Math.random() - 0.5) * 2) * 250}%, ${((Math.random() - 0.5) * 2) * 250}%) rotate(${((Math.random() - 0.5) * 2) * 40}deg)`;
-        player.appendChild(lightbulb);
-      }
+      setPlayerFooled(player);
     }
     await waitForNSeconds(2.5);
 
@@ -181,32 +108,136 @@ async function presentPhoto(playerPresentingPhoto, messaging) {
     setTimeout(() => player.classList.remove('transitioning-to-fullscreen-in-audience'), 500);
     await waitForNSeconds(0.5);
 
-    for (const photo of [...document.getElementsByClassName('photo-container')]) {
-      photo.classList.toggle('de-emphasize', photo.player !== playerPresentingPhoto);
+    for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+      otherPhoto.classList.toggle('de-emphasize', otherPhoto.player !== playerPresentingPhoto);
     }
   }
-
-  messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
 
   await waitForNSeconds(2);
 
   for (const otherPlayer of players) {
-    const fooledStamp = otherPlayer.querySelector('.fooled-stamp');
-    if (fooledStamp) {
-      fooledStamp.remove();
+    clearPlayerFooledState(otherPlayer);
+  }
+}
+
+async function judgePhoto(playerPresentingPhoto, photo) {
+  const croppedPhotoArrayBuffer = await makeCroppedImageArrayBuffer(photo.image);
+
+  const selfJudgementChannel = playerPresentingPhoto.rtcConnection.createDataChannel('all-the-things_photo-self-judgement');
+  const otherPlayerChannels = [];
+
+  const getAllPlayerResponses = new Promise(resolve => {
+    let selfJudgementResult = null;
+    const otherPlayerResponses = new Map();
+    function checkAllPlayersResponded() {
+      const otherPlayers = players.filter(player => player !== playerPresentingPhoto);
+      if (selfJudgementResult !== null && otherPlayers.length >= 1 && otherPlayers.every(player => otherPlayerResponses.has(player))) {
+        resolve([selfJudgementResult, otherPlayerResponses]);
+        stopListeningForAllPlayers(handlePlayer);
+        stopListeningForLeavingPlayer(checkAllPlayersResponded);
+      } else if (players.indexOf(playerPresentingPhoto) === -1) {
+        stopListeningForAllPlayers(handlePlayer);
+        stopListeningForLeavingPlayer(checkAllPlayersResponded);
+      }
     }
-    const fooledOverlay = otherPlayer.querySelector('.fooled-overlay');
-    if (fooledOverlay) {
-      fooledOverlay.remove();
+    selfJudgementChannel.onmessage = event => {
+      selfJudgementResult = event.data;
+      checkAllPlayersResponded();
     }
-    const notFooledStamp = otherPlayer.querySelector('.not-fooled-stamp');
-    if (notFooledStamp) {
-      notFooledStamp.remove();
+    function handlePlayer(player) {
+      if (player === playerPresentingPhoto) {
+        return;
+      }
+      const channel = player.rtcConnection.createDataChannel('all-the-things_photo-judgement');
+      channel.onopen = () => channel.send(croppedPhotoArrayBuffer);
+      channel.onmessage = event => {
+        otherPlayerResponses.set(player, event.data);
+        checkAllPlayersResponded();
+        clearSpeechBubblesFromPlayer(player);
+        addSpeechBubbleToPlayer(player, event.data);
+      }
+      otherPlayerChannels.push(channel);
     }
-    for (const lightbulb of [...otherPlayer.getElementsByClassName('lightbulb')]) {
-      lightbulb.remove();
-    }
+    listenForAllPlayers(handlePlayer);
+    listenForLeavingPlayer(checkAllPlayersResponded);
+  });
+
+  const result = await Promise.race([
+    getAllPlayerResponses,
+    waitForPlayerToLeave(playerPresentingPhoto)
+  ]);
+  selfJudgementChannel.close();
+  for (const channel of otherPlayerChannels) {
+    channel.close();
   }
 
-  return messaging;
+  return result;
+}
+
+function setPlayerFooled(player) {
+  fooledSound.play().catch(() => {});
+  const fooledStamp = document.createElement('div');
+  fooledStamp.classList.add('all-the-things');
+  fooledStamp.classList.add('fooled-stamp');
+  fooledStamp.textContent = 'FOOLED';
+  player.appendChild(fooledStamp);
+  const fooledOverlay = document.createElement('div');
+  fooledOverlay.classList.add('all-the-things');
+  fooledOverlay.classList.add('fooled-overlay');
+  player.appendChild(fooledOverlay);
+}
+
+function setPlayerNotFooled(player) {
+  notFooledSound.play().catch(() => {});
+  const notFooledStamp = document.createElement('div');
+  notFooledStamp.classList.add('all-the-things');
+  notFooledStamp.classList.add('not-fooled-stamp');
+  notFooledStamp.textContent = 'not fooled';
+  player.appendChild(notFooledStamp);
+  const lightbulbsCount = 6;
+  for (let i=0; i < lightbulbsCount; i++) {
+    const lightbulb = document.createElement('div');
+    lightbulb.classList.add('all-the-things');
+    lightbulb.classList.add('lightbulb');
+    lightbulb.style.animationDelay = (0.7 * (i / lightbulbsCount)) + 's';
+    lightbulb.style.transform = `translate(${((Math.random() - 0.5) * 2) * 250}%, ${((Math.random() - 0.5) * 2) * 250}%) rotate(${((Math.random() - 0.5) * 2) * 40}deg)`;
+    player.appendChild(lightbulb);
+  }
+}
+
+function clearPlayerFooledState(player) {
+  const fooledStamp = player.querySelector('.fooled-stamp');
+  if (fooledStamp) {
+    fooledStamp.remove();
+  }
+  const fooledOverlay = player.querySelector('.fooled-overlay');
+  if (fooledOverlay) {
+    fooledOverlay.remove();
+  }
+  const notFooledStamp = player.querySelector('.not-fooled-stamp');
+  if (notFooledStamp) {
+    notFooledStamp.remove();
+  }
+  for (const lightbulb of [...player.getElementsByClassName('lightbulb')]) {
+    lightbulb.remove();
+  }
+}
+
+async function makeCroppedImageArrayBuffer(image) {
+  const canvas = document.createElement('canvas');
+  const croppedSize = Math.min(image.naturalWidth, image.naturalHeight) / 3;
+  canvas.width  = croppedSize;
+  canvas.height = croppedSize;
+  const context = canvas.getContext('2d');
+  context.drawImage(
+    image,
+    (image.naturalWidth  / 2) - (croppedSize / 2), // Source X
+    (image.naturalHeight / 2) - (croppedSize / 2), // Source Y
+    croppedSize, croppedSize, // Source dimensions
+    0, 0, // Destination position
+    croppedSize, croppedSize // Destination dimensions
+  );
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+  const arrayBuffer = await new Response(blob).arrayBuffer();
+  return arrayBuffer;
 }

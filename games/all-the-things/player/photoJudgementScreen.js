@@ -1,40 +1,94 @@
 "use strict";
 
-function photoJudgement(channel, thing) {
+async function photoJudgement(channel, getThing) {
+  const thing = await getThing();
+
   const subjectPanel = document.getElementById('subject-panel');
+  const image = document.createElement('img');
+  image.classList.add('photo-judgement-image');
+  subjectPanel.appendChild(image);
+  image.classList.add('active');
+  channel.onmessage = event => {
+    const arrayBuffer = event.data;
+    const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
+    image.src = URL.createObjectURL(blob);
+  }
+
+  const messagingPanel = document.getElementById('messaging-panel');
   const judgementScreen = document.createElement('div');
   judgementScreen.classList.add('all-the-things');
   judgementScreen.classList.add('photo-judgement-screen');
   judgementScreen.insertAdjacentHTML('beforeend', `
     <h1>Is this photo really of:</h1>
-    <div class="goal">
-      <img src="/games/all-the-things/things/${thing}.svg">
-      <div class="label">${thing}</div>
-      <canvas></canvas>
+    <img src="/games/all-the-things/things/${thing}.svg">
+    <div class="label">${thing}</div>
+    <div class="real-or-fake">
+      <button class="push-button" data-option="real">real</button>
+      <button class="push-button" data-option="fake">fake</button>
     </div>
   `);
-  subjectPanel.appendChild(judgementScreen);
+  messagingPanel.appendChild(judgementScreen);
   judgementScreen.classList.add('active');
-  channel.onmessage = event => {
-    const arrayBuffer = event.data;
-    const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
-    const image = new Image();
-    image.src = URL.createObjectURL(blob);
-
-    const cropContainer = document.createElement('div');
-    cropContainer.classList.add('crop-container');
-    cropContainer.appendChild(image);
-
-    const photoContainer = document.createElement('div');
-    photoContainer.classList.add('photo-container');
-    photoContainer.appendChild(cropContainer);
-
-    judgementScreen.appendChild(photoContainer);
+  judgementScreen.querySelector('.real-or-fake').onclick = event => {
+    const buttons = judgementScreen.querySelectorAll('.real-or-fake button');
+    for (const button of buttons) {
+      button.classList.remove('selected');
+    }
+    if (event.target.tagName === 'BUTTON') {
+      channel.send(event.target.dataset.option);
+      event.target.classList.add('selected');
+    }
   }
-  channel.onclose = () => {
-    judgementScreen.classList.remove('active');
-    setTimeout(() => {
-      judgementScreen.remove();
-    }, 500);
+
+  await waitForDataChannelClose(channel);
+  image.classList.remove('active');
+  judgementScreen.classList.remove('active');
+  setTimeout(() => {
+    image.remove();
+    judgementScreen.remove();
+  }, 500);
+}
+
+async function photoSelfJudgement(channel, getThing, photoCanvas) {
+  const thing = await getThing();
+
+  const subjectPanel = document.getElementById('subject-panel');
+  photoCanvas.classList.add('photo-judgement-image');
+  subjectPanel.appendChild(photoCanvas);
+  photoCanvas.classList.add('active');
+
+  const messagingPanel = document.getElementById('messaging-panel');
+  const selfJudgementScreen = document.createElement('div');
+  selfJudgementScreen.classList.add('all-the-things');
+  selfJudgementScreen.classList.add('photo-self-judgement-screen');
+  selfJudgementScreen.insertAdjacentHTML('beforeend', `
+    <h1>Is your photo really of:</h1>
+    <img src="/games/all-the-things/things/${thing}.svg">
+    <div class="label">${thing}</div>
+    <div class="be-honest">be honest</div>
+    <div class="buttons">
+      <button class="push-button" data-response="real">yes</button>
+      <button class="push-button" data-response="fake">no</button>
+    </div>
+  `);
+  messagingPanel.appendChild(selfJudgementScreen);
+  selfJudgementScreen.classList.add('active');
+  selfJudgementScreen.onclick = event => {
+    if (event.target.tagName === 'BUTTON') {
+      channel.send(event.target.dataset.response);
+      const buttons = selfJudgementScreen.querySelectorAll('button');
+      for (const button of buttons) {
+        button.classList.remove('selected');
+      }
+      event.target.classList.add('selected');
+    }
   }
+
+  await waitForDataChannelClose(channel);
+  photoCanvas.classList.remove('active');
+  selfJudgementScreen.classList.remove('active');
+  setTimeout(() => {
+    photoCanvas.remove();
+    selfJudgementScreen.remove();
+  }, 500);
 }

@@ -4,7 +4,10 @@
   top:    0;
   right:  0;
   bottom: 0;
-  background: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 .all-the-things.photo-judgement-screen h1 {
   text-align: center;
@@ -12,37 +15,98 @@
   color: white;
   text-shadow: black 0.1vw 0.1vw 1vw;
 }
-.all-the-things.photo-judgement-screen .goal {
-  position: absolute;
-  left:  0;
-  right: 0;
-  top: 12vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.all-the-things.photo-judgement-screen img {
+  width:  25vmin;
+  height: 25vmin;
+  object-fit: contain;
 }
-.all-the-things.photo-judgement-screen .goal img {
-  width:  15vmin;
-  height: 15vmin;
-}
-.all-the-things.photo-judgement-screen .goal .label {
+.all-the-things.photo-judgement-screen .label {
   font-size: 6vmin;
   text-shadow: 0 0 2vmin white;
 }
-.all-the-things.photo-judgement-screen .photo-container {
+.all-the-things.photo-judgement-screen .real-or-fake {
+  display: flex;
+  flex-direction: row;
+}
+.all-the-things.photo-judgement-screen .real-or-fake button {
+  flex-grow: 1;
+  height: 20vmin;
+  margin: 2vmin;
+  font-size: 10vmin;
+}
+.all-the-things.photo-judgement-screen .real-or-fake button.selected {
+  outline: 3vmin solid yellow;
+}
+
+.photo-judgement-image {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+  background: black;
+}
+
+.all-the-things.photo-self-judgement-screen {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.all-the-things.photo-self-judgement-screen h1 {
+  text-align: center;
+  font-size: 6vmin;
+  color: white;
+  text-shadow: black 0.1vw 0.1vw 1vw;
+}
+.all-the-things.photo-self-judgement-screen img {
+  width:  15vmin;
+  height: 15vmin;
+}
+.all-the-things.photo-self-judgement-screen .label {
+  font-size: 6vmin;
+  text-shadow: 0 0 2vmin white;
+}
+.all-the-things.photo-self-judgement-screen .be-honest {
+  text-align: center;
+  font-size: 9vmin;
+  color: red;
+  font-weight: bold;
+  animation: 0.5s be-honest-flash alternate infinite;
+  text-shadow: 0 0 2vmin black;
+}
+@keyframes be-honest-flash {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.all-the-things.photo-self-judgement-screen canvas {
   position: absolute;
   left: 0;
   top:  0;
   width:  100%;
   height: 100%;
   z-index: -1;
+  object-fit: contain;
+  object-position: top;
 }
-.all-the-things.photo-judgement-screen .crop-container {
-  position: absolute;
-  left:   40%;
-  top:    33%;
-  right:  40%;
-  bottom: 48%;
-  overflow: hidden;
-  transform: scale(4);
+.all-the-things.photo-self-judgement-screen .buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+.all-the-things.photo-self-judgement-screen button {
+  height: 20vmin;
+  flex-grow: 1;
+  max-width: 80vmin;
+  margin: 2vmin;
+  font-size: 15vmin;
+}
+.all-the-things.photo-self-judgement-screen button.selected {
+  outline: 3vmin solid yellow;
 }

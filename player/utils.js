@@ -4,6 +4,10 @@ function waitForNSeconds(seconds) {
   return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }
 
+function randomInArray(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
 function waitForPageToBeVisible() {
   return new Promise(resolve => {
     if (document.visibilityState === 'visible') {
@@ -96,4 +100,27 @@ function waitForRtcToDisconnect(rtcConnection) {
       });
     }
   });
+}
+
+async function getMessageFromDataChannelOrClose(channel) {
+  if (channel.readyState === 'closing' || channel.readyState === 'closed') {
+    return [null, true];
+  } else {
+    return new Promise(resolve => {
+      channel.addEventListener('message', event => resolve([event.data, false]), {once: true});
+      channel.addEventListener('close', () => resolve([null, true]), {once: true});
+      channel.addEventListener('error', () => resolve([null, true]), {once: true});
+    });
+  }
+}
+
+async function waitForDataChannelClose(channel) {
+  if (channel.readyState === 'closing' || channel.readyState === 'closed') {
+    return;
+  } else {
+    return new Promise(resolve => {
+      channel.addEventListener('close', resolve, {once: true});
+      channel.addEventListener('error', resolve, {once: true});
+    });
+  }
 }

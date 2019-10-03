@@ -21,7 +21,7 @@
   cursor: pointer;
 }
 .player.bubble.new {
-  animation: 0.5s both pop-in forwards;
+  animation: 0.5s pop-in forwards;
 }
 @keyframes pop-in {
   0%   { transform: scale(0); }

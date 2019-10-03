@@ -4,11 +4,9 @@
   width:  60vmin !important;
   height: 60vmin !important;
   z-index: 5;
-  transition: left 0.8s linear, top 0.8s linear, width 0.8s linear, height 0.8s linear;
 }
 .photo-container.de-emphasize {
   opacity: 0.2;
-  transition: opacity 1s;
 }
 .photo-container.reveal-full-photo {
   left: 2vmin !important;

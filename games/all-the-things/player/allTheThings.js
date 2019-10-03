@@ -5,18 +5,31 @@ function allTheThings(channel, rtcConnection) {
   document.body.style.backgroundColor = '#98947f';
 
   let thing = null;
+  channel.onmessage = event => {
+    thing = event.data;
+  }
+  async function getThing() {
+    if (thing !== null) {
+      return thing;
+    } else {
+      return new Promise(resolve => {
+        channel.addEventListener('message', event => resolve(event.data), {once: true});
+      });
+    }
+  }
+
   let photoCanvas = null;
   function handleNewChannel(event) {
     if (event.channel.label === 'all-the-things_ready-to-start-looking') {
-      readyToStartLooking(event.channel);
+      confirmation(event.channel, 'Ready to start looking?');
     } else if (event.channel.label === 'all-the-things_photo') {
-      photoTakingScreen(event.channel).then(results => {
-        [thing, photoCanvas] = results;
-      });
+      photoTakingScreen(event.channel, getThing).then(canvas => photoCanvas = canvas);
     } else if (event.channel.label === 'all-the-things_photo-self-judgement') {
-      photoSelfJudgement(event.channel, thing, photoCanvas);
+      photoSelfJudgement(event.channel, getThing, photoCanvas);
     } else if (event.channel.label === 'all-the-things_photo-judgement') {
-      photoJudgement(event.channel, thing);
+      photoJudgement(event.channel, getThing);
+    } else if (event.channel.label === 'all-the-things_another-round') {
+      confirmation(event.channel, 'Play another round?');
     }
   }
   rtcConnection.addEventListener('datachannel', handleNewChannel);
@@ -27,47 +40,33 @@ function allTheThings(channel, rtcConnection) {
   }
 }
 
-function readyToStartLooking(channel) {
+function confirmation(channel, text) {
   const subjectPanel = document.getElementById('subject-panel');
   const heading = document.createElement('h1');
-  heading.classList.add('ready-to-start-looking');
-  heading.textContent = 'Ready to start looking?';
+  heading.classList.add('all-the-things_confirmation');
+  heading.textContent = text;
   subjectPanel.appendChild(heading);
   heading.classList.add('active');
+
+  const messagingPanel = document.getElementById('messaging-panel');
+  const yesButton = document.createElement('button');
+  yesButton.classList.add('push-button');
+  yesButton.classList.add('all-the-things_yes-button');
+  yesButton.textContent = '👍';
+  messagingPanel.appendChild(yesButton);
+  yesButton.classList.add('active');
+
+  yesButton.onclick = () => {
+    channel.send(true);
+    yesButton.classList.add('selected');
+  }
+
   channel.onclose = () => {
     heading.classList.remove('active');
+    yesButton.classList.remove('active');
     setTimeout(() => {
       heading.remove();
+      yesButton.remove();
     }, 500);
-  }
-}
-
-function photoSelfJudgement(channel, thing, photoCanvas) {
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things photo-self-judgement-screen">
-      <h1>Is your photo really of:</h1>
-      <div class="goal">
-        <img src="/games/all-the-things/things/${thing}.svg">
-        <div class="label">${thing}</div>
-      </div>
-      <div class="be-honest">be honest</div>
-      <div class="buttons">
-        <button class="push-button" data-response="real">yes</button>
-        <button class="push-button" data-response="fake">no</button>
-      </div>
-    </div>
-  `);
-  const selfJudgementScreen = document.body.lastElementChild;
-  selfJudgementScreen.insertBefore(photoCanvas, selfJudgementScreen.firstChild);
-  selfJudgementScreen.onclick = event => {
-    if (event.target.tagName === 'BUTTON') {
-      channel.send(event.target.dataset.response);
-      event.target.classList.add('selected');
-      selfJudgementScreen.querySelector('.be-honest').remove();
-      selfJudgementScreen.onclick = null;
-    }
-  }
-  channel.onclose = () => {
-    selfJudgementScreen.remove();
   }
 }

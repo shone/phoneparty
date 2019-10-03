@@ -44,6 +44,7 @@
 .all-the-things.photo-container {
   position: absolute;
   z-index: 4;
+  transition: opacity 1s, left 0.8s linear, top 0.8s linear, width 0.8s linear, height 0.8s linear;
 }
 .all-the-things.photo-container .crop-container {
   position: absolute;

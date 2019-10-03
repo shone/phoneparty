@@ -22,7 +22,7 @@ TODO:
 
 [x] Fix fullscreen button
 [x] Make text non-selectable
-[ ] Show picture in player subject panel when judging real/fake
+[x] Show picture in player subject panel when judging real/fake
 [x] Bug: refreshing player while on photo taking screen causes phone element on host to remain after photos taken
 [x] Make speech-bubble font bigger
 [x] Use :empty selector to hide subject panel on player
@@ -32,7 +32,7 @@ TODO:
 
 BUGS:
 [ ] Speech bubbles can remain after starting photo taking screen
-[ ] If presenting player leaves, other players must be moved on to the next presenting player
+[x] If presenting player leaves, other players must be moved on to the next presenting player
 
 New game assets:
 

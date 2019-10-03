@@ -1,13 +1,17 @@
 "use strict";
 
-let acceptPlayersCallback = null;
+let acceptAllPlayersCallback = null;
+let nowAcceptingPlayersCallbacks = new Set();
 function acceptAllPlayers(callback) {
+  for (const callback of nowAcceptingPlayersCallbacks) {
+    callback();
+  }
   listenForAllPlayers(callback);
-  acceptPlayersCallback = callback;
+  acceptAllPlayersCallback = callback;
 }
 function stopAcceptingPlayers() {
-  stopListeningForAllPlayers(acceptPlayersCallback);
-  acceptPlayersCallback = null;
+  stopListeningForAllPlayers(acceptAllPlayersCallback);
+  acceptAllPlayersCallback = null;
 }
 
 const listenForNewPlayersCallbacks = [];
@@ -21,22 +25,19 @@ function stopListeningForNewPlayers(callback) {
   }
 }
 
-const listenPlayersCallbacks = [];
+const listenForAllPlayersCallbacks = [];
 function listenForAllPlayers(callback) {
   for (const player of players) {
     callback(player);
   }
-  listenPlayersCallbacks.push(callback);
+  listenForAllPlayersCallbacks.push(callback);
 }
 function stopListeningForAllPlayers(callback) {
-  const index = listenPlayersCallbacks.indexOf(callback);
+  const index = listenForAllPlayersCallbacks.indexOf(callback);
   if (index !== -1) {
-    listenPlayersCallbacks.splice(index, 1);
+    listenForAllPlayersCallbacks.splice(index, 1);
   }
 }
-
-const newPlayerSound  = new Audio('/sounds/new_player.mp3');
-const playerLeftSound = new Audio('/sounds/player_left.mp3');
 
 const leavingPlayerCallbacks = new Set();
 function listenForLeavingPlayer(callback) {
@@ -45,6 +46,9 @@ function listenForLeavingPlayer(callback) {
 function stopListeningForLeavingPlayer(callback) {
   leavingPlayerCallbacks.delete(callback);
 }
+
+const newPlayerSound  = new Audio('/sounds/new_player.mp3');
+const playerLeftSound = new Audio('/sounds/player_left.mp3');
 
 async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
@@ -89,6 +93,7 @@ async function handleNewPlayer(playerId, sdp, websocket) {
   const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   player.closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
+  const acceptPlayerChannel     = rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -109,9 +114,6 @@ async function handleNewPlayer(playerId, sdp, websocket) {
 
   player.rtcConnection = rtcConnection;
 
-  player.classList.add('player', 'new');
-  setTimeout(() => player.classList.remove('new'), 4000);
-
   accelerometerChannel.onmessage = event => {
     if (player.classList.contains('wiggleable')) {
       const acceleration = JSON.parse(event.data);
@@ -122,14 +124,32 @@ async function handleNewPlayer(playerId, sdp, websocket) {
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
+  if (!acceptAllPlayersCallback) {
+    await new Promise(resolve => {
+      nowAcceptingPlayersCallbacks.add(function callback() {
+        resolve();
+        nowAcceptingPlayersCallbacks.delete(callback);
+      });
+    });
+  }
+  if (acceptPlayerChannel.readyState === 'open') {
+    acceptPlayerChannel.send(true);
+  } else {
+    acceptPlayerChannel.onopen = () => {
+      acceptPlayerChannel.send(true);
+    }
+  }
+
+  player.classList.add('player', 'new');
+  setTimeout(() => player.classList.remove('new'), 4000);
+
   players.push(player);
-  for (const callback of listenPlayersCallbacks) {
+  for (const callback of listenForAllPlayersCallbacks) {
     callback(player);
   }
   for (const callback of listenForNewPlayersCallbacks) {
     callback(player);
   }
-  document.body.dispatchEvent(new Event('playerAdded'));
 
   newPlayerSound.play().catch(() => {});
 

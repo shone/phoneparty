@@ -1,41 +1,60 @@
 "use strict";
 
 async function AllTheThings() {
-  let audience = startAudienceMode();
-  let messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+  let chosenThingElement = null;
 
   const channels = [];
   function handlePlayer(player) {
     const channel = player.rtcConnection.createDataChannel('all-the-things');
     channels.push(channel);
+    channel.onopen = () => {
+      if (chosenThingElement !== null) {
+        channel.send(chosenThingElement.dataset.name);
+      }
+    }
   }
   listenForAllPlayers(handlePlayer);
 
   document.body.style.backgroundColor = '#98947f';
   await waitForNSeconds(1);
 
+  let audience = startAudienceMode();
+  let messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+
   await titleScreen();
 
   while(true) {
-    const chosenThingElement = await thingChoosingScreen();
+    chosenThingElement = await thingChoosingScreen();
 //     const chosenThingElement = chooseThing('sock');
+    for (const channel of channels) {
+      if (channel.readyState === 'open') {
+        channel.send(chosenThingElement.dataset.name);
+      }
+    }
 
-    await goalScreen(chosenThingElement, messaging);
-
-    audience.stop();
     messaging.stop();
 
-    const playerGrid = await photoTakingScreen(chosenThingElement.dataset.name);
+    await goalScreen(chosenThingElement);
+
+    audience.stop();
+
+    const [playerPhotos, playerGrid] = await photoTakingScreen();
 
     audience = startAudienceMode();
-    messaging = startMessaging();
 
-    messaging = await presentingPhotosScreen(messaging);
+    await presentingPhotosScreen(playerPhotos);
+
+    for (const channel of channels) {
+      if (channel.readyState === 'open') {
+        channel.send(null);
+      }
+    }
 
     playerGrid.stop();
     chosenThingElement.remove();
 
-    await anotherRoundScreen(messaging);
+    await anotherRoundScreen();
+    messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
   }
 
   stopListeningForAllPlayers(handlePlayer);
@@ -44,7 +63,7 @@ async function AllTheThings() {
   }
 }
 
-function startPlayerGrid() {
+function startPlayerGrid(playerPhotos) {
 
 //   const debugBlocks = [];
 
@@ -98,11 +117,12 @@ function startPlayerGrid() {
           player.style.width  = playerSize + 'px';
           player.style.height = playerSize + 'px';
         }
-        if (player.photo) {
-          player.photo.style.left   = (cellLeft + ((cellWidth  - playerSize) / 2)) + 'px';
-          player.photo.style.top    = (cellTop  + ((cellHeight - playerSize) / 2)) + 'px';
-          player.photo.style.width  = playerSize + 'px';
-          player.photo.style.height = playerSize + 'px';
+        if (playerPhotos.has(player)) {
+          const photo = playerPhotos.get(player);
+          photo.style.left   = (cellLeft + ((cellWidth  - playerSize) / 2)) + 'px';
+          photo.style.top    = (cellTop  + ((cellHeight - playerSize) / 2)) + 'px';
+          photo.style.width  = playerSize + 'px';
+          photo.style.height = playerSize + 'px';
         }
         playerIndex++;
       }

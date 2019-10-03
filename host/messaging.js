@@ -1,16 +1,38 @@
 "use strict";
 
+const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
+function playPopSound() {
+  const popSound = popSoundInstances.shift();
+  popSound.play().catch(() => {});
+  popSoundInstances.push(popSound);
+}
+const swooshSound = new Audio('/sounds/swoosh.mp3');
+
+function addSpeechBubbleToPlayer(player, text) {
+  const speechBubble = document.createElement('div');
+  speechBubble.classList.add('speech-bubble');
+  speechBubble.textContent = text;
+  player.appendChild(speechBubble);
+  playPopSound();
+}
+
+function clearSpeechBubblesFromPlayer(player) {
+  const speechBubbles = [...player.querySelectorAll('.speech-bubble:not(.cleared)')];
+  if (speechBubbles.length > 0) {
+    for (const speechBubble of speechBubbles) {
+      speechBubble.classList.add('cleared');
+    }
+    swooshSound.play().catch(() => {});
+    setTimeout(() => {
+      for (const speechBubble of speechBubbles) {
+        speechBubble.remove();
+      }
+    }, 1000);
+  }
+}
+
 function startMessaging(possibleMessages = []) {
   const messageCallbacks = new Set();
-
-  const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
-  function playPopSound() {
-    const popSound = popSoundInstances.shift();
-    popSound.play();
-    popSoundInstances.push(popSound);
-  }
-
-  const swooshSound = new Audio('/sounds/swoosh.mp3');
 
   const channels = [];
   function handlePlayer(player) {
@@ -23,19 +45,13 @@ function startMessaging(possibleMessages = []) {
       const previousSpeechBubble = player.querySelector('.speech-bubble:not(.cleared)');
       if (previousSpeechBubble) {
         if (event.data === 'clear') {
-          swooshSound.play();
-          previousSpeechBubble.classList.add('cleared');
-          setTimeout(() => previousSpeechBubble.remove(), 1000);
+          clearSpeechBubblesFromPlayer(player);
         } else {
           previousSpeechBubble.remove();
         }
       }
       if (event.data !== 'clear') {
-        const speechBubble = document.createElement('div');
-        speechBubble.classList.add('speech-bubble');
-        speechBubble.textContent = event.data;
-        player.appendChild(speechBubble);
-        playPopSound();
+        addSpeechBubbleToPlayer(player, event.data);
       }
       for (const callback of messageCallbacks) {
         callback(event.data, player);

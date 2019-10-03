@@ -187,7 +187,12 @@
               visibility:       rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true}),
               hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
               close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
+              acceptPlayer:     rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true}),
             }
+
+            var waitToBeAccepted = new Promise(resolve => {
+              channels.acceptPlayer.onmessage = resolve;
+            });
 
             try {
               var rtcOffer = await rtcConnection.createOffer();
@@ -245,11 +250,16 @@
             }
           }
 
+          handleRtcConnection(rtcConnection, channels);
+
+          statusContainer.className = 'waiting';
+          status.textContent = 'Waiting to be accepted';
+          statusDetail.textContent = '';
+          await waitToBeAccepted;
+
           statusContainer.className = '';
           status.textContent = '';
           statusDetail.textContent = '';
-
-          handleRtcConnection(rtcConnection, channels);
 
           window.onunload = window.onbeforeunload = () => {
             if (channels.close.readyState === 'open') {
