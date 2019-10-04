@@ -63,7 +63,7 @@
   position: absolute;
   width:  100%;
   height: 100%;
-  transform: scale(-3.2, 3.2);
+  transform: scale(3.2);
   object-fit: cover;
 }
 /*.grid-debug-block {

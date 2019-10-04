@@ -89,10 +89,14 @@ async function photoTakingScreen(channel, getThing) {
   return await new Promise(resolve => {
     takePhotoButton.onclick = async function() {
       shutterSound.play().catch(() => {});
-      const context = canvas.getContext('2d');
       if (video.srcObject) {
         canvas.width  = video.videoWidth;
         canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        if (video.classList.contains('flip')) {
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+        }
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
       } else if (location.hostname === 'localhost') {
         const testImage = new Image();
@@ -100,6 +104,7 @@ async function photoTakingScreen(channel, getThing) {
         await new Promise(resolve => testImage.onload = resolve);
         canvas.width  = testImage.width;
         canvas.height = testImage.height;
+        const context = canvas.getContext('2d');
         context.drawImage(testImage, 0, 0, canvas.width, canvas.height);
       }
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));

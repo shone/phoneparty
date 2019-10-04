@@ -18,7 +18,7 @@
   transition: transform 0.8s linear;
 }
 .photo-container.fullscreen.reveal-full-photo img {
-  transform: scale(-1, 1);
+  transform: scale(1);
 }
 .player.presenting-photo {
   position: fixed;
@@ -31,8 +31,8 @@
   animation: 3s reveal-full-photo forwards;
 }
 @keyframes reveal-full-photo {
-  from { transform: scale(-4, 4); }
-  to   { transform: scale(-1, 1); }
+  from { transform: scale(4); }
+  to   { transform: scale(1); }
 }
 
 .player .all-the-things.fooled-stamp {
