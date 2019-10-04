@@ -31,7 +31,9 @@ function clearSpeechBubblesFromPlayer(player) {
   }
 }
 
-function startMessaging(possibleMessages = []) {
+const defaultPossibleMessages = ['👍', '👎', '👌', '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😔', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
+
+function startMessaging(possibleMessages = defaultPossibleMessages) {
   const messageCallbacks = new Set();
 
   const channels = [];

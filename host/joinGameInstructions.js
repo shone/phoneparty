@@ -17,7 +17,7 @@ async function showJoinGameInstructions() {
   const joinGameInstructions = document.body.lastElementChild;
 
   const bubbleField = startBubbleField();
-  const messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+  const messaging = startMessaging();
 
   await waitForKeypress(' ');
   joinGameInstructions.classList.add('in-corner');

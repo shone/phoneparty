@@ -19,7 +19,7 @@ async function AllTheThings() {
   await waitForNSeconds(1);
 
   let audience = startAudienceMode();
-  let messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+  let messaging = startMessaging();
 
   await titleScreen();
 
@@ -54,7 +54,7 @@ async function AllTheThings() {
     chosenThingElement.remove();
 
     await anotherRoundScreen();
-    messaging = startMessaging(Array.from('👍👎👌😀😃😄😁😆😅🤣😂🙂😉😇☺️😋😛🥰🤔🤫🤨😬😏😌😔😴😟🙁😯😥👋✌️🤞'));
+    messaging = startMessaging();
   }
 
   stopListeningForAllPlayers(handlePlayer);
