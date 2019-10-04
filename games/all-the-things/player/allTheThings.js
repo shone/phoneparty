@@ -52,7 +52,6 @@ function confirmation(channel, text) {
   const yesButton = document.createElement('button');
   yesButton.classList.add('push-button');
   yesButton.classList.add('all-the-things_yes-button');
-  yesButton.textContent = '👍';
   messagingPanel.appendChild(yesButton);
   yesButton.classList.add('active');
 
