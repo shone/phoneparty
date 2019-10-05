@@ -23,7 +23,7 @@ function allTheThings(channel, rtcConnection) {
     if (event.channel.label === 'all-the-things_ready-to-start-looking') {
       confirmation(event.channel, 'Ready to start looking?');
     } else if (event.channel.label === 'all-the-things_photo') {
-      photoTakingScreen(event.channel, getThing).then(canvas => photoCanvas = canvas);
+      photoTakingScreen(event.channel, getThing, rtcConnection).then(canvas => photoCanvas = canvas);
     } else if (event.channel.label === 'all-the-things_photo-self-judgement') {
       photoSelfJudgement(event.channel, getThing, photoCanvas);
     } else if (event.channel.label === 'all-the-things_photo-judgement') {

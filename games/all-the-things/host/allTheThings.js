@@ -25,7 +25,7 @@ async function AllTheThings() {
 
   while(true) {
     chosenThingElement = await thingChoosingScreen();
-//     const chosenThingElement = chooseThing('sock');
+//    chosenThingElement = chooseThing('sock');
     for (const channel of channels) {
       if (channel.readyState === 'open') {
         channel.send(chosenThingElement.dataset.name);

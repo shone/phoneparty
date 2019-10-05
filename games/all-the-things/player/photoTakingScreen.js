@@ -1,6 +1,6 @@
 "use strict";
 
-async function photoTakingScreen(channel, getThing) {
+async function photoTakingScreen(channel, getThing, rtcConnection) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-screen">
       <video playsinline autoplay muted></video>
@@ -27,20 +27,31 @@ async function photoTakingScreen(channel, getThing) {
   photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
 
   // Setup video streams
-  try {
-    const alternateStream = await navigator.mediaDevices.getUserMedia({ video: {facingMode: { exact: "environment"}  }, audio: false});
-    video.srcObject = alternateStream;
+  async function switchCamera(options) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: options, audio: false});
+      video.srcObject = stream;
+      const flip = (options === true) || (options.facingMode && options.facingMode.exact === 'user');
+      video.classList.toggle('flip', flip);
+      rtcConnection.getSenders()[0].replaceTrack(stream.getVideoTracks()[0]);
+      return true;
+    } catch(error) {
+      return false;
+    }
+  }
+  if (await switchCamera({facingMode: { exact: 'environment'}})) {
+    let facingMode = 'environment';
     switchCamerasButton.onclick = () => {
-      if (video.srcObject === alternateStream) {
-        video.srcObject = stream;
-        video.classList.add('flip');
+      if (facingMode === 'environment') {
+        facingMode = 'user';
       } else {
-        video.srcObject = alternateStream;
-        video.classList.remove('flip');
+        facingMode = 'environment';
       }
+      switchCamera({facingMode: { exact: facingMode}});
     }
     switchCamerasButton.classList.remove('hide');
-  } catch(error) {
+    cleanups.unshift(() => switchCamera(true));
+  } else {
     video.srcObject = stream;
     video.classList.add('flip');
   }
