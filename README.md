@@ -1,6 +1,6 @@
 ![Phone Party logo](logo.svg)
 
-# That's cheating - the Game! (appropriate name is WIP)
+# Phone Party
 
 A framework for party games, where each player connects using their phone and plays together on a shared screen.
 
