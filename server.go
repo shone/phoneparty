@@ -22,7 +22,7 @@ type MessageWithPlayerId struct {
 
 func NoCache(handler http.Handler) http.Handler {
   return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-    writer.Header().Set("Cache-Control", "max-age=0")
+    writer.Header().Set("Cache-Control", "must-revalidate")
     handler.ServeHTTP(writer, request)
   })
 }
@@ -71,7 +71,7 @@ func main() {
     })
 
     hostDisconnectedChan := make(chan bool)
-    
+
     // Relay messages from players to host
     go func() {
       for {
