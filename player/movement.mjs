@@ -1,6 +1,4 @@
-"use strict";
-
-function handleMovement(channel) {
+export default function handleMovement(channel) {
   const subjectPanel = document.getElementById('subject-panel');
   const container = document.createElement('div');
   container.classList.add('movement');

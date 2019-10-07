@@ -1,6 +1,8 @@
-"use strict";
+import {waitForNSeconds} from '/host/utils.mjs';
+import {players, acceptAllPlayers, stopAcceptingPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
+import {startPlayerGrid} from './allTheThings.mjs';
 
-async function photoTakingScreen() {
+export default async function photoTakingScreen() {
   await waitForNSeconds(1);
 
   const piggy = document.createElement('img');

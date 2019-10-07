@@ -1,6 +1,8 @@
-"use strict";
+import startBubbleField from './bubbleField.mjs';
+import startMessaging from './messaging.mjs';
+import {waitForKeypress} from './utils.mjs';
 
-async function showJoinGameInstructions() {
+export async function joinGameInstructions() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="join-game-instructions">

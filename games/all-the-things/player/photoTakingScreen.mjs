@@ -1,6 +1,7 @@
-"use strict";
+import {stream} from '/main.mjs';
+import {randomInArray} from '/shared/utils.mjs';
 
-async function photoTakingScreen(channel, getThing, rtcConnection) {
+export default async function photoTakingScreen(channel, getThing, rtcConnection) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-screen">
       <video playsinline autoplay muted></video>

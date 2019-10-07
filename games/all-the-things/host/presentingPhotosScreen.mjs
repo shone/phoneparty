@@ -1,6 +1,8 @@
-"use strict";
+import {waitForNSeconds} from '/shared/utils.mjs';
+import {players, waitForPlayerToLeave, listenForAllPlayers, listenForLeavingPlayer, stopListeningForAllPlayers, stopListeningForLeavingPlayer} from '/host/players.mjs';
+import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messaging.mjs';
 
-async function presentingPhotosScreen(playerPhotos) {
+export default async function presentingPhotosScreen(playerPhotos) {
   await waitForNSeconds(2);
 
   const playersWithPhotos = players.filter(player => playerPhotos.has(player));

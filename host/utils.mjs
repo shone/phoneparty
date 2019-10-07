@@ -1,10 +1,29 @@
-"use strict";
+import {paused} from './main.mjs';
 
-function randomInArray(array) {
-  return array[Math.floor(Math.random() * array.length)];
+export function waitForNSeconds(seconds) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      if (paused) {
+        waitForKeypress('p').then(() => resolve());
+      } else {
+        resolve();
+      }
+    }, 1000 * seconds);
+  });
 }
 
-async function waitForDataChannelOpen(dataChannel) {
+export function waitForKeypress(key) {
+  return new Promise(resolve => {
+    window.addEventListener('keypress', function handleKeypress(event) {
+      if (event.key === key) {
+        resolve(event);
+        window.removeEventListener('keypress', handleKeypress);
+      }
+    });
+  });
+}
+
+export async function waitForDataChannelOpen(dataChannel) {
   if (dataChannel.readyState === 'open') {
     return;
   } else if (dataChannel.readyState === 'closing' || dataChannel.readyState === 'closed') {
@@ -18,7 +37,7 @@ async function waitForDataChannelOpen(dataChannel) {
   }
 }
 
-async function waitForRtcConnectionClose(rtcConnection) {
+export async function waitForRtcConnectionClose(rtcConnection) {
   if (rtcConnection.connectionState === 'closed' || rtcConnection.connectionState === 'failed') {
     return;
   }
@@ -30,19 +49,4 @@ async function waitForRtcConnectionClose(rtcConnection) {
       }
     });
   });
-}
-
-async function waitForPlayerToLeave(player) {
-  if (players.indexOf(player) === -1) {
-    return 'player_left';
-  } else {
-    return new Promise(resolve => {
-      listenForLeavingPlayer(function handlePlayerLeaving(p) {
-        if (p === player) {
-          resolve('player_left');
-          stopListeningForLeavingPlayer(handlePlayerLeaving);
-        }
-      });
-    });
-  }
 }

@@ -1,6 +1,7 @@
-"use strict";
+import {waitForNSeconds, waitForKeypress} from '/host/utils.mjs';
+import {randomInArray} from '/shared/utils.mjs';
 
-async function thingChoosingScreen() {
+export default async function thingChoosingScreen() {
   // Thing choosing screen
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things thing-choosing-screen">
@@ -35,7 +36,7 @@ async function thingChoosingScreen() {
   const stopJuggling = juggleElements(thingElements);
 
   await Promise.race([waitForNSeconds(4), waitForKeypress(' ')]);
-  
+
   const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
   thinkingEmoji.classList.add('appear');
 
@@ -75,7 +76,7 @@ async function thingChoosingScreen() {
   return chosenThingElement;
 }
 
-function chooseThing(thingName) {
+export function chooseThing(thingName) {
   const element = document.createElement('div');
   element.classList.add('thing');
   element.dataset.name = thingName;

@@ -1,6 +1,6 @@
-"use strict";
+import {waitForNSeconds, waitForKeypress} from '/host/utils.mjs';
 
-async function titleScreen() {
+export default async function titleScreen() {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things title-screen">
       <div class="title-image"></div>

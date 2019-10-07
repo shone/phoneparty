@@ -1,14 +1,12 @@
-"use strict";
-
-function waitForNSeconds(seconds) {
+export function waitForNSeconds(seconds) {
   return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }
 
-function randomInArray(array) {
+export function randomInArray(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function waitForPageToBeVisible() {
+export function waitForPageToBeVisible() {
   return new Promise(resolve => {
     if (document.visibilityState === 'visible') {
       resolve();
@@ -23,7 +21,7 @@ function waitForPageToBeVisible() {
   });
 }
 
-function waitForWebsocketToConnect(websocket) {
+export function waitForWebsocketToConnect(websocket) {
   return new Promise((resolve, reject) => {
     if (websocket.readyState === websocket.OPEN) {
       resolve();
@@ -37,7 +35,7 @@ function waitForWebsocketToConnect(websocket) {
   });
 }
 
-function waitForWebsocketToDisconnect(websocket) {
+export function waitForWebsocketToDisconnect(websocket) {
   return new Promise(resolve => {
     if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
       resolve('websocket_disconnected');
@@ -48,26 +46,7 @@ function waitForWebsocketToDisconnect(websocket) {
   });
 }
 
-function waitForHost(websocket) {
-  return new Promise((resolve, reject) => {
-    if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-      reject('websocket_disconnected');
-    } else {
-      function callback(event) {
-        const message = JSON.parse(event.data);
-        if (message.type === 'host' && message.message === 'connected') {
-          resolve('host_connected');
-          websocket.removeEventListener('message', callback);
-        }
-      }
-      websocket.addEventListener('message', callback);
-      websocket.addEventListener('close', () => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-      websocket.addEventListener('error', () => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
-    }
-  });
-}
-
-function waitForRtcConnection(rtcConnection) {
+export function waitForRtcConnection(rtcConnection) {
   return new Promise((resolve, reject) => {
     if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
       resolve();
@@ -87,7 +66,8 @@ function waitForRtcConnection(rtcConnection) {
   });
 }
 
-function waitForRtcToDisconnect(rtcConnection) {
+export function waitForRtcToDisconnect(rtcConnection) {
+  // TODO: don't resolve on disconnect state! (WebRTC can reconnect again after that)
   return new Promise((resolve, reject) => {
     if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
       resolve('webrtc_disconnected');
@@ -102,7 +82,7 @@ function waitForRtcToDisconnect(rtcConnection) {
   });
 }
 
-async function getMessageFromDataChannelOrClose(channel) {
+export async function getMessageFromDataChannelOrClose(channel) {
   if (channel.readyState === 'closing' || channel.readyState === 'closed') {
     return [null, true];
   } else {
@@ -114,7 +94,7 @@ async function getMessageFromDataChannelOrClose(channel) {
   }
 }
 
-async function waitForDataChannelClose(channel) {
+export async function waitForDataChannelClose(channel) {
   if (channel.readyState === 'closing' || channel.readyState === 'closed') {
     return;
   } else {

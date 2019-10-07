@@ -33,6 +33,7 @@ func main() {
   http.Handle("/sounds/", http.StripPrefix("/sounds/", NoCache(http.FileServer(http.Dir("./sounds")))))
   http.Handle("/fonts/",  http.StripPrefix("/fonts/",  NoCache(http.FileServer(http.Dir("./fonts")))))
   http.Handle("/games/",  http.StripPrefix("/games/",  NoCache(http.FileServer(http.Dir("./games")))))
+  http.Handle("/shared/", http.StripPrefix("/shared/", NoCache(http.FileServer(http.Dir("./shared")))))
 
   var hostConn *websocket.Conn
   var playerConns sync.Map

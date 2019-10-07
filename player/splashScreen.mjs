@@ -1,6 +1,5 @@
-"use strict";
-
-async function splashScreen() {
+export default function splashScreen(channel) {
+  const previousBackgroundColor = document.body.style.backgroundColor;
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -24,28 +23,14 @@ async function splashScreen() {
   `);
   const splashScreen = document.body.lastElementChild;
 
-  const channels = [];
-  acceptAllPlayers(player => {
-    channels.push(player.rtcConnection.createDataChannel('splash-screen'));
-  });
-
-  const timeAtSplashStart = performance.now();
-
-  await waitForKeypress(' ');
-  splashScreen.classList.add('finished');
-  for (const channel of channels) {
-    if (channel.readyState === 'open') {
-      channel.send('finished');
+  channel.onmessage = event => {
+    if (event.data === 'finished') {
+      splashScreen.classList.add('finished');
     }
   }
 
-  if ((performance.now() - timeAtSplashStart) > 2000) {
-    await waitForNSeconds(2);
-  }
-
-  splashScreen.remove();
-  stopAcceptingPlayers();
-  for (const channel of channels) {
-    channel.close();
+  channel.onclose = () => {
+    splashScreen.remove();
+    document.body.style.backgroundColor = previousBackgroundColor;
   }
 }

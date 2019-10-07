@@ -1,5 +1,3 @@
-"use strict";
-
 const audioContext = new (window.AudioContext || window.webkitAudioContext);
 const personalToneFrequency = 180 + (200 * Math.random());
 
@@ -25,7 +23,7 @@ window.addEventListener('mousedown',  resumeAudio);
 window.addEventListener('touchstart', resumeAudio);
 window.addEventListener('keydown',    resumeAudio);
 
-function playTone(timeOffset = 0) {
+export function playTone(timeOffset = 0) {
   envelope.gain.setValueAtTime(0, audioContext.currentTime);
   envelope.gain.setValueAtTime(0.02, audioContext.currentTime + timeOffset);
   envelope.gain.setTargetAtTime(0, audioContext.currentTime + timeOffset, 0.2);

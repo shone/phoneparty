@@ -1,6 +1,4 @@
-"use strict";
-
-function handleMessaging(channel) {
+export default function handleMessaging(channel) {
   const messagingPanel = document.getElementById('messaging-panel');
   const container = document.createElement('div');
   container.classList.add('container');

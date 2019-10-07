@@ -1,7 +1,7 @@
-"use strict";
+import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
+import * as utils from './utils.mjs';
 
-function splashScreen(channel) {
-  const previousBackgroundColor = document.body.style.backgroundColor;
+export async function splashScreen() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -25,14 +25,28 @@ function splashScreen(channel) {
   `);
   const splashScreen = document.body.lastElementChild;
 
-  channel.onmessage = event => {
-    if (event.data === 'finished') {
-      splashScreen.classList.add('finished');
+  const channels = [];
+  acceptAllPlayers(player => {
+    channels.push(player.rtcConnection.createDataChannel('splash-screen'));
+  });
+
+  const timeAtSplashStart = performance.now();
+
+  await utils.waitForKeypress(' ');
+  splashScreen.classList.add('finished');
+  for (const channel of channels) {
+    if (channel.readyState === 'open') {
+      channel.send('finished');
     }
   }
 
-  channel.onclose = () => {
-    splashScreen.remove();
-    document.body.style.backgroundColor = previousBackgroundColor;
+  if ((performance.now() - timeAtSplashStart) > 2000) {
+    await utils.waitForNSeconds(2);
+  }
+
+  splashScreen.remove();
+  stopAcceptingPlayers();
+  for (const channel of channels) {
+    channel.close();
   }
 }

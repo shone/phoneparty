@@ -1,4 +1,4 @@
-"use strict";
+import {listenForAllPlayers, stopListeningForAllPlayers} from './players.mjs';
 
 const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
 function playPopSound() {
@@ -8,7 +8,7 @@ function playPopSound() {
 }
 const swooshSound = new Audio('/sounds/swoosh.mp3');
 
-function addSpeechBubbleToPlayer(player, text) {
+export function addSpeechBubbleToPlayer(player, text) {
   const speechBubble = document.createElement('div');
   speechBubble.classList.add('speech-bubble');
   speechBubble.textContent = text;
@@ -16,7 +16,7 @@ function addSpeechBubbleToPlayer(player, text) {
   playPopSound();
 }
 
-function clearSpeechBubblesFromPlayer(player) {
+export function clearSpeechBubblesFromPlayer(player) {
   const speechBubbles = [...player.querySelectorAll('.speech-bubble:not(.cleared)')];
   if (speechBubbles.length > 0) {
     for (const speechBubble of speechBubbles) {
@@ -33,7 +33,7 @@ function clearSpeechBubblesFromPlayer(player) {
 
 const defaultPossibleMessages = ['👍', '👎', '👌', '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😔', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
 
-function startMessaging(possibleMessages = defaultPossibleMessages) {
+export default function startMessaging(possibleMessages = defaultPossibleMessages) {
   const messageCallbacks = new Set();
 
   const channels = [];

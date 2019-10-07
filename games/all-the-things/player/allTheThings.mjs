@@ -1,6 +1,7 @@
-"use strict";
+import {photoJudgement, photoSelfJudgement} from './photoJudgementScreen.mjs';
+import photoTakingScreen from './photoTakingScreen.mjs';
 
-function allTheThings(channel, rtcConnection) {
+export default function allTheThings(channel, rtcConnection) {
   const previousBackgroundColor = document.body.style.backgroundColor;
   document.body.style.backgroundColor = '#98947f';
 

@@ -1,6 +1,6 @@
-"use strict";
+import {players, acceptAllPlayers, stopAcceptingPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from './players.mjs';
 
-function startAudienceMode() {
+export default function startAudienceMode() {
 
   const background = document.createElement('div');
   background.classList.add('audience-mode-background');

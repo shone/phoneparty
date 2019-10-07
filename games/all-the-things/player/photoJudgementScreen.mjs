@@ -1,6 +1,6 @@
-"use strict";
+import {waitForDataChannelClose} from '/shared/utils.mjs';
 
-async function photoJudgement(channel, getThing) {
+export async function photoJudgement(channel, getThing) {
   const thing = await getThing();
 
   const subjectPanel = document.getElementById('subject-panel');
@@ -49,7 +49,7 @@ async function photoJudgement(channel, getThing) {
   }, 500);
 }
 
-async function photoSelfJudgement(channel, getThing, photoCanvas) {
+export async function photoSelfJudgement(channel, getThing, photoCanvas) {
   const thing = await getThing();
 
   const subjectPanel = document.getElementById('subject-panel');

@@ -1,6 +1,6 @@
-"use strict";
+import {players, acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 
-function startBubbleField() {
+export default function startBubbleField() {
   const channels = [];
   acceptAllPlayers(player => {
     const movementChannel  = player.rtcConnection.createDataChannel('movement');

@@ -1,6 +1,16 @@
-"use strict";
+import titleScreen from './titleScreen.mjs';
+import thingChoosingScreen, {chooseThing} from './thingChoosingScreen.mjs';
+import goalScreen from './goalScreen.mjs';
+import photoTakingScreen from './photoTakingScreen.mjs';
+import presentingPhotosScreen from './presentingPhotosScreen.mjs';
+import anotherRoundScreen from './anotherRoundScreen.mjs';
 
-async function AllTheThings() {
+import startAudienceMode from '/host/audienceMode.mjs';
+import startMessaging from '/host/messaging.mjs';
+import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForNewPlayers, stopListeningForNewPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
+import {waitForNSeconds} from '/host/utils.mjs';
+
+export async function AllTheThings() {
   let chosenThingElement = null;
 
   const channels = [];
@@ -24,8 +34,8 @@ async function AllTheThings() {
   await titleScreen();
 
   while(true) {
-    chosenThingElement = await thingChoosingScreen();
-//    chosenThingElement = chooseThing('sock');
+//     chosenThingElement = await thingChoosingScreen();
+    chosenThingElement = chooseThing('sock');
     for (const channel of channels) {
       if (channel.readyState === 'open') {
         channel.send(chosenThingElement.dataset.name);
@@ -34,7 +44,7 @@ async function AllTheThings() {
 
     messaging.stop();
 
-    await goalScreen(chosenThingElement);
+//     await goalScreen(chosenThingElement);
 
     audience.stop();
 
@@ -63,7 +73,7 @@ async function AllTheThings() {
   }
 }
 
-function startPlayerGrid(playerPhotos) {
+export function startPlayerGrid(playerPhotos) {
 
 //   const debugBlocks = [];
 

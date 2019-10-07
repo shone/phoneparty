@@ -1,24 +1,24 @@
-"use strict";
+export const players = [];
 
 let acceptAllPlayersCallback = null;
 let nowAcceptingPlayersCallbacks = new Set();
-function acceptAllPlayers(callback) {
+export function acceptAllPlayers(callback) {
   for (const callback of nowAcceptingPlayersCallbacks) {
     callback();
   }
   listenForAllPlayers(callback);
   acceptAllPlayersCallback = callback;
 }
-function stopAcceptingPlayers() {
+export function stopAcceptingPlayers() {
   stopListeningForAllPlayers(acceptAllPlayersCallback);
   acceptAllPlayersCallback = null;
 }
 
 const listenForNewPlayersCallbacks = [];
-function listenForNewPlayers(callback) {
+export function listenForNewPlayers(callback) {
   listenForNewPlayersCallbacks.push(callback);
 }
-function stopListeningForNewPlayers(callback) {
+export function stopListeningForNewPlayers(callback) {
   const index = listenForNewPlayersCallbacks.indexOf(callback);
   if (index !== -1) {
     listenForNewPlayersCallbacks.splice(index, 1);
@@ -26,13 +26,13 @@ function stopListeningForNewPlayers(callback) {
 }
 
 const listenForAllPlayersCallbacks = [];
-function listenForAllPlayers(callback) {
+export function listenForAllPlayers(callback) {
   for (const player of players) {
     callback(player);
   }
   listenForAllPlayersCallbacks.push(callback);
 }
-function stopListeningForAllPlayers(callback) {
+export function stopListeningForAllPlayers(callback) {
   const index = listenForAllPlayersCallbacks.indexOf(callback);
   if (index !== -1) {
     listenForAllPlayersCallbacks.splice(index, 1);
@@ -40,17 +40,32 @@ function stopListeningForAllPlayers(callback) {
 }
 
 const leavingPlayerCallbacks = new Set();
-function listenForLeavingPlayer(callback) {
+export function listenForLeavingPlayer(callback) {
   leavingPlayerCallbacks.add(callback);
 }
-function stopListeningForLeavingPlayer(callback) {
+export function stopListeningForLeavingPlayer(callback) {
   leavingPlayerCallbacks.delete(callback);
+}
+
+export async function waitForPlayerToLeave(player) {
+  if (players.indexOf(player) === -1) {
+    return 'player_left';
+  } else {
+    return new Promise(resolve => {
+      listenForLeavingPlayer(function handlePlayerLeaving(p) {
+        if (p === player) {
+          resolve('player_left');
+          stopListeningForLeavingPlayer(handlePlayerLeaving);
+        }
+      });
+    });
+  }
 }
 
 const newPlayerSound  = new Audio('/sounds/new_player.mp3');
 const playerLeftSound = new Audio('/sounds/player_left.mp3');
 
-async function handleNewPlayer(playerId, sdp, websocket) {
+export async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
   const rtcConnection = new RTCPeerConnection();
