@@ -11,6 +11,8 @@ Tech:
 - The [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), for beeps and boops.
 - The [Sensor APIs](https://developer.mozilla.org/en-US/docs/Web/API/Sensor_APIs) for using accelerometer data.
 
+![Architecture diagram](architecture-diagram.svg)
+
 Usage:
 
 *Requies Go
