@@ -34,8 +34,8 @@ export async function AllTheThings() {
   await titleScreen();
 
   while(true) {
-//     chosenThingElement = await thingChoosingScreen();
-    chosenThingElement = chooseThing('sock');
+    chosenThingElement = await thingChoosingScreen();
+//     chosenThingElement = chooseThing('sock');
     for (const channel of channels) {
       if (channel.readyState === 'open') {
         channel.send(chosenThingElement.dataset.name);
@@ -44,7 +44,7 @@ export async function AllTheThings() {
 
     messaging.stop();
 
-//     await goalScreen(chosenThingElement);
+    await goalScreen(chosenThingElement);
 
     audience.stop();
 
