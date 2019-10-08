@@ -21,6 +21,17 @@ export function waitForPageToBeVisible() {
   });
 }
 
+export function waitForKeypress(key) {
+  return new Promise(resolve => {
+    window.addEventListener('keypress', function handleKeypress(event) {
+      if (event.key === key) {
+        resolve(event);
+        window.removeEventListener('keypress', handleKeypress);
+      }
+    });
+  });
+}
+
 export function waitForWebsocketToConnect(websocket) {
   return new Promise((resolve, reject) => {
     if (websocket.readyState === websocket.OPEN) {
@@ -82,14 +93,30 @@ export function waitForRtcToDisconnect(rtcConnection) {
   });
 }
 
-export async function getMessageFromDataChannelOrClose(channel) {
-  if (channel.readyState === 'closing' || channel.readyState === 'closed') {
-    return [null, true];
+export async function waitForRtcConnectionClose(rtcConnection) {
+  if (rtcConnection.connectionState === 'closed' || rtcConnection.connectionState === 'failed') {
+    return;
+  }
+  return new Promise(resolve => {
+    rtcConnection.addEventListener('connectionstatechange', function callback() {
+      if (rtcConnection.connectionState === 'closed' || rtcConnection.connectionState === 'failed') {
+        resolve();
+        rtcConnection.removeEventListener('connectionstatechange', callback);
+      }
+    });
+  });
+}
+
+export async function waitForDataChannelOpen(dataChannel) {
+  if (dataChannel.readyState === 'open') {
+    return;
+  } else if (dataChannel.readyState === 'closing' || dataChannel.readyState === 'closed') {
+    throw 'Data channel is closing or closed';
   } else {
-    return new Promise(resolve => {
-      channel.addEventListener('message', event => resolve([event.data, false]), {once: true});
-      channel.addEventListener('close', () => resolve([null, true]), {once: true});
-      channel.addEventListener('error', () => resolve([null, true]), {once: true});
+    return new Promise((resolve, reject) => {
+      dataChannel.addEventListener('open', resolve, {once: true});
+      dataChannel.addEventListener('error', reject, {once: true});
+      dataChannel.addEventListener('close', reject, {once: true});
     });
   }
 }
@@ -101,6 +128,18 @@ export async function waitForDataChannelClose(channel) {
     return new Promise(resolve => {
       channel.addEventListener('close', resolve, {once: true});
       channel.addEventListener('error', resolve, {once: true});
+    });
+  }
+}
+
+export async function getMessageFromDataChannelOrClose(channel) {
+  if (channel.readyState === 'closing' || channel.readyState === 'closed') {
+    return [null, true];
+  } else {
+    return new Promise(resolve => {
+      channel.addEventListener('message', event => resolve([event.data, false]), {once: true});
+      channel.addEventListener('close', () => resolve([null, true]), {once: true});
+      channel.addEventListener('error', () => resolve([null, true]), {once: true});
     });
   }
 }

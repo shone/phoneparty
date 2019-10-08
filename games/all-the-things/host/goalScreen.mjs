@@ -1,4 +1,4 @@
-import {waitForNSeconds, waitForKeypress} from '/host/utils.mjs';
+import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
 

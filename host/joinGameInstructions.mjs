@@ -1,6 +1,6 @@
 import startBubbleField from './bubbleField.mjs';
 import startMessaging from './messaging.mjs';
-import {waitForKeypress} from './utils.mjs';
+import {waitForKeypress} from '/shared/utils.mjs';
 
 export async function joinGameInstructions() {
   document.body.style.backgroundColor = 'black';

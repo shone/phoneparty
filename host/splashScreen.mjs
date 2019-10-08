@@ -1,5 +1,5 @@
 import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
-import * as utils from './utils.mjs';
+import * as utils from '/shared/utils.mjs';
 
 export async function splashScreen() {
   document.body.style.backgroundColor = 'black';

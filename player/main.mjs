@@ -1,5 +1,4 @@
 import {waitForNSeconds, waitForPageToBeVisible, waitForWebsocketToConnect, waitForWebsocketToDisconnect, waitForRtcConnection, waitForRtcToDisconnect} from '/shared/utils.mjs';
-import {waitForHost} from './utils.mjs';
 import {playTone} from './audio.mjs';
 import './push-buttons.mjs';
 import handleMessaging from './messaging.mjs';
@@ -282,3 +281,22 @@ export let stream = null;
     }
   }
 })();
+
+function waitForHost(websocket) {
+  return new Promise((resolve, reject) => {
+    if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
+      reject('websocket_disconnected');
+    } else {
+      function callback(event) {
+        const message = JSON.parse(event.data);
+        if (message.type === 'host' && message.message === 'connected') {
+          resolve('host_connected');
+          websocket.removeEventListener('message', callback);
+        }
+      }
+      websocket.addEventListener('message', callback);
+      websocket.addEventListener('close', () => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+      websocket.addEventListener('error', () => { reject('websocket_disconnected'); websocket.removeEventListener('message', callback) }, {once: true});
+    }
+  });
+}

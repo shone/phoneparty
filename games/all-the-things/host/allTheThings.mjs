@@ -8,7 +8,7 @@ import anotherRoundScreen from './anotherRoundScreen.mjs';
 import startAudienceMode from '/host/audienceMode.mjs';
 import startMessaging from '/host/messaging.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForNewPlayers, stopListeningForNewPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
-import {waitForNSeconds} from '/host/utils.mjs';
+import {waitForNSeconds} from '/shared/utils.mjs';
 
 export async function AllTheThings() {
   let chosenThingElement = null;

@@ -1,4 +1,4 @@
-import {waitForNSeconds} from '/host/utils.mjs';
+import {waitForNSeconds} from '/shared/utils.mjs';
 import {players, acceptAllPlayers, stopAcceptingPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {startPlayerGrid} from './allTheThings.mjs';
 

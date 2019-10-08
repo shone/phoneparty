@@ -1,4 +1,4 @@
-import {waitForNSeconds, waitForKeypress} from '/host/utils.mjs';
+import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
 export default async function titleScreen() {
   document.body.insertAdjacentHTML('beforeend', `
