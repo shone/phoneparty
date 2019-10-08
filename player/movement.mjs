@@ -29,8 +29,6 @@ export default function handleMovement(channel) {
 
   channel.onclose = event => {
     container.classList.remove('active');
-    window.removeEventListener('keydown', handleKey);
-    window.removeEventListener('keyup',   handleKey);
     window.removeEventListener('resize', updateContainerSize);
     setTimeout(() => {
       container.remove();
