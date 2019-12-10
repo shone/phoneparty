@@ -12,19 +12,22 @@
   from { bottom: -20vh; }
   to   { bottom: 0; }
 }
+.audience-mode-background.fade-out {
+  animation: 0.5s fade-out-audience-mode-background ease-out forwards;
+}
+@keyframes fade-out-audience-mode-background {
+  from { bottom: 0; }
+  to   { bottom: -20vh; }
+}
 .player.audience-mode {
-  margin-top:  0;
-  margin-left: 0;
   overflow: visible;
   transition: 0.5s transform, 0.5s box-shadow;
 }
-.player.audience-mode.transition-position {
+.player.audience-mode-layout-animation {
   transition: left 1s, top 1s, width 1s, height 1s, margin-left 1s, margin-top 1s, 0.5s box-shadow;
 }
-.player.new-player-in-audience {
+.player.audience-mode.new {
   transform: translateY(20vh);
-}
-.player.new-player-in-audience.revealing {
   animation: 0.5s new-player-in-audience-reveal ease-out forwards;
 }
 @keyframes new-player-in-audience-reveal {

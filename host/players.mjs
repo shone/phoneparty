@@ -156,7 +156,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   }
 
   player.classList.add('player', 'new');
-  setTimeout(() => player.classList.remove('new'), 4000);
+  setTimeout(() => player.classList.remove('new'), 500);
 
   players.push(player);
   for (const callback of listenForAllPlayersCallbacks) {
@@ -193,6 +193,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   playerLeftSound.play().catch(() => {});
 
+  player.classList.remove('new');
   player.classList.add('leaving');
   player.dataset.visibility = '';
   setTimeout(() => player.remove(), 200);
