@@ -15,7 +15,7 @@
   height: calc(80vh  - 4vmin) !important;
 }
 .photo-container.fullscreen img {
-  transition: transform 0.8s linear;
+  transition: transform 0.8s ease-in-out;
 }
 .photo-container.fullscreen.reveal-full-photo img {
   transform: scale(1);
