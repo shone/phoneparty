@@ -9,6 +9,8 @@ function playPopSound() {
 const swooshSound = new Audio('/sounds/swoosh.mp3');
 
 export function addSpeechBubbleToPlayer(player, text) {
+  clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
+
   const speechBubble = document.createElement('div');
   speechBubble.classList.add('speech-bubble');
   speechBubble.textContent = text;
@@ -16,13 +18,17 @@ export function addSpeechBubbleToPlayer(player, text) {
   playPopSound();
 }
 
-export function clearSpeechBubblesFromPlayer(player) {
+export function clearSpeechBubblesFromPlayer(player, options={}) {
+  if (options.playSwooshSound === undefined) options.playSwooshSound = true;
+
   const speechBubbles = [...player.querySelectorAll('.speech-bubble:not(.cleared)')];
   if (speechBubbles.length > 0) {
     for (const speechBubble of speechBubbles) {
       speechBubble.classList.add('cleared');
     }
-    swooshSound.play().catch(() => {});
+    if (options.playSwooshSound) {
+      swooshSound.play().catch(() => {});
+    }
     setTimeout(() => {
       for (const speechBubble of speechBubbles) {
         speechBubble.remove();
