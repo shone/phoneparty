@@ -49,15 +49,15 @@ export default async function goalScreen(chosenThingElement, messaging) {
 
   goalScreen.querySelector('h2').classList.add('fade-in-text');
 
-  // Wait for all players to confirm
+  // Wait for players to be ready
   await new Promise(resolve => {
     const confirmedPlayers = new Set();
     const channels = [];
-    function checkIfAllPlayersConfirmed() {
-      if (players.length > 0 && players.every(p => confirmedPlayers.has(p))) {
+    function checkIfPlayersReady() {
+      if (players.length >= 2 && players.every(p => confirmedPlayers.has(p))) {
         resolve();
         stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkIfAllPlayersConfirmed);
+        stopListeningForLeavingPlayer(checkIfPlayersReady);
         for (const channel of channels) {
           channel.close();
         }
@@ -68,13 +68,15 @@ export default async function goalScreen(chosenThingElement, messaging) {
       channel.onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
-        checkIfAllPlayersConfirmed();
+        checkIfPlayersReady();
       }
       channels.push(channel);
     }
     listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayer(checkIfAllPlayersConfirmed);
+    listenForLeavingPlayer(checkIfPlayersReady);
   });
+
+  // Highlight all the 'thumbs up' speech bubbles
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
     if (speechBubble) {
