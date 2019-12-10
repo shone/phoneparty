@@ -6,9 +6,6 @@ export default function startAudienceMode() {
   background.classList.add('audience-mode-background');
   document.body.appendChild(background);
 
-  const messageCallbacks = new Set();
-
-  const channels = [];
   let transitionPositionTimer = null;
   const newPlayerTimers = new Set();
   let timeOnLastNewPlayer = null;
@@ -75,7 +72,6 @@ export default function startAudienceMode() {
       background.remove();
       stopAcceptingPlayers();
       stopListeningForLeavingPlayer(handlePlayerLeaving);
-      messageCallbacks.clear();
       for (const player of players) {
         player.classList.remove('audience-mode');
         player.classList.remove('transition-position');
@@ -89,9 +85,6 @@ export default function startAudienceMode() {
       }
       for (const timerId of newPlayerTimers) {
         clearTimeout(timerId);
-      }
-      for (const channel of channels) {
-        channel.close();
       }
     }
   }
