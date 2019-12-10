@@ -1,4 +1,4 @@
-import {waitForNSeconds, waitForPageToBeVisible, waitForWebsocketToConnect, waitForWebsocketToDisconnect, waitForRtcConnection, waitForRtcToDisconnect} from '/shared/utils.mjs';
+import {waitForNSeconds, waitForPageToBeVisible, waitForWebsocketToConnect, waitForWebsocketToDisconnect, waitForRtcConnection, waitForRtcConnectionClose} from '/shared/utils.mjs';
 import {playTone} from './audio.mjs';
 import './push-buttons.mjs';
 import handleMessaging from './messaging.mjs';
@@ -184,7 +184,7 @@ export let stream = null;
         try {
           var result = await Promise.race([waitForRtcConnection(rtcConnection), waitForWebsocketToDisconnect(websocket)]);
         } catch(error) {
-          if (error === 'rtc_disconnected') {
+          if (error === 'rtc_closed') {
             statusContainer.className = 'error';
             status.textContent = 'Could not connect';
             statusDetail.textContent = 'WebRTC disconnected. Retrying in 2 seconds..';
@@ -262,7 +262,7 @@ export let stream = null;
 
       const waitForCloseChannel = new Promise(resolve => channels.close.onmessage = () => resolve('close_channel'));
 
-      var result = await Promise.race([waitForRtcToDisconnect(rtcConnection), waitForCloseChannel]);
+      var result = await Promise.race([waitForRtcConnectionClose(rtcConnection), waitForCloseChannel]);
       if (result === 'close_channel') {
         rtcConnection.close();
         hasHost = false;

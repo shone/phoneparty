@@ -59,17 +59,17 @@ export function waitForWebsocketToDisconnect(websocket) {
 
 export function waitForRtcConnection(rtcConnection) {
   return new Promise((resolve, reject) => {
-    if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+    if (rtcConnection.iceConnectionState === 'connected' || rtcConnection.iceConnectionState === 'completed') {
       resolve();
-    } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-      reject('rtc_disconnected');
+    } else if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
+      reject('rtc_closed');
     } else {
       rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-        if (rtcConnection.iceConnectionState in {connected: true, completed: true}) {
+        if (rtcConnection.iceConnectionState === 'connected' || rtcConnection.iceConnectionState === 'completed') {
           resolve();
           rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-        } else if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          reject();
+        } else if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
+          reject('rtc_closed');
           rtcConnection.removeEventListener('iceconnectionstatechange', callback);
         }
       });
@@ -77,33 +77,18 @@ export function waitForRtcConnection(rtcConnection) {
   });
 }
 
-export function waitForRtcToDisconnect(rtcConnection) {
-  // TODO: don't resolve on disconnect state! (WebRTC can reconnect again after that)
+export function waitForRtcConnectionClose(rtcConnection) {
   return new Promise((resolve, reject) => {
-    if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-      resolve('webrtc_disconnected');
+    if (rtcConnection.connectionState === 'failed' || rtcConnection.connectionState === 'closed') {
+      resolve();
     } else {
       rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-        if (rtcConnection.iceConnectionState in {disconnected: true, failed: true, closed: true}) {
-          resolve('webrtc_disconnected');
+        if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
+          resolve();
           rtcConnection.removeEventListener('iceconnectionstatechange', callback);
         }
       });
     }
-  });
-}
-
-export async function waitForRtcConnectionClose(rtcConnection) {
-  if (rtcConnection.connectionState === 'closed' || rtcConnection.connectionState === 'failed') {
-    return;
-  }
-  return new Promise(resolve => {
-    rtcConnection.addEventListener('connectionstatechange', function callback() {
-      if (rtcConnection.connectionState === 'closed' || rtcConnection.connectionState === 'failed') {
-        resolve();
-        rtcConnection.removeEventListener('connectionstatechange', callback);
-      }
-    });
   });
 }
 
