@@ -5,13 +5,6 @@ import {startPlayerGrid} from './allTheThings.mjs';
 export default async function photoTakingScreen() {
   await waitForNSeconds(1);
 
-  const piggy = document.createElement('img');
-  piggy.classList.add('piggy');
-  piggy.src = '/games/all-the-things/images/piggy_on_scooter.svg';
-  document.body.appendChild(piggy);
-  await waitForNSeconds(4);
-  piggy.remove();
-
   const playerPhotos = new Map();
 
   // Layout players as a grid of bubbles
