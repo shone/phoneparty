@@ -77,7 +77,7 @@ async function presentPhoto(playerPresentingPhoto, photo) {
   }
 
   photo.classList.add('reveal-full-photo');
-  await waitForNSeconds(1);
+  await Promise.race([waitForNSeconds(5), waitForKeypress(' ')]);
 
   // Reveal fooled/not-fooled state for each player
   for (const player of otherPlayersWithResponses) {
