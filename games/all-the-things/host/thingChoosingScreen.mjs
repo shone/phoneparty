@@ -92,7 +92,7 @@ function juggleElements(elements) {
   for (const element of elements) {
     element.momentum = {x: 0, y: 0};
     element.style.left = (Math.random() * 100) + 'vw';
-    element.style.bottom = '-10vh';
+    element.style.bottom = '-15vh';
   }
   let lastTimestamp = performance.now();
   let frameId = window.requestAnimationFrame(function callback(timestamp) {
@@ -105,8 +105,8 @@ function juggleElements(elements) {
       element.momentum.y -= gravity * delta;
       element.style.left    = (parseFloat(element.style.left)    + (element.momentum.x * delta)) + 'vw';
       element.style.bottom  = (parseFloat(element.style.bottom)  + (element.momentum.y * delta)) + 'vh';
-      if (parseFloat(element.style.bottom) < -10) {
-        element.style.bottom = '-10vh';
+      if (parseFloat(element.style.bottom) < -15) {
+        element.style.bottom = '-15vh';
         element.momentum.y = 0;
       }
       if (parseFloat(element.style.left) < 0) {
@@ -125,7 +125,7 @@ function juggleElements(elements) {
     const element = randomInArray(elements.filter(element => parseFloat(element.style.bottom) < 0));
     if (element) {
       element.momentum.x = (Math.random() - 0.5) * 0.02;
-      element.momentum.y = 0.1 + (Math.random() * 0.05);
+      element.momentum.y = 0.1 + (Math.random() * 0.055);
     }
   }, 1000);
 

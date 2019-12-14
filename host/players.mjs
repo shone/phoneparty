@@ -75,7 +75,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     if (event.candidate) {
       iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
       if (hasSentSdp) {
-        while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, type: 'ice', message: iceCandidatesToSend.pop()}));
+        while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, iceCandidate: iceCandidatesToSend.pop()}));
       }
     }
   }
@@ -94,10 +94,10 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   websocket.addEventListener('message', function callback(event) {
     const message = JSON.parse(event.data);
     if (message.playerId === playerId) {
-      if (message.type === 'playerDisconnected') {
+      if (message.connectionState === 'disconnected') {
         websocket.removeEventListener('message', callback);
-      } else if (message.type === 'ice') {
-        rtcConnection.addIceCandidate(JSON.parse(JSON.parse(message.message).iceCandidate));
+      } else if (message.iceCandidate) {
+        rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
       }
     }
   });
@@ -112,9 +112,9 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
-  websocket.send(JSON.stringify({playerId: playerId, type: 'sdp', message: answer.sdp}));
+  websocket.send(JSON.stringify({playerId: playerId, sdp: answer.sdp}));
   hasSentSdp = true;
-  while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, type: 'ice', message: iceCandidatesToSend.pop()}));
+  while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, iceCandidate: iceCandidatesToSend.pop()}));
 
   // Wait for RTC connection to connect
   await new Promise((resolve, reject) => {

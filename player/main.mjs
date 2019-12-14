@@ -94,8 +94,8 @@ export let stream = null;
     let hasHost = false;
     websocket.addEventListener('message', event => {
       const message = JSON.parse(event.data);
-      if (message.type === 'host') {
-        hasHost = message.message === 'connected';
+      if (message.host) {
+        hasHost = message.host === 'connected';
       }
     });
     websocket.addEventListener('close', event => hasHost = false);
@@ -136,7 +136,7 @@ export let stream = null;
           if (event.candidate) {
             iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
             if (websocket.readyState === websocket.OPEN && hasSentSdp) {
-              while (iceCandidatesToSend.length) websocket.send(JSON.stringify({type: 'ice', iceCandidate: iceCandidatesToSend.pop()}));
+              while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
             }
           }
         });
@@ -164,18 +164,18 @@ export let stream = null;
         }
 
         rtcConnection.setLocalDescription(rtcOffer);
-        websocket.send(JSON.stringify({type: 'sdp', sdp: rtcOffer.sdp}));
+        websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
         hasSentSdp = true;
 
-        while (iceCandidatesToSend.length) websocket.send(JSON.stringify({type: 'ice', iceCandidate: iceCandidatesToSend.pop()}));
+        while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
 
         websocket.addEventListener('message', function callback(event) {
           const message = JSON.parse(event.data);
-          if (message.type === 'sdp') {
-            rtcConnection.setRemoteDescription({type: 'answer', sdp: message.message});
-          } else if (message.type === 'ice') {
-            rtcConnection.addIceCandidate(JSON.parse(message.message));
-          } else if (message.type === 'host' && message.message === 'disconnected') {
+          if (message.sdp) {
+            rtcConnection.setRemoteDescription({type: 'answer', sdp: message.sdp});
+          } else if (message.iceCandidate) {
+            rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
+          } else if (message.host === 'disconnected') {
             websocket.removeEventListener('message', callback);
             rtcConnection.close();
           }
@@ -289,7 +289,7 @@ function waitForHost(websocket) {
     } else {
       function callback(event) {
         const message = JSON.parse(event.data);
-        if (message.type === 'host' && message.message === 'connected') {
+        if (message.host === 'connected') {
           resolve('host_connected');
           websocket.removeEventListener('message', callback);
         }

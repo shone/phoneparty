@@ -27,8 +27,8 @@ if (location.protocol === 'file:') {
 
     websocket.onmessage = event => {
       const message = JSON.parse(event.data);
-      if (message.type !== 'playerDisconnected' && JSON.parse(message.message).sdp) {
-        handleNewPlayer(message.playerId, JSON.parse(message.message).sdp, websocket);
+      if (message.sdp) {
+        handleNewPlayer(message.playerId, message.sdp, websocket);
       }
     }
 
