@@ -2,6 +2,7 @@
   position: fixed;
   width:  16vmin;
   height: 16vmin;
+  will-change: transform;
 }
 .thing img {
   position: absolute;
@@ -19,15 +20,13 @@
 .thing.present-in-center {
   width:  20vmin;
   height: 20vmin;
-  left:   calc(50vw - 10vmin) !important;
-  bottom: calc(50vh - 10vmin) !important;
+  transform: translate(calc(50vw - 10vmin), calc(50vh - 10vmin)) !important;
   transition: all 1s ease-in-out;
 }
 .thing.show-in-top-right {
   width:  15vmin;
   height: 15vmin;
-  left:   calc(100vw - 17vmin) !important;
-  bottom: calc(100vh - 17vmin) !important;
+  transform: translate(calc(100vw - 19vmin), 2vmin) !important;
   transition: all 1s ease-in-out;
 }
 .thing-label {

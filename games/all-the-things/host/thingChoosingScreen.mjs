@@ -23,14 +23,12 @@ export default async function thingChoosingScreen() {
 
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
-    const element = document.createElement('div');
-    element.classList.add('thing');
-    element.dataset.name = thingName;
-    const img = document.createElement('img');
-    img.src = `/games/all-the-things/things/${thingName}.svg`;
-    element.appendChild(img);
-    document.body.appendChild(element);
-    return element;
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="thing" data-name="${thingName}">
+        <img src="/games/all-the-things/things/${thingName}.svg">
+      </div>
+    `);
+    return document.body.lastElementChild;
   });
 
   const stopJuggling = juggleElements(thingElements);
@@ -91,8 +89,8 @@ export function chooseThing(thingName) {
 function juggleElements(elements) {
   for (const element of elements) {
     element.momentum = {x: 0, y: 0};
-    element.style.left = (Math.random() * 100) + 'vw';
-    element.style.bottom = '-15vh';
+    element.position = {x: Math.random() * 100, y: -15};
+    element.style.transform = `translate(${element.position.x}vw, ${element.position.y}vh)`;
   }
   let lastTimestamp = performance.now();
   let frameId = window.requestAnimationFrame(function callback(timestamp) {
@@ -103,29 +101,30 @@ function juggleElements(elements) {
 
     for (const element of elements) {
       element.momentum.y -= gravity * delta;
-      element.style.left    = (parseFloat(element.style.left)    + (element.momentum.x * delta)) + 'vw';
-      element.style.bottom  = (parseFloat(element.style.bottom)  + (element.momentum.y * delta)) + 'vh';
-      if (parseFloat(element.style.bottom) < -15) {
-        element.style.bottom = '-15vh';
+      element.position.x += element.momentum.x * delta;
+      element.position.y += element.momentum.y * delta;
+      if (element.position.y < -15) {
+        element.position.y = -15;
         element.momentum.y = 0;
       }
-      if (parseFloat(element.style.left) < 0) {
-        element.style.left = '0vw';
+      if (element.position.x < 0) {
+        element.position.x = 0;
         element.momentum.x = -element.momentum.x;
-      } else if (parseFloat(element.style.left) > 100) {
-        element.style.left = '100vw';
+      } else if (element.position.x > 100) {
+        element.position.x = 100;
         element.momentum.x = -element.momentum.x;
       }
+      element.style.transform = `translate(${element.position.x}vw, ${100 - element.position.y}vh)`;
     }
 
     frameId = window.requestAnimationFrame(callback);
   });
 
   const throwInterval = setInterval(() => {
-    const element = randomInArray(elements.filter(element => parseFloat(element.style.bottom) < 0));
+    const element = randomInArray(elements.filter(element => element.position.y < 0));
     if (element) {
       element.momentum.x = (Math.random() - 0.5) * 0.02;
-      element.momentum.y = 0.1 + (Math.random() * 0.055);
+      element.momentum.y = 0.1 + (Math.random() * 0.06);
     }
   }, 1000);
 
@@ -155,8 +154,8 @@ function getClosestThingToCenterOfScreen(thingElements) {
   let closestThing = null;
   let closestThingDistance = null;
   for (const thingElement of thingElements) {
-    const deltaX = parseFloat(thingElement.style.left)   - 50;
-    const deltaY = parseFloat(thingElement.style.bottom) - 50;
+    const deltaX = thingElement.position.x - 50;
+    const deltaY = thingElement.position.y - 50;
     const distance = (deltaX*deltaX) + (deltaY*deltaY);
     if (!closestThingDistance || (distance < closestThingDistance)) {
       closestThingDistance = distance;
