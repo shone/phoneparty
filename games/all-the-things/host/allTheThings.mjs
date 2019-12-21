@@ -5,8 +5,8 @@ import photoTakingScreen from './photoTakingScreen.mjs';
 import presentingPhotosScreen from './presentingPhotosScreen.mjs';
 import anotherRoundScreen from './anotherRoundScreen.mjs';
 
-import startAudienceMode from '/host/audienceMode.mjs';
-import startMessaging from '/host/messaging.mjs';
+import * as audienceMode from '/host/audienceMode.mjs';
+import * as messaging from '/host/messaging.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForNewPlayers, stopListeningForNewPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {waitForNSeconds} from '/shared/utils.mjs';
 
@@ -28,8 +28,8 @@ export async function AllTheThings() {
   document.body.style.backgroundColor = '#98947f';
   await waitForNSeconds(1);
 
-  let audience = startAudienceMode();
-  let messaging = startMessaging();
+  audienceMode.start();
+  messaging.start();
 
   await titleScreen();
 
@@ -46,11 +46,11 @@ export async function AllTheThings() {
 
     await goalScreen(chosenThingElement);
 
-    audience.stop();
+    audienceMode.stop();
 
     const [playerPhotos, playerGrid] = await photoTakingScreen();
 
-    audience = startAudienceMode();
+    audienceMode.start();
 
     await presentingPhotosScreen(playerPhotos);
 
@@ -64,7 +64,7 @@ export async function AllTheThings() {
     chosenThingElement.remove();
 
     await anotherRoundScreen();
-    messaging = startMessaging();
+    messaging.start();
   }
 
   stopListeningForAllPlayers(handlePlayer);

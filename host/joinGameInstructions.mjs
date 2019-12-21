@@ -1,5 +1,5 @@
 import startBubbleField from './bubbleField.mjs';
-import startMessaging from './messaging.mjs';
+import * as messaging from './messaging.mjs';
 import {waitForKeypress} from '/shared/utils.mjs';
 
 export async function joinGameInstructions() {
@@ -19,7 +19,7 @@ export async function joinGameInstructions() {
   const joinGameInstructions = document.body.lastElementChild;
 
   const bubbleField = startBubbleField();
-  const messaging = startMessaging();
+  messaging.start();
 
   await waitForKeypress(' ');
   joinGameInstructions.classList.add('in-corner');

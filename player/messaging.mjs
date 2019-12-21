@@ -12,21 +12,19 @@ export default function handleMessaging(channel) {
   const clearButton = container.querySelector('.clear-button');
   const options = container.querySelector('.options');
 
-  channel.onmessage = event => {
-    const existingSpeechBubbles = [...options.getElementsByClassName('speech-bubble')];
-    for (const speechBubble of existingSpeechBubbles) {
-      speechBubble.remove();
-    }
-    const possibleMessages = JSON.parse(event.data);
-    const now = performance.now();
-    const revealDurationSecs = 0.5;
-    for (const [index, message] of possibleMessages.entries()) {
-      const speechBubble = document.createElement('div');
-      speechBubble.classList.add('speech-bubble');
-      speechBubble.textContent = message;
-      speechBubble.style.animationDelay = (revealDurationSecs * (index / possibleMessages.length)) + 's';
-      options.appendChild(speechBubble);
-    }
+  const existingSpeechBubbles = [...options.getElementsByClassName('speech-bubble')];
+  for (const speechBubble of existingSpeechBubbles) {
+    speechBubble.remove();
+  }
+
+  const possibleMessages = ['👍', '👎', '👌', '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😔', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
+  const revealDurationSecs = 0.8;
+  for (const [index, message] of possibleMessages.entries()) {
+    options.insertAdjacentHTML('beforeend', `
+      <div class="speech-bubble" style="animation-delay: ${0.7 + (revealDurationSecs * (index / possibleMessages.length))}s">
+        ${message}
+      </div>
+    `);
   }
 
   options.onclick = event => {

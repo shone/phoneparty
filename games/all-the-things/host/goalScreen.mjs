@@ -2,7 +2,7 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
 
-export default async function goalScreen(chosenThingElement, messaging) {
+export default async function goalScreen(chosenThingElement) {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things goal-screen">
       <h1>THE GOAL:</h1>

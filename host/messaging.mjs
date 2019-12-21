@@ -1,5 +1,25 @@
 import {listenForAllPlayers, stopListeningForAllPlayers} from './players.mjs';
 
+let started = false;
+
+export function start() {
+  if (!started) {
+    listenForAllPlayers(handlePlayer);
+    started = true;
+  }
+}
+
+export function stop() {
+  if (started) {
+    stopListeningForAllPlayers(handlePlayer);
+    for (const channel of channels) {
+      channel.close();
+    }
+    channels.length = 0;
+    started = false;
+  }
+}
+
 const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
 function playPopSound() {
   const popSound = popSoundInstances.shift();
@@ -37,57 +57,21 @@ export function clearSpeechBubblesFromPlayer(player, options={}) {
   }
 }
 
-const defaultPossibleMessages = ['👍', '👎', '👌', '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😔', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
-
-export default function startMessaging(possibleMessages = defaultPossibleMessages) {
-  const messageCallbacks = new Set();
-
-  const channels = [];
-  function handlePlayer(player) {
-    const channel = player.rtcConnection.createDataChannel('messaging');
-    channels.push(channel);
-    channel.onopen = () => {
-      channel.send(JSON.stringify(possibleMessages));
-    }
-    channel.onmessage = event => {
-      const previousSpeechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-      if (previousSpeechBubble) {
-        if (event.data === 'clear') {
-          clearSpeechBubblesFromPlayer(player);
-        } else {
-          previousSpeechBubble.remove();
-        }
-      }
-      if (event.data !== 'clear') {
-        addSpeechBubbleToPlayer(player, event.data);
-      }
-      for (const callback of messageCallbacks) {
-        callback(event.data, player);
+const channels = [];
+function handlePlayer(player) {
+  const channel = player.rtcConnection.createDataChannel('messaging');
+  channels.push(channel);
+  channel.onmessage = event => {
+    const previousSpeechBubble = player.querySelector('.speech-bubble:not(.cleared)');
+    if (previousSpeechBubble) {
+      if (event.data === 'clear') {
+        clearSpeechBubblesFromPlayer(player);
+      } else {
+        previousSpeechBubble.remove();
       }
     }
-  }
-  listenForAllPlayers(handlePlayer);
-
-  return {
-    listenForMessage: callback => {
-      messageCallbacks.add(callback);
-    },
-    stopListeningForMessage: callback => {
-      messageCallbacks.delete(callback);
-    },
-    setPossibleMessages: messages => {
-      possibleMessages = messages;
-      for (const channel of channels) {
-        if (channel.readyState === 'open') {
-          channel.send(JSON.stringify(messages));
-        }
-      }
-    },
-    stop: () => {
-      stopListeningForAllPlayers(handlePlayer);
-      for (const channel of channels) {
-        channel.close();
-      }
-    },
+    if (event.data !== 'clear') {
+      addSpeechBubbleToPlayer(player, event.data);
+    }
   }
 }
