@@ -11,7 +11,8 @@
 }
 .all-the-things.photo-judgement-screen h1 {
   text-align: center;
-  font-size: 5vw;
+  font-size: 9vw;
+  margin: 0;
   color: white;
   text-shadow: black 0.1vw 0.1vw 1vw;
 }
@@ -21,7 +22,7 @@
   object-fit: contain;
 }
 .all-the-things.photo-judgement-screen .label {
-  font-size: 6vmin;
+  font-size: 11vmin;
   text-shadow: 0 0 2vmin white;
 }
 .all-the-things.photo-judgement-screen .real-or-fake {
@@ -32,7 +33,10 @@
   flex-grow: 1;
   height: 20vmin;
   margin: 2vmin;
-  font-size: 10vmin;
+  font-size: 13vmin;
+  border-radius: 4vmin;
+  padding-left:  3vmin;
+  padding-right: 3vmin;
 }
 .all-the-things.photo-judgement-screen .real-or-fake button.selected {
   outline: 3vmin solid yellow;
@@ -45,6 +49,8 @@
   width:  100%;
   height: 100%;
   object-fit: contain;
+  padding: 3vmin;
+  box-sizing: border-box;
   background: black;
 }
 
@@ -61,16 +67,17 @@
 }
 .all-the-things.photo-self-judgement-screen h1 {
   text-align: center;
-  font-size: 6vmin;
+  font-size: 13vmin;
+  margin: 0;
   color: white;
   text-shadow: black 0.1vw 0.1vw 1vw;
 }
 .all-the-things.photo-self-judgement-screen img {
-  width:  15vmin;
-  height: 15vmin;
+  width:  17vmin;
+  height: 17vmin;
 }
 .all-the-things.photo-self-judgement-screen .label {
-  font-size: 6vmin;
+  font-size: 11vmin;
   text-shadow: 0 0 2vmin white;
 }
 .all-the-things.photo-self-judgement-screen .be-honest {
@@ -105,7 +112,10 @@
   flex-grow: 1;
   max-width: 80vmin;
   margin: 2vmin;
-  font-size: 15vmin;
+  font-size: 13vmin;
+  border-radius: 4vmin;
+  padding-left: 5vmin;
+  padding-right: 5vmin;
 }
 .all-the-things.photo-self-judgement-screen button.selected {
   outline: 3vmin solid yellow;

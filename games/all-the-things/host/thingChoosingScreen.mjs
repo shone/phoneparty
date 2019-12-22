@@ -21,10 +21,17 @@ export default async function thingChoosingScreen() {
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
+  await waitForNSeconds(1);
+
+  const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
+  thinkingEmoji.classList.add('appear');
+
+  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
     document.body.insertAdjacentHTML('beforeend', `
-      <div class="thing" data-name="${thingName}">
+      <div class="all-the-things thing" data-name="${thingName}">
         <img src="/games/all-the-things/things/${thingName}.svg">
       </div>
     `);
@@ -33,12 +40,7 @@ export default async function thingChoosingScreen() {
 
   const stopJuggling = juggleElements(thingElements);
 
-  await Promise.race([waitForNSeconds(4), waitForKeypress(' ')]);
-
-  const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
-  thinkingEmoji.classList.add('appear');
-
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
 
   await countdownPieTimer(thingChoosingScreen.querySelector('.timer'), 5);
 
@@ -110,8 +112,8 @@ function juggleElements(elements) {
       if (element.position.x < 0) {
         element.position.x = 0;
         element.momentum.x = -element.momentum.x;
-      } else if (element.position.x > 100) {
-        element.position.x = 100;
+      } else if (element.position.x > 95) {
+        element.position.x = 95;
         element.momentum.x = -element.momentum.x;
       }
       element.style.transform = `translate(${element.position.x}vw, ${100 - element.position.y}vh)`;

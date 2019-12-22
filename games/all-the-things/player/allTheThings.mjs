@@ -43,22 +43,23 @@ export default function allTheThings(channel, rtcConnection) {
 
 function confirmation(channel, text) {
   const subjectPanel = document.getElementById('subject-panel');
-  const heading = document.createElement('h1');
-  heading.classList.add('all-the-things_confirmation');
-  heading.textContent = text;
-  subjectPanel.appendChild(heading);
-  heading.classList.add('active');
+  subjectPanel.insertAdjacentHTML('beforeend', `
+    <h1 class="all-the-things confirmation active flash">
+      ${text}
+    </h1>
+  `);
+  const heading = subjectPanel.lastElementChild;
 
   const messagingPanel = document.getElementById('messaging-panel');
-  const yesButton = document.createElement('button');
-  yesButton.classList.add('push-button');
-  yesButton.classList.add('all-the-things_yes-button');
-  messagingPanel.appendChild(yesButton);
-  yesButton.classList.add('active');
+  messagingPanel.insertAdjacentHTML('beforeend', `
+    <button class="all-the-things yes-button push-button active"></button>
+  `);
+  const yesButton = messagingPanel.lastElementChild;
 
   yesButton.onclick = () => {
     channel.send(true);
     yesButton.classList.add('selected');
+    heading.classList.remove('flash');
   }
 
   channel.onclose = () => {

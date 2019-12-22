@@ -4,10 +4,13 @@
   top:    0;
   right:  0;
   bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .all-the-things.another-round-screen h1 {
   text-align: center;
-  font-size: 6vw;
+  font-size: 12vw;
   margin-top: 3vh;
 }

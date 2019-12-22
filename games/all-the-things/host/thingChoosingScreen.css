@@ -6,10 +6,10 @@
   position: fixed;
   left:  0;
   right: 0;
-  bottom: calc(50vh + 11vmin);
-  font-size: 5vmin;
+  bottom: calc(50vh + 8vmin);
+  font-size: 7vmin;
   opacity: 0;
-  animation: fade-in 0.5s 5s forwards;
+  animation: fade-in 0.5s 2s forwards;
 }
 .all-the-things.thing-choosing-screen .timer {
   position: fixed;

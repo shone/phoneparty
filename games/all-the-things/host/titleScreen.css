@@ -31,10 +31,10 @@
 
 .all-the-things.title-screen h1 {
   text-align: center;
-  font-size: 14vmin;
+  font-size: 18vmin;
   margin-top: 5vh;
   color: white;
-  -webkit-text-stroke: 0.7vmin black;
+  -webkit-text-stroke: 0.4vmin black;
   z-index: 1;
   text-shadow: black -3px 7px 20px;
   opacity: 0;
@@ -53,7 +53,8 @@
   right: 0;
   bottom: 21vh;
   margin-bottom: 5vh;
-  font-size: 8vmin;
+  font-size: 13vmin;
+  -webkit-text-stroke: 0.2vmin black;
   text-shadow: #000 0.2vmin 0.3vmin 1.5vmin;
   color: white;
   opacity: 0;

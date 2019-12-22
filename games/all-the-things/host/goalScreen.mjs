@@ -9,7 +9,7 @@ export default async function goalScreen(chosenThingElement) {
       <div class="goal-container">
         <span class="goal-text">
           <div class="find-a-peice-of">Find a peice of</div>
-          <div class="thing-text"></div>
+          <div class="thing-text">${chosenThingElement.dataset.name}</div>
         </span>
         <span class="all-the-things phone">
           <div class="phone-background"></div>
@@ -20,7 +20,6 @@ export default async function goalScreen(chosenThingElement) {
     </div>
   `);
   const goalScreen = document.body.lastElementChild;
-  goalScreen.querySelector('.thing-text').textContent = chosenThingElement.dataset.name;
   const phoneBackground = goalScreen.querySelector('.phone-background');
   const phoneBackgroundContent = document.createElement('img');
   phoneBackgroundContent.src = chosenThingElement.querySelector('img').src;

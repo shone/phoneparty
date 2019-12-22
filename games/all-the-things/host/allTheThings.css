@@ -1,3 +1,16 @@
+@font-face {
+  font-family: "Timothy";
+  src: url("/games/all-the-things/timothy.woff2") format("woff2");
+}
+
+h1.all-the-things, h2.all-the-things {
+  font-weight: normal;
+}
+
+.all-the-things {
+  font-family: Timothy;
+}
+
 .thing {
   position: fixed;
   width:  16vmin;
@@ -37,7 +50,7 @@
   text-align: center;
   opacity: 0;
   animation: fade-in 1s 1s forwards;
-  font-size: 6vmin;
+  font-size: 7vmin;
 }
 
 .all-the-things.photo-container {
