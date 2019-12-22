@@ -19,6 +19,7 @@
   z-index: 7;
   background-color: grey;
   cursor: pointer;
+  will-change: transform;
 }
 .player.bubble.new {
   animation: 0.5s pop-in forwards;
