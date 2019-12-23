@@ -57,3 +57,19 @@
   margin-top:  0;
   box-shadow: 0 1vmin 5vmin #000000;
 }
+
+.player-bubble-placeholder {
+  position: absolute;
+  margin-left: -6vw;
+  margin-top:  -6vw;
+  border-radius: 50%;
+  border: 1vmin solid black;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.player-bubble-placeholder > * {
+  font-size: 3vmin;
+  text-align: center;
+}
