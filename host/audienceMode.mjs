@@ -20,6 +20,15 @@ export function stop() {
   }
 }
 
+let minPlayers = 0;
+let setMinPlayersCallback = null;
+export function setMinPlayers(numberOfPlayers) {
+  minPlayers = numberOfPlayers;
+  if (setMinPlayersCallback) {
+    setMinPlayersCallback();
+  }
+}
+
 audienceMode();
 
 async function audienceMode() {
@@ -43,19 +52,39 @@ async function audienceMode() {
     function addPlayerPlaceholder() {
       document.body.insertAdjacentHTML('beforeend', `
         <div class="player-bubble-placeholder">
-          <span>Waiting for player...</span>
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="47">
+          </svg>
+          <label>waiting for player...</label>
         </div>
       `);
       const playerPlaceholder = document.body.lastElementChild;
       playerSlots.push(playerPlaceholder);
     }
 
-    const playerSlots = [];
-    const minPlayers = 2;
+    let playerSlots = [];
     for (let i=0; i<Math.max(players.length, minPlayers); i++) {
       addPlayerPlaceholder();
     }
     layoutPlayers();
+    setMinPlayersCallback = () => {
+      if (players.length >= minPlayers) {
+        playerSlots = playerSlots.filter(slot => {
+          if (slot.classList.contains('player-bubble-placeholder')) {
+            slot.classList.add('removing');
+            setTimeout(() => slot.remove(), 3000);
+            return false;
+          } else {
+            return true;
+          }
+        });
+      } else {
+        for (let i=0; i < minPlayers - players.length; i++) {
+          addPlayerPlaceholder();
+        }
+      }
+      layoutPlayers();
+    }
 
     const newPlayerTimers = new Set();
     let timeOnLastNewPlayer = null;
@@ -106,13 +135,16 @@ async function audienceMode() {
       if (playerSlots.length === 0) {
         return;
       }
-      const playerSize = Math.min(100 / playerSlots.length, 10);
+      const spacing = 1;
+      const playerSize = Math.min((100 / playerSlots.length) - spacing, 10);
+      const slotSize = playerSize + spacing;
+      const slotsLeftEdge = 50 - ((slotSize * playerSlots.length) / 2);
       const playerMargin = 6;
       for (const [index, playerSlot] of playerSlots.entries()) {
         playerSlot.classList.add('audience-mode-layout-animation');
         if (!playerSlot.classList.contains('fullscreen-in-audience')) {
           playerSlot.style.top  = `calc((100vh - ${playerSize}vw) + ${playerMargin}vw)`;
-          playerSlot.style.left = (((50 - ((playerSize * playerSlots.length) / 2)) + (playerSize * index)) + playerMargin) + 'vw';
+          playerSlot.style.left = ((slotsLeftEdge + (slotSize * index)) + playerMargin + (spacing / 2)) + 'vw';
           playerSlot.style.width  = playerSize + 'vw';
           playerSlot.style.height = playerSize + 'vw';
           playerSlot.style.fontSize = playerSize + 'vw';
@@ -122,8 +154,8 @@ async function audienceMode() {
         clearTimeout(timerForLayoutAnimation);
       }
       timerForLayoutAnimation = setTimeout(() => {
-        for (const player of players) {
-          player.classList.remove('audience-mode-layout-animation');
+        for (const slot of playerSlots) {
+          slot.classList.remove('audience-mode-layout-animation');
         }
       }, (Math.max(...players.map(p => parseFloat(p.style.transitionDelay || 0) * 1000))) + 1000);
     }

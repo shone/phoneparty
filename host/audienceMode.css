@@ -63,13 +63,48 @@
   margin-left: -6vw;
   margin-top:  -6vw;
   border-radius: 50%;
-  border: 1vmin solid black;
-  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 3;
+  animation: 3s fade-in forwards;
+  cursor: wait;
 }
-.player-bubble-placeholder > * {
-  font-size: 3vmin;
+.player-bubble-placeholder.audience-mode-layout-animation {
+  transition: left 1s, top 1s, width 1s, height 1s;
+}
+.player-bubble-placeholder.removing {
+  animation: 3s fade-out forwards;
+}
+.player-bubble-placeholder svg {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  animation: 7s player-bubble-placeholder-circle infinite linear;
+  transform-origin: center;
+}
+.player-bubble-placeholder svg circle {
+  fill: none;
+  stroke-width: 0.3vw;
+  stroke-dasharray: 10.5;
+  stroke: #bbb;
+  stroke-linecap: round;
+}
+@keyframes player-bubble-placeholder-circle {
+  from { transform: rotate(  0deg); }
+  to   { transform: rotate(360deg); }
+}
+.player-bubble-placeholder > label {
+  font-size: 1.5vw;
+  font-weight: 800;
   text-align: center;
+  color: #bbb;
+  animation: 1s pulse-player-placeholder-label infinite alternate;
+}
+@keyframes pulse-player-placeholder-label {
+  from { opacity: 1.0; }
+  to   { opacity: 0.6; }
 }

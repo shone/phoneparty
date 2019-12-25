@@ -1,6 +1,7 @@
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
+import * as audience from '/host/audienceMode.mjs';
 
 export default async function goalScreen(chosenThingElement) {
   document.body.insertAdjacentHTML('beforeend', `
@@ -47,6 +48,10 @@ export default async function goalScreen(chosenThingElement) {
   }
 
   goalScreen.querySelector('h2').classList.add('fade-in-text');
+
+  await waitForNSeconds(1);
+
+  audience.setMinPlayers(2);
 
   // Wait for players to be ready
   await new Promise(resolve => {
