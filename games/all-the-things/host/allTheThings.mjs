@@ -78,10 +78,10 @@ export function startPlayerGrid(playerPhotos) {
 //   const debugBlocks = [];
 
   function updateLayout() {
-    const gridPadding = Math.min(window.innerWidth, window.innerHeight) * 0.15;
-    const gridBottomPadding = Math.min(window.innerWidth, window.innerHeight) * 0.3;
+    const gridPadding = Math.min(window.innerWidth, window.innerHeight) * 0.08;
+    const gridTopPadding = Math.min(window.innerWidth, window.innerHeight) * 0.2;
     const gridWidth  = window.innerWidth  - (gridPadding * 2);
-    const gridHeight = window.innerHeight - (gridBottomPadding + gridPadding);
+    const gridHeight = window.innerHeight - (gridTopPadding + gridPadding);
     const gridAspectRatio = gridWidth / gridHeight;
     let gridColumnCount = Math.round(Math.sqrt(players.length) * gridAspectRatio);
     let gridRowCount    = Math.round(Math.sqrt(players.length) * (1/gridAspectRatio));
@@ -110,8 +110,8 @@ export function startPlayerGrid(playerPhotos) {
           break;
         }
         const player = players[playerIndex];
-        const cellLeft = rowLeft + (cellWidth  * gridColumn) + cellPadding;
-        const cellTop   = gridPadding + (cellHeight * gridRow) + cellPadding;
+        const cellLeft = rowLeft        + (cellWidth  * gridColumn) + cellPadding;
+        const cellTop  = gridTopPadding + (cellHeight * gridRow   ) + cellPadding;
 //         const debugBlock = document.createElement('div');
 //         debugBlock.classList.add('grid-debug-block');
 //         debugBlock.style.left = cellLeft + 'px';

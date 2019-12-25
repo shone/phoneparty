@@ -1,5 +1,6 @@
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {randomInArray} from '/shared/utils.mjs';
+import {listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
 
 export default async function thingChoosingScreen() {
   // Thing choosing screen
@@ -26,6 +27,20 @@ export default async function thingChoosingScreen() {
   const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
   thinkingEmoji.classList.add('appear');
 
+  let chosenThingElement = null;
+
+  const channels = [];
+  function handlePlayer(player) {
+    const channel = player.rtcConnection.createDataChannel('all-the-things_thing-choosing');
+    channels.push(channel);
+    channel.onopen = () => {
+      if (chosenThingElement !== null) {
+        channel.send(chosenThingElement.dataset.name);
+      }
+    }
+  }
+  listenForAllPlayers(handlePlayer);
+
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
@@ -46,8 +61,14 @@ export default async function thingChoosingScreen() {
 
   stopJuggling();
 
-  const chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
+  chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
   chosenThingElement.classList.add('chosen');
+
+  for (const channel of channels) {
+    if (channel.readyState === 'open') {
+      channel.send(chosenThingElement.dataset.name);
+    }
+  }
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
@@ -72,6 +93,11 @@ export default async function thingChoosingScreen() {
   chosenThingElement.classList.remove('chosen');  
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
+
+  for (const channel of channels) {
+    channel.close();
+  }
+  stopListeningForAllPlayers(handlePlayer);
 
   return chosenThingElement;
 }

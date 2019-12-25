@@ -1,4 +1,5 @@
 import {photoJudgement, photoSelfJudgement} from './photoJudgementScreen.mjs';
+import thingChoosingScreen from './thingChoosingScreen.mjs';
 import photoTakingScreen from './photoTakingScreen.mjs';
 
 export default function allTheThings(channel, rtcConnection) {
@@ -20,17 +21,22 @@ export default function allTheThings(channel, rtcConnection) {
   }
 
   let photoCanvas = null;
+
   function handleNewChannel(event) {
-    if (event.channel.label === 'all-the-things_ready-to-start-looking') {
-      confirmation(event.channel, 'Ready to start looking?');
-    } else if (event.channel.label === 'all-the-things_photo') {
-      photoTakingScreen(event.channel, getThing, rtcConnection).then(canvas => photoCanvas = canvas);
-    } else if (event.channel.label === 'all-the-things_photo-self-judgement') {
-      photoSelfJudgement(event.channel, getThing, photoCanvas);
-    } else if (event.channel.label === 'all-the-things_photo-judgement') {
-      photoJudgement(event.channel, getThing);
-    } else if (event.channel.label === 'all-the-things_another-round') {
-      confirmation(event.channel, 'Play another round?');
+    switch (event.channel.label) {
+      case 'all-the-things_thing-choosing':
+        event.channel.addEventListener('message', event => thing = event.data);
+        return thingChoosingScreen(event.channel);
+      case 'all-the-things_ready-to-start-looking':
+        return confirmation(event.channel, 'Ready to start looking?');
+      case 'all-the-things_photo':
+        return photoTakingScreen(event.channel, getThing, rtcConnection).then(canvas => photoCanvas = canvas);
+      case 'all-the-things_photo-self-judgement':
+        return photoSelfJudgement(event.channel, getThing, photoCanvas);
+      case 'all-the-things_photo-judgement':
+        return photoJudgement(event.channel, getThing);
+      case 'all-the-things_another-round':
+        return confirmation(event.channel, 'Play another round?');
     }
   }
   rtcConnection.addEventListener('datachannel', handleNewChannel);

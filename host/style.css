@@ -71,3 +71,11 @@ body {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+
+@keyframes pop-in {
+    0% { transform: scale(0.0); }
+   30% { transform: scale(1.2); }
+   55% { transform: scale(0.9); }
+   75% { transform: scale(1.1); }
+  100% { transform: scale(1.0); }
+}
