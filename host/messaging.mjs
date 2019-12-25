@@ -1,4 +1,4 @@
-import {listenForAllPlayers, stopListeningForAllPlayers} from './players.mjs';
+import {players, listenForAllPlayers, stopListeningForAllPlayers} from './players.mjs';
 
 let started = false;
 
@@ -16,6 +16,9 @@ export function stop() {
       channel.close();
     }
     channels.length = 0;
+    for (const player of players) {
+      clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
+    }
     started = false;
   }
 }
