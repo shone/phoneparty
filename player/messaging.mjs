@@ -17,7 +17,7 @@ export default function handleMessaging(channel) {
     speechBubble.remove();
   }
 
-  const possibleMessages = ['👍', '👎', '👌', '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😔', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
+  const possibleMessages = ['👍', '👎', '👌', '😄', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
   const revealDurationSecs = 0.8;
   for (const [index, message] of possibleMessages.entries()) {
     options.insertAdjacentHTML('beforeend', `
