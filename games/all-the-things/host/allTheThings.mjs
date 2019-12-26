@@ -31,6 +31,8 @@ export async function AllTheThings() {
   audienceMode.start();
   messaging.start();
 
+  await waitForNSeconds(1.5);
+
   await titleScreen();
 
   while(true) {
