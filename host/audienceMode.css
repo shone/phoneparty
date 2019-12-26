@@ -103,6 +103,7 @@
   text-align: center;
   color: #bbb;
   animation: 1s pulse-player-placeholder-label infinite alternate;
+  pointer-events: none;
 }
 @keyframes pulse-player-placeholder-label {
   from { opacity: 1.0; }
