@@ -52,17 +52,16 @@ export let stream = null;
     const clickSound = new Audio('/sounds/click.mp3');
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
-          fullscreenButton.classList.add('fullscreen');
-        });
+        document.documentElement.requestFullscreen({navigationUI: "hide"});
       } else {
-        document.exitFullscreen().then(() => {
-          fullscreenButton.classList.remove('fullscreen');
-        });
+        document.exitFullscreen();
       }
       clickSound.play();
     }
     fullscreenButton.onclick = toggleFullscreen;
+    document.documentElement.onfullscreenchange = () => {
+      fullscreenButton.classList.toggle('fullscreen', document.fullscreenElement !== null);
+    }
     const touches = new Set();
     fullscreenButton.ontouchstart = event => {
       fullscreenButton.classList.add('active');

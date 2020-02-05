@@ -13,10 +13,10 @@ body {
 
 #panels {
   position: fixed;
-  left:   0;
-  top:    0;
-  right:  0;
-  bottom: 0;
+  left:   env(safe-area-inset-left);
+  top:    env(safe-area-inset-top);
+  right:  env(safe-area-inset-right);
+  bottom: env(safe-area-inset-bottom);
   display: flex;
   justify-content: flex-end;
 }
@@ -145,8 +145,8 @@ button::-moz-focus-inner {
   border-radius: 6vmin;
   box-shadow: 0 0 2vmin black;
   position: fixed;
-  right: 0;
-  top:   0;
+  right: 3vmin;
+  top:   3vmin;
   width:  12vmin;
   height: 12vmin;
   padding: 0;
