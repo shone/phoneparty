@@ -49,7 +49,7 @@ export let stream = null;
   // Setup fullscreen button
   if (document.documentElement.requestFullscreen) {
     const fullscreenButton = document.getElementById('fullscreen-button');
-    const clickSound = new Audio('/sounds/click.mp3');
+    const clickSound = new Audio('/sounds/click.wav');
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen({navigationUI: "hide"});
