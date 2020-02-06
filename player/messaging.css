@@ -64,5 +64,10 @@
   right: 3.5vmin;
 }
 #messaging-panel .speech-bubble.selected {
-  filter: drop-shadow(0 0 11px white);
+  border: 2vmin solid red;
+}
+#messaging-panel .speech-bubble.selected:before {
+  border-left:   1.5vmin solid red;
+  border-bottom: 1.5vmin solid red;
+  top: calc(100% - 1.5vmin);
 }
