@@ -21,12 +21,13 @@
 }
 .player.audience-mode {
   overflow: visible;
-  transition: 0.5s transform, 0.5s box-shadow;
+  transition: 0.5s box-shadow;
 }
 .player.audience-mode-layout-animation {
   transition: left 1s, top 1s, width 1s, height 1s, margin-left 1s, margin-top 1s, 0.5s box-shadow;
 }
 .player.audience-mode.new {
+  transition: 0.5s transform;
   transform: translateY(20vh);
   animation: 0.5s new-player-in-audience-reveal ease-out forwards;
 }
@@ -39,6 +40,7 @@
 }
 
 .player.highlight-in-audience {
+  transition: 0.5s transform;
   transform: translateY(-4vh) scale(1.2);
   box-shadow: 0 1vmin 5vmin #000000;
   z-index: 8;
