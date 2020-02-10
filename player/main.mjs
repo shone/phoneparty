@@ -11,6 +11,8 @@ if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
   location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 }
 
+navigator.serviceWorker.register('/service-worker.js');
+
 const statusContainer = document.getElementById('status-container');
 const status          = document.getElementById('status');
 const statusDetail    = document.getElementById('status-detail');
@@ -47,7 +49,10 @@ export let stream = null;
   }
 
   // Setup fullscreen button
-  if (document.documentElement.requestFullscreen) {
+  // - Only show the fullscreen button if the fullscreen API is available.
+  // - If the app was started in fullscreen mode, assume that it's running as an installed PWA and therefore doesn't
+  // need a fullscreen button.
+  if (document.documentElement.requestFullscreen && !window.matchMedia('(display-mode: fullscreen)').matches) {
     const fullscreenButton = document.getElementById('fullscreen-button');
     const clickSound = new Audio('/sounds/click.wav');
     function toggleFullscreen() {

@@ -1,0 +1,21 @@
+{
+  "name": "Phone Party",
+  "short_name": "Phone Party",
+  "start_url": "/",
+  "display": "fullscreen",
+  "theme_color": "#000",
+  "background_color": "#000",
+  "description": "Play silly party games with friends on your WiFi using your selfie camera.",
+  "icons": [
+    {
+      "src": "favicon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
