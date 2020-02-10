@@ -59,9 +59,6 @@ export let stream = null;
       clickSound.play();
     }
     fullscreenButton.onclick = toggleFullscreen;
-    document.documentElement.onfullscreenchange = () => {
-      fullscreenButton.classList.toggle('fullscreen', document.fullscreenElement !== null);
-    }
     const touches = new Set();
     fullscreenButton.ontouchstart = event => {
       fullscreenButton.classList.add('active');
