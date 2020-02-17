@@ -1,5 +1,6 @@
+import './titleScreen.mjs';
 import {photoJudgement, photoSelfJudgement} from './photoJudgementScreen.mjs';
-import thingChoosingScreen from './thingChoosingScreen.mjs';
+import './thingChoosingScreen.mjs';
 import photoTakingScreen from './photoTakingScreen.mjs';
 
 export default function allTheThings(channel, rtcConnection) {
@@ -24,9 +25,9 @@ export default function allTheThings(channel, rtcConnection) {
 
   function handleNewChannel(event) {
     switch (event.channel.label) {
-      case 'all-the-things_thing-choosing':
-        event.channel.addEventListener('message', event => thing = event.data);
-        return thingChoosingScreen(event.channel);
+//       case 'all-the-things_thing-choosing':
+//         event.channel.addEventListener('message', event => thing = event.data);
+//         return thingChoosingScreen(event.channel);
       case 'all-the-things_ready-to-start-looking':
         return confirmation(event.channel, 'Ready to start looking?');
       case 'all-the-things_photo':

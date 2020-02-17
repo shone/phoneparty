@@ -1,8 +1,10 @@
+import {currentRoute, currentRouteCounter} from './routes.mjs';
+
 export const players = [];
 
 let acceptAllPlayersCallback = null;
 let nowAcceptingPlayersCallbacks = new Set();
-export function acceptAllPlayers(callback) {
+export function acceptAllPlayers(callback = () => {}) {
   for (const callback of nowAcceptingPlayersCallbacks) {
     callback();
   }
@@ -109,6 +111,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   player.closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const acceptPlayerChannel     = rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true});
+  player.routeChannel           = rtcConnection.createDataChannel('route',           {negotiated: true, id: 9, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
   rtcConnection.setLocalDescription(answer);
@@ -129,15 +132,47 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   player.rtcConnection = rtcConnection;
 
+  player.wigglePosition = {x: 0, y: 0};
+//   player.acceleration   = {x: 0, y: 0};
+  player.wiggleMomentum = {x: 0, y: 0};
   accelerometerChannel.onmessage = event => {
     if (player.classList.contains('wiggleable')) {
       const acceleration = JSON.parse(event.data);
-      const wiggle = 0.5;
-      player.style.transform = `translate(${(acceleration.x * wiggle) + 'vw'}, ${(acceleration.y * -wiggle) + 'vw'})`;
+      player.wiggleMomentum.x += acceleration.x;
+      player.wiggleMomentum.y -= acceleration.y;
+//       const wiggle = 0.5;
+//       player.wiggleMomentum.x += acceleration.x;
+//       player.wiggleMomentum.y += acceleration.y;
     }
+  }
+  accelerometerChannel.onopen = () => {
+    let timeOnLastWiggleUpdate = performance.now();
+    const wiggliness = 0.002;
+    const antiWiggliness = 0.02;
+    window.requestAnimationFrame(function callback(timestamp) {
+      const delta = timestamp - timeOnLastWiggleUpdate;
+      player.wigglePosition.x += player.wiggleMomentum.x * delta * wiggliness;
+      player.wigglePosition.y += player.wiggleMomentum.y * delta * wiggliness;
+
+      player.wiggleMomentum.x -= player.wigglePosition.x * delta * antiWiggliness * 2;
+      player.wiggleMomentum.y -= player.wigglePosition.y * delta * antiWiggliness * 2;
+
+      player.wiggleMomentum.x *= Math.max(0, 1 - (delta * antiWiggliness));
+      player.wiggleMomentum.y *= Math.max(0, 1 - (delta * antiWiggliness));
+
+      player.style.transform = `translate(${(player.wigglePosition.x) + 'vw'}, ${(player.wigglePosition.y) + 'vw'})`;
+      timeOnLastWiggleUpdate = timestamp;
+      if (accelerometerChannel.readyState === 'open') {
+        window.requestAnimationFrame(callback);
+      }
+    });
   }
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
+
+  player.createChannelOnCurrentRoute = () => {
+    return rtcConnection.createDataChannel(currentRoute + '@' + currentRouteCounter);
+  }
 
   if (!acceptAllPlayersCallback) {
     await new Promise(resolve => {

@@ -1,6 +1,12 @@
+import {acceptAllPlayers} from '/host/players.mjs';
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
-export default async function titleScreen() {
+import * as audienceMode from '/host/audienceMode.mjs';
+
+import routes, {waitForRouteChange} from '/host/routes.mjs';
+
+routes['#games/all-the-things'] = async function titleScreen() {
+  document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things title-screen">
       <div class="title-image-background"></div>
@@ -11,8 +17,16 @@ export default async function titleScreen() {
   `);
   const titleScreen = document.body.lastElementChild;
 
-  await waitForKeypress(' ');
+  audienceMode.start();
+
+  await waitForRouteChange();
+
   titleScreen.classList.add('finished');
   setTimeout(() => { titleScreen.remove() }, 2000);
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+
+  if (location.hash !== '#games/all-the-things') {
+    audienceMode.stop();
+  }
+  return '#games/all-the-things/thing-choosing';
 }

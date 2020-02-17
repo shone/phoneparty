@@ -9,7 +9,7 @@ export default async function goalScreen(chosenThingElement) {
       <h1>THE GOAL:</h1>
       <div class="goal-container">
         <span class="goal-text">
-          <div class="find-a-peice-of">Find a peice of</div>
+          <div class="find-a-piece-of">Find a piece of</div>
           <div class="thing-text">${chosenThingElement.dataset.name}</div>
         </span>
         <span class="all-the-things phone">
