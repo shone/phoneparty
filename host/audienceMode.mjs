@@ -23,6 +23,7 @@ export function stop() {
 let minPlayers = 0;
 let setMinPlayersCallback = null;
 export function setMinPlayers(numberOfPlayers) {
+  if (minPlayers === numberOfPlayers) return;
   minPlayers = numberOfPlayers;
   if (setMinPlayersCallback) {
     setMinPlayersCallback();
@@ -35,13 +36,9 @@ async function audienceMode() {
 
   while (true) {
     // Wait for start()
-    await new Promise(resolve => {
-      if (started) {
-        resolve();
-      } else {
-        startCallback = resolve;
-      }
-    });
+    if (!started) {
+      await new Promise(resolve => startCallback = resolve);
+    }
 
     const background = document.createElement('div');
     background.classList.add('audience-mode-background');
@@ -49,7 +46,7 @@ async function audienceMode() {
 
     let timerForLayoutAnimation = null;
 
-    function addPlayerPlaceholder() {
+    function createPlayerPlaceholder() {
       document.body.insertAdjacentHTML('beforeend', `
         <div class="player-bubble-placeholder">
           <svg viewBox="0 0 100 100">
@@ -59,31 +56,53 @@ async function audienceMode() {
         </div>
       `);
       const playerPlaceholder = document.body.lastElementChild;
-      playerSlots.push(playerPlaceholder);
+      return playerPlaceholder;
     }
 
+    const initialPlayerSlotCount = Math.max(players.length, minPlayers);
     let playerSlots = [];
-    for (let i=0; i<Math.max(players.length, minPlayers); i++) {
-      addPlayerPlaceholder();
+    for (let i=0; i < initialPlayerSlotCount; i++) {
+      playerSlots.push(createPlayerPlaceholder());
     }
-    layoutPlayers();
+    layoutPlayerSlots();
+
     setMinPlayersCallback = () => {
-      if (players.length >= minPlayers) {
-        playerSlots = playerSlots.filter(slot => {
-          if (slot.classList.contains('player-bubble-placeholder')) {
+      const placeholdersRequired = Math.max(minPlayers - players.length, 0);
+      let placeholdersFound = 0;
+
+      playerSlots = playerSlots.filter(slot => {
+        if (slot.classList.contains('player-bubble-placeholder')) {
+          placeholdersFound++;
+          if (placeholdersFound > placeholdersRequired) {
             slot.classList.add('removing');
             setTimeout(() => slot.remove(), 3000);
             return false;
-          } else {
-            return true;
           }
-        });
-      } else {
-        for (let i=0; i < minPlayers - players.length; i++) {
-          addPlayerPlaceholder();
         }
+        return true;
+      });
+
+      for (let i=0; i < placeholdersRequired - placeholdersFound; i++) {
+        playerSlots.push(createPlayerPlaceholder());
       }
-      layoutPlayers();
+
+//       if (players.length >= minPlayers) {
+//         playerSlots = playerSlots.filter(slot => {
+//           if (slot.classList.contains('player-bubble-placeholder')) {
+//             slot.classList.add('removing');
+//             setTimeout(() => slot.remove(), 3000);
+//             return false;
+//           } else {
+//             return true;
+//           }
+//         });
+//       } else {
+//         
+//         for (let i=0; i < placeholdersRequired; i++) {
+//           playerSlots.push(createPlayerPlaceholder());
+//         }
+//       }
+      layoutPlayerSlots();
     }
 
     const newPlayerTimers = new Set();
@@ -115,7 +134,7 @@ async function audienceMode() {
         player.style.transitionDelay = '';
       }, revealDelayMs));
 
-      layoutPlayers();
+      layoutPlayerSlots();
       if (!player.parentElement) {
         document.body.appendChild(player);
       }
@@ -125,13 +144,13 @@ async function audienceMode() {
       const slotIndex = playerSlots.indexOf(player);
       playerSlots.splice(slotIndex, 1);
       if (playerSlots.length < minPlayers) {
-        addPlayerPlaceholder();
+        playerSlots.push(createPlayerPlaceholder());
       }
-      layoutPlayers();
+      layoutPlayerSlots();
     }
     listenForLeavingPlayer(handlePlayerLeaving);
 
-    function layoutPlayers() {
+    function layoutPlayerSlots() {
       if (playerSlots.length === 0) {
         return;
       }
@@ -161,13 +180,9 @@ async function audienceMode() {
     }
 
     // Wait for stop()
-    await new Promise(resolve => {
-      if (!started) {
-        resolve();
-      } else {
-        stopCallback = resolve;
-      }
-    });
+    if (started) {
+      await new Promise(resolve => stopCallback = resolve);
+    }
 
     background.classList.add('fade-out');
     stopAcceptingPlayers();

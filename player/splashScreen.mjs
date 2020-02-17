@@ -1,5 +1,6 @@
-export default function splashScreen(channel) {
-  const previousBackgroundColor = document.body.style.backgroundColor;
+import routes, {waitForRouteChange, listenForChannelOnCurrentRoute} from './routes.mjs';
+
+routes['#splash-screen'] = async function splashScreen() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -23,14 +24,12 @@ export default function splashScreen(channel) {
   `);
   const splashScreen = document.body.lastElementChild;
 
-  channel.onmessage = event => {
-    if (event.data === 'finished') {
+  listenForChannelOnCurrentRoute(channel => {
+    channel.onmessage = () => {
       splashScreen.classList.add('finished');
     }
-  }
+  });
 
-  channel.onclose = () => {
-    splashScreen.remove();
-    document.body.style.backgroundColor = previousBackgroundColor;
-  }
+  await waitForRouteChange();
+  splashScreen.remove();
 }

@@ -9,6 +9,7 @@
   font-size: 4.5vmin;
   opacity: 0;
   animation: 1s 0.5s reveal-join-game-instructions-fullscreen forwards;
+  transition: 1.5s left, 1.5s top, 1.5s width, 1.5s height, 1.5s font-size, 1.5s border-radius;
 }
 @keyframes reveal-join-game-instructions-fullscreen {
   from { opacity: 0; transform: translateY(5vmin); }
@@ -17,34 +18,41 @@
 .join-game-instructions.in-corner {
   z-index: 2;
   box-shadow: 0px 0px 1vmin black;
-  animation: 1.5s join-game-instructions_transition-to-corner forwards;
+/*   animation: 1.5s join-game-instructions_transition-to-corner forwards; */
+  left: 1vmin;
+  top:  1vmin;
+  width: 12em;
+  height: 6em;
+  font-size: 2vmin;
+  border-radius: 1vmin;
   opacity: 1;
 }
-@keyframes join-game-instructions_transition-to-corner {
+/*@keyframes join-game-instructions_transition-to-corner {
   to {
     left: 1vmin;
     top:  1vmin;
     width: 12em;
     height: 6em;
     font-size: 2vmin;
-    border-radius: 0;
     border-radius: 1vmin;
   }
-}
+}*/
 
 .join-game-instructions h1 {
   text-align: center;
   font-size: 1.4em;
+  transition: 1.5s margin;
 }
 .join-game-instructions.fullscreen h1 {
   margin: 0.6em;
 }
 .join-game-instructions.in-corner h1 {
-  animation: 1.5s join-game-instructions_h1-in-corner forwards;
+/*   animation: 1.5s join-game-instructions_h1-in-corner forwards; */
+  margin: 0;
 }
-@keyframes join-game-instructions_h1-in-corner {
+/*@keyframes join-game-instructions_h1-in-corner {
   to { margin: 0; }
-}
+}*/
 .join-game-instructions h2 {
   background: black;
   color: white;
@@ -55,14 +63,18 @@
   height: 1.45em;
   margin-top:    0.83em;
   margin-bottom: 0.83em;
+  transition: 1.5s opacity, 1.5s height, 1.5s margin;
 }
 .join-game-instructions.in-corner h2 {
-  animation: 1.5s join-game-instructions_h2-in-corner forwards;
+/*   animation: 1.5s join-game-instructions_h2-in-corner forwards; */
+  opacity: 0;
+  height: 0;
+  margin: 0;
 }
-@keyframes join-game-instructions_h2-in-corner {
+/*@keyframes join-game-instructions_h2-in-corner {
   20%  { opacity: 0; }
   100% { opacity: 0; height: 0; margin: 0; }
-}
+}*/
 .join-game-instructions .wifi-details {
   display: flex;
   flex-direction: row;

@@ -2,8 +2,12 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 import {listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
 
-export default async function thingChoosingScreen() {
-  // Thing choosing screen
+import routes, {waitForRouteChange, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
+
+import * as audienceMode from '/host/audienceMode.mjs';
+
+routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
+  document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things thing-choosing-screen">
       <h1>Choosing thing...</h1>
@@ -22,26 +26,14 @@ export default async function thingChoosingScreen() {
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
-  await waitForNSeconds(1);
+  audienceMode.start();
+
+  await waitForNSeconds(0.5);
 
   const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
   thinkingEmoji.classList.add('appear');
 
-  let chosenThingElement = null;
-
-  const channels = [];
-  function handlePlayer(player) {
-    const channel = player.rtcConnection.createDataChannel('all-the-things_thing-choosing');
-    channels.push(channel);
-    channel.onopen = () => {
-      if (chosenThingElement !== null) {
-        channel.send(chosenThingElement.dataset.name);
-      }
-    }
-  }
-  listenForAllPlayers(handlePlayer);
-
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
@@ -61,14 +53,25 @@ export default async function thingChoosingScreen() {
 
   stopJuggling();
 
-  chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
+  const chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
   chosenThingElement.classList.add('chosen');
 
-  for (const channel of channels) {
-    if (channel.readyState === 'open') {
-      channel.send(chosenThingElement.dataset.name);
+//   const channels = [];
+  listenForPlayersOnCurrentRoute(player => {
+    const channel = player.createChannelOnCurrentRoute();
+//     channels.push(channel);
+    channel.onopen = () => {
+      if (chosenThingElement !== null) {
+        channel.send(chosenThingElement.dataset.name);
+      }
     }
-  }
+  });
+
+//   for (const channel of channels) {
+//     if (channel.readyState === 'open') {
+//       channel.send(chosenThingElement.dataset.name);
+//     }
+//   }
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
@@ -90,16 +93,11 @@ export default async function thingChoosingScreen() {
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
-  chosenThingElement.classList.remove('chosen');  
+  chosenThingElement.classList.remove('chosen');
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
 
-  for (const channel of channels) {
-    channel.close();
-  }
-  stopListeningForAllPlayers(handlePlayer);
-
-  return chosenThingElement;
+  return `#games/all-the-things/goal-screen?thing=${chosenThingElement.dataset.name}`;
 }
 
 export function chooseThing(thingName) {

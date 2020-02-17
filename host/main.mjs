@@ -1,10 +1,7 @@
-import {splashScreen} from './splashScreen.mjs';
-import {joinGameInstructions} from './joinGameInstructions.mjs';
-import {players, handleNewPlayer} from './players.mjs';
-import {AllTheThings} from '/games/all-the-things/host/allTheThings.mjs';
+const isServedLocally = location.hostname === 'localhost' || location.hostname.startsWith('192.168.') || location.protocol === 'file:';
 
 // Redirect to HTTPS
-if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && location.protocol !== 'file:') {
+if (location.protocol !== 'https:' && !isServedLocally) {
   location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 }
 
@@ -17,6 +14,15 @@ if (location.protocol === 'file:') {
   connectionStatus.textContent = message;
   throw message;
 }
+
+import {players, handleNewPlayer} from './players.mjs';
+
+import './splashScreen.mjs';
+import './joinGameInstructions.mjs';
+import '/games/all-the-things/host/allTheThings.mjs';
+
+import {startRouting} from './routes.mjs';
+startRouting({defaultRoute: '#splash-screen'});
 
 // Open websocket and receive players
 (async function() {
@@ -40,13 +46,6 @@ if (location.protocol === 'file:') {
     await new Promise(resolve => setTimeout(() => resolve(), 1000));
     warningIndicator.textContent = '';
   }
-})();
-
-(async function() {
-  await splashScreen();
-  await joinGameInstructions();
-
-  await AllTheThings();
 })();
 
 window.onbeforeunload = () => {

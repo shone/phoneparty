@@ -9,7 +9,7 @@
   bottom: calc(50vh + 8vmin);
   font-size: 7vmin;
   opacity: 0;
-  animation: fade-in 0.5s 2s forwards;
+  animation: fade-in 0.5s 1.5s forwards;
 }
 .all-the-things.thing-choosing-screen .timer {
   position: fixed;

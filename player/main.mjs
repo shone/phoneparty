@@ -1,15 +1,20 @@
 import {waitForNSeconds, waitForPageToBeVisible, waitForWebsocketToConnect, waitForWebsocketToDisconnect, waitForRtcConnection, waitForRtcConnectionClose} from '/shared/utils.mjs';
 import {playTone} from './audio.mjs';
 import './push-buttons.mjs';
+import {startRouting} from './routes.mjs';
+
 import handleMessaging from './messaging.mjs';
 import handleMovement from './movement.mjs';
-import splashScreen from './splashScreen.mjs';
+
+import './splashScreen.mjs';
 import allTheThings from '/games/all-the-things/player/allTheThings.mjs';
 
 // HTTPS redirect
 if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
   location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 }
+
+location.hash = '';
 
 const statusContainer = document.getElementById('status-container');
 const status          = document.getElementById('status');
@@ -147,6 +152,7 @@ export let stream = null;
           hostInteraction:  rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true}),
           close:            rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true}),
           acceptPlayer:     rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true}),
+          route:            rtcConnection.createDataChannel('route',           {negotiated: true, id: 9, ordered: true}),
         }
 
         var waitToBeAccepted = new Promise(resolve => {
@@ -210,16 +216,15 @@ export let stream = null;
       }
 
       rtcConnection.ondatachannel = event => {
-        if (event.channel.label === 'movement') {
-          handleMovement(event.channel);
-        } else if (event.channel.label === 'messaging') {
-          handleMessaging(event.channel);
-        } else if (event.channel.label === 'splash-screen') {
-          splashScreen(event.channel);
-        } else if (event.channel.label === 'all-the-things') {
-          allTheThings(event.channel, rtcConnection);
+        switch (event.channel.label) {
+          case 'movement':  handleMovement(event.channel);  break;
+          case 'messaging': handleMessaging(event.channel); break;
+//           case 'splash-screen': splashScreen(event.channel); break;
+          case 'all-the-things': allTheThings(event.channel, rtcConnection); break;
         }
       }
+
+      startRouting(rtcConnection, channels.route);
 
       function handleDeviceMotion(event) { channels.accelerometer.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
       channels.accelerometer.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);

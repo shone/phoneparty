@@ -1,5 +1,5 @@
-import titleScreen from './titleScreen.mjs';
-import thingChoosingScreen, {chooseThing} from './thingChoosingScreen.mjs';
+import './titleScreen.mjs';
+import './thingChoosingScreen.mjs';
 import goalScreen from './goalScreen.mjs';
 import photoTakingScreen from './photoTakingScreen.mjs';
 import presentingPhotosScreen from './presentingPhotosScreen.mjs';
@@ -10,7 +10,13 @@ import * as messaging from '/host/messaging.mjs';
 import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForNewPlayers, stopListeningForNewPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {waitForNSeconds} from '/shared/utils.mjs';
 
-export async function AllTheThings() {
+import routes from '/host/routes.mjs';
+
+// routes['#games/all-the-things'] = titleScreen;
+// routes['#games/all-the-things/thingChoosingScreen'] = thingChoosingScreen;
+routes['#games/all-the-things/goalScreen'] = goalScreen;
+
+routes['#games/all-the-things/next'] = async function AllTheThings() {
   let chosenThingElement = null;
 
   const channels = [];
@@ -33,10 +39,10 @@ export async function AllTheThings() {
 
   await waitForNSeconds(1.5);
 
-  await titleScreen();
+//   await titleScreen();
 
   while(true) {
-    chosenThingElement = await thingChoosingScreen();
+//     chosenThingElement = await thingChoosingScreen();
 //     chosenThingElement = chooseThing('sock');
     for (const channel of channels) {
       if (channel.readyState === 'open') {
@@ -73,7 +79,7 @@ export async function AllTheThings() {
   for (const channel of channels) {
     channel.close();
   }
-}
+};
 
 export function startPlayerGrid(playerPhotos) {
 

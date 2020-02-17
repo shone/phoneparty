@@ -39,7 +39,7 @@ func main() {
 
   http.HandleFunc("/host/ws", func(response http.ResponseWriter, request *http.Request) {
     if hostConn != nil {
-      log.Println("A host attempted to connect, but there's already a host connected")
+      log.Println("A host (Address:", request.RemoteAddr, ") attempted to connect, but there's already a host connected")
       response.WriteHeader(http.StatusConflict)
       response.Write([]byte("A host is already connected"))
       return
@@ -49,7 +49,7 @@ func main() {
       log.Println("Unable to upgrade host connection to websocket: ", err)
       return
     }
-    log.Println("Host connected")
+    log.Println("Host connected - Address:", request.RemoteAddr)
 
     hostConn = conn
 
@@ -152,17 +152,17 @@ func main() {
       return
     }
     playerId := atomic.AddUint64(&nextPlayerId, 1)
-    log.Println("Player", playerId, "connected")
+    log.Println("Player connected - ID:", playerId, "Address:", request.RemoteAddr)
+
+    if hostConn != nil {
+      conn.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+    }
 
     playerConns.Store(playerId, conn)
     defer func() {
       playerConns.Delete(playerId)
       hostSendChan <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
     }()
-
-    if hostConn != nil {
-      conn.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
-    }
 
     for {
       _,message,err := conn.ReadMessage()

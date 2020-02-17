@@ -1,7 +1,9 @@
 import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 import * as utils from '/shared/utils.mjs';
 
-export async function splashScreen() {
+import routes, {waitForRouteChange} from '/host/routes.mjs';
+
+routes['#splash-screen'] = async function splashScreen() {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -26,13 +28,15 @@ export async function splashScreen() {
   const splashScreen = document.body.lastElementChild;
 
   const channels = [];
-  acceptAllPlayers(player => {
-    channels.push(player.rtcConnection.createDataChannel('splash-screen'));
+  acceptAllPlayers(player => { // TODO: acceptPlayersOnCurrentRoute
+    player.remove();
+    channels.push(player.createChannelOnCurrentRoute());
   });
 
   const timeAtSplashStart = performance.now();
 
-  await utils.waitForKeypress(' ');
+  await waitForRouteChange();
+
   splashScreen.classList.add('finished');
   for (const channel of channels) {
     if (channel.readyState === 'open') {
@@ -49,4 +53,6 @@ export async function splashScreen() {
   for (const channel of channels) {
     channel.close();
   }
-}
+
+  return '#join-game-instructions';
+};
