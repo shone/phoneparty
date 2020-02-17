@@ -4,7 +4,7 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
 let instructionsElement = null;
 
-import routes, {waitForRouteChange} from '/host/routes.mjs';
+import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
 routes['#join-game-instructions'] = async function joinGameInstructions() {
   document.body.style.backgroundColor = 'black';
@@ -29,7 +29,7 @@ routes['#join-game-instructions'] = async function joinGameInstructions() {
   const bubbleField = startBubbleField();
   messaging.start();
 
-  await waitForRouteChange();
+  await waitForRouteToEnd();
 
   instructionsElement.classList.add('in-corner');
   await waitForNSeconds(1);

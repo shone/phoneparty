@@ -71,7 +71,7 @@ export function startRouting(rtcConnection, routeChannel) {
   });
 }
 
-export function waitForRouteChange() {
+export function waitForRouteToEnd() {
   return new Promise(resolve => routeChangeListeners.push(resolve));
 }
 

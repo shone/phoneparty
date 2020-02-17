@@ -2,7 +2,7 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 import {listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
 
-import routes, {waitForRouteChange, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
+import routes, {waitForRouteToEnd, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 

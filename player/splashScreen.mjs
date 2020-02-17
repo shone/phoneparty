@@ -1,4 +1,4 @@
-import routes, {waitForRouteChange, listenForChannelOnCurrentRoute} from './routes.mjs';
+import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from './routes.mjs';
 
 routes['#splash-screen'] = async function splashScreen() {
   document.body.style.backgroundColor = 'black';
@@ -30,6 +30,6 @@ routes['#splash-screen'] = async function splashScreen() {
     }
   });
 
-  await waitForRouteChange();
+  await waitForRouteToEnd();
   splashScreen.remove();
 }

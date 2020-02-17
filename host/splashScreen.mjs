@@ -1,7 +1,7 @@
 import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 import * as utils from '/shared/utils.mjs';
 
-import routes, {waitForRouteChange} from '/host/routes.mjs';
+import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
 routes['#splash-screen'] = async function splashScreen() {
   document.body.style.backgroundColor = 'black';
@@ -35,7 +35,7 @@ routes['#splash-screen'] = async function splashScreen() {
 
   const timeAtSplashStart = performance.now();
 
-  await waitForRouteChange();
+  await waitForRouteToEnd();
 
   splashScreen.classList.add('finished');
   for (const channel of channels) {
