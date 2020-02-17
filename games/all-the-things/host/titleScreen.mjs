@@ -3,7 +3,7 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
-import routes, {waitForRouteChange} from '/host/routes.mjs';
+import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
 routes['#games/all-the-things'] = async function titleScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -19,7 +19,7 @@ routes['#games/all-the-things'] = async function titleScreen() {
 
   audienceMode.start();
 
-  await waitForRouteChange();
+  await waitForRouteToEnd();
 
   titleScreen.classList.add('finished');
   setTimeout(() => { titleScreen.remove() }, 2000);

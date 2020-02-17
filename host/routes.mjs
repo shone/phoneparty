@@ -6,7 +6,21 @@ export default routes;
 export let currentRoute = null;
 export let currentRouteCounter = null;
 
-export async function waitForRouteChange() {
+async function notFoundRouteHandler() {
+  document.body.style.backgroundColor = '#fff';
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="route-404">
+      <h1>404</h1>
+      <p>No handler found for route: <b>${currentRoute}</b></p>
+    </div>
+  `);
+  const div = document.body.lastElementChild;
+
+  await waitForRouteToEnd();
+  div.remove();
+}
+
+export async function waitForRouteToEnd() {
   if (location.hash !== currentRoute) {
     return;
   } else {
@@ -30,20 +44,19 @@ export async function waitForRouteChange() {
 
 export function listenForPlayersOnCurrentRoute(callback) {
   listenForAllPlayers(callback);
-  waitForRouteChange().then(() => {
+  waitForRouteToEnd().then(() => {
     stopListeningForAllPlayers(callback);
   });
 }
 
 export async function startRouting({defaultRoute}) {
+
+  currentRoute = location.hash || defaultRoute;
   currentRouteCounter = 0;
 
-  if (!location.hash) {
-    location.hash = defaultRoute;
-  }
-  currentRoute = location.hash;
-
   while (true) {
+
+    location.hash = currentRoute;
 
     // Send current route to all players
     function handlePlayer(player) {
@@ -59,25 +72,25 @@ export async function startRouting({defaultRoute}) {
     listenForAllPlayers(handlePlayer);
 
     // Call route handler
-    const func = routes[currentRoute];
-    if (func) {
-      const nextRoute = await func();
-      if (nextRoute !== null && location.hash === currentRoute) {
-        location.hash = nextRoute;
-      }
-    }
+    const routeHandler = routes[currentRoute] || notFoundRouteHandler;
+    const routeHandlerNextRoute = await routeHandler();
 
+    // Stop sending current route to all players
     stopListeningForAllPlayers(handlePlayer);
     for (const player of players) {
       player.routeChannel.onopen = null;
     }
 
-    if (location.hash === currentRoute) {
-      await new Promise(resolve => {
-        window.addEventListener('hashchange', resolve, {once: true});
-      });
+    // If another route has been typed into the browser URL bar, use
+    // that as the next route
+    if (location.hash !== currentRoute) {
+      currentRoute = location.hash;
+    } else if (routeHandlerNextRoute) {
+      currentRoute = routeHandlerNextRoute;
+    } else {
+      await new Promise(resolve => window.addEventListener('hashchange', resolve, {once: true}));
+      currentRoute = location.hash;
     }
-    currentRoute = location.hash;
 
     currentRouteCounter++;
   }
