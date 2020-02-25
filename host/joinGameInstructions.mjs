@@ -37,5 +37,7 @@ routes['#join-game-instructions'] = async function joinGameInstructions() {
   bubbleField.stop();
   messaging.stop();
 
+  messaging.clearAllSpeechBubbles();
+
   return '#games/all-the-things';
 };

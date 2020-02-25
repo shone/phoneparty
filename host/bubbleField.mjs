@@ -1,6 +1,9 @@
 import {players, acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
+import * as audienceMode from '/host/audienceMode.mjs';
 
 export default function startBubbleField() {
+  audienceMode.stop(); // TODO: wait for audience mode to stop
+
   const channels = [];
   acceptAllPlayers(player => {
     const movementChannel  = player.rtcConnection.createDataChannel('movement');

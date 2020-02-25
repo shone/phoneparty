@@ -1,5 +1,6 @@
 import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 import * as utils from '/shared/utils.mjs';
+import * as audienceMode from '/host/audienceMode.mjs';
 
 import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
@@ -26,6 +27,8 @@ routes['#splash-screen'] = async function splashScreen() {
     </div>
   `);
   const splashScreen = document.body.lastElementChild;
+
+  audienceMode.stop();
 
   const channels = [];
   acceptAllPlayers(player => { // TODO: acceptPlayersOnCurrentRoute

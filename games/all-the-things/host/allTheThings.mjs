@@ -1,85 +1,84 @@
 import './titleScreen.mjs';
 import './thingChoosingScreen.mjs';
-import goalScreen from './goalScreen.mjs';
-import photoTakingScreen from './photoTakingScreen.mjs';
+import './goalScreen.mjs';
+import './photoTakingScreen.mjs';
 import presentingPhotosScreen from './presentingPhotosScreen.mjs';
 import anotherRoundScreen from './anotherRoundScreen.mjs';
 
-import * as audienceMode from '/host/audienceMode.mjs';
-import * as messaging from '/host/messaging.mjs';
-import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForNewPlayers, stopListeningForNewPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
-import {waitForNSeconds} from '/shared/utils.mjs';
+import {
+  players,
+  listenForAllPlayers,
+  stopListeningForAllPlayers,
+  listenForNewPlayers,
+  stopListeningForNewPlayers,
+  listenForLeavingPlayer,
+  stopListeningForLeavingPlayer
+} from '/host/players.mjs';
 
-import routes from '/host/routes.mjs';
-
-// routes['#games/all-the-things'] = titleScreen;
-// routes['#games/all-the-things/thingChoosingScreen'] = thingChoosingScreen;
-routes['#games/all-the-things/goalScreen'] = goalScreen;
-
-routes['#games/all-the-things/next'] = async function AllTheThings() {
-  let chosenThingElement = null;
-
-  const channels = [];
-  function handlePlayer(player) {
-    const channel = player.rtcConnection.createDataChannel('all-the-things');
-    channels.push(channel);
-    channel.onopen = () => {
-      if (chosenThingElement !== null) {
-        channel.send(chosenThingElement.dataset.name);
-      }
-    }
-  }
-  listenForAllPlayers(handlePlayer);
-
-  document.body.style.backgroundColor = '#98947f';
-  await waitForNSeconds(1);
-
-  audienceMode.start();
-  messaging.start();
-
-  await waitForNSeconds(1.5);
-
-//   await titleScreen();
-
-  while(true) {
-//     chosenThingElement = await thingChoosingScreen();
-//     chosenThingElement = chooseThing('sock');
-    for (const channel of channels) {
-      if (channel.readyState === 'open') {
-        channel.send(chosenThingElement.dataset.name);
-      }
-    }
-
-    messaging.stop();
-
-    await goalScreen(chosenThingElement);
-
-    audienceMode.stop();
-
-    const [playerPhotos, playerGrid] = await photoTakingScreen();
-
-    audienceMode.start();
-
-    await presentingPhotosScreen(playerPhotos);
-
-    for (const channel of channels) {
-      if (channel.readyState === 'open') {
-        channel.send(null);
-      }
-    }
-
-    playerGrid.stop();
-    chosenThingElement.remove();
-
-    await anotherRoundScreen();
-    messaging.start();
-  }
-
-  stopListeningForAllPlayers(handlePlayer);
-  for (const channel of channels) {
-    channel.close();
-  }
-};
+// routes['#games/all-the-things/next'] = async function AllTheThings() {
+//   let chosenThingElement = null;
+//
+//   const channels = [];
+//   function handlePlayer(player) {
+//     const channel = player.rtcConnection.createDataChannel('all-the-things');
+//     channels.push(channel);
+//     channel.onopen = () => {
+//       if (chosenThingElement !== null) {
+//         channel.send(chosenThingElement.dataset.name);
+//       }
+//     }
+//   }
+//   listenForAllPlayers(handlePlayer);
+//
+//   document.body.style.backgroundColor = '#98947f';
+//   await waitForNSeconds(1);
+//
+//   audienceMode.start();
+//   messaging.start();
+//
+//   await waitForNSeconds(1.5);
+//
+// //   await titleScreen();
+//
+//   while(true) {
+// //     chosenThingElement = await thingChoosingScreen();
+// //     chosenThingElement = chooseThing('sock');
+//     for (const channel of channels) {
+//       if (channel.readyState === 'open') {
+//         channel.send(chosenThingElement.dataset.name);
+//       }
+//     }
+// 
+//     messaging.stop();
+// 
+//     await goalScreen(chosenThingElement);
+// 
+//     audienceMode.stop();
+// 
+//     const [playerPhotos, playerGrid] = await photoTakingScreen();
+// 
+//     audienceMode.start();
+// 
+//     await presentingPhotosScreen(playerPhotos);
+// 
+//     for (const channel of channels) {
+//       if (channel.readyState === 'open') {
+//         channel.send(null);
+//       }
+//     }
+// 
+//     playerGrid.stop();
+//     chosenThingElement.remove();
+// 
+//     await anotherRoundScreen();
+//     messaging.start();
+//   }
+// 
+//   stopListeningForAllPlayers(handlePlayer);
+//   for (const channel of channels) {
+//     channel.close();
+//   }
+// };
 
 export function startPlayerGrid(playerPhotos) {
 
