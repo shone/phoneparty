@@ -6,19 +6,18 @@ export function randomInArray(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-export function waitForPageToBeVisible() {
-  return new Promise(resolve => {
-    if (document.visibilityState === 'visible') {
-      resolve();
-    } else {
-      document.addEventListener('visibilitychange', function callback() {
-        if (document.visibilityState === 'visible') {
-          resolve();
-          document.removeEventListener('visibilitychange', callback);
-        }
-      });
-    }
-  });
+export async function waitForPageToBeVisible() {
+  if (document.visibilityState === 'visible') {
+    return;
+  }
+  return new Promise(resolve =>
+    document.addEventListener('visibilitychange', function callback() {
+      if (document.visibilityState === 'visible') {
+        resolve();
+        document.removeEventListener('visibilitychange', callback);
+      }
+    })
+  );
 }
 
 export function waitForKeypress(key) {
@@ -32,49 +31,55 @@ export function waitForKeypress(key) {
   });
 }
 
-export function waitForWebsocketToConnect(websocket) {
-  return new Promise((resolve, reject) => {
-    if (websocket.readyState === websocket.OPEN) {
-      resolve();
-    } else if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-      reject();
-    } else {
-      websocket.addEventListener('open',  resolve, {once: true});
-      websocket.addEventListener('close', reject,  {once: true});
-      websocket.addEventListener('error', reject,  {once: true});
-    }
-  });
-}
-
-export function waitForWebsocketToDisconnect(websocket) {
-  return new Promise(resolve => {
-    if (websocket.readyState === websocket.CLOSING || websocket.readyState === websocket.CLOSED) {
-      resolve('websocket_disconnected');
-    } else {
-      websocket.addEventListener('close', () => resolve('websocket_disconnected'), {once: true});
-      websocket.addEventListener('error', () => resolve('websocket_disconnected'), {once: true});
-    }
-  });
-}
-
-export function waitForRtcConnection(rtcConnection) {
-  return new Promise((resolve, reject) => {
-    if (rtcConnection.iceConnectionState === 'connected' || rtcConnection.iceConnectionState === 'completed') {
-      resolve();
-    } else if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
-      reject('rtc_closed');
-    } else {
-      rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-        if (rtcConnection.iceConnectionState === 'connected' || rtcConnection.iceConnectionState === 'completed') {
-          resolve();
-          rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-        } else if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
-          reject('rtc_closed');
-          rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-        }
+export async function waitForWebsocketOpen(websocket) {
+  switch (websocket.readyState) {
+    case websocket.OPEN:
+      return 'websocket-open';
+    case websocket.CLOSING: case websocket.CLOSED:
+      return 'websocket-closed';
+    default:
+      return new Promise(resolve => {
+        websocket.addEventListener('open',  () => resolve('websocket-open'),   {once: true});
+        websocket.addEventListener('close', () => resolve('websocket-closed'), {once: true});
+        websocket.addEventListener('error', () => resolve('websocket-error'),  {once: true});
       });
-    }
-  });
+  }
+}
+
+export async function waitForWebsocketClose(websocket) {
+  switch (websocket.readyState) {
+    case websocket.CLOSING: case websocket.CLOSED:
+      return 'websocket-closed';
+    default:
+      return new Promise(resolve => {
+        websocket.addEventListener('close', () => resolve('websocket-closed'), {once: true});
+        websocket.addEventListener('error', () => resolve('websocket-closed'), {once: true});
+      });
+  }
+}
+
+export async function waitForRtcConnectedState(rtcConnection) {
+  switch (rtcConnection.iceConnectionState) {
+    case 'connected': case 'completed':
+      return 'rtc-connected';
+    case 'failed': return 'rtc-failed';
+    case 'closed': return 'rtc-closed';
+    default:
+      return new Promise(resolve =>
+        rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
+          switch (rtcConnection.iceConnectionState) {
+            case 'connected': case 'completed':
+              resolve('rtc-connected');
+              break;
+            case 'failed': resolve('rtc-failed'); break;
+            case 'closed': resolve('rtc-closed'); break;
+            default:
+              return;
+          }
+          rtcConnection.removeEventListener('iceconnectionstatechange', callback);
+        })
+      );
+  }
 }
 
 export function waitForRtcConnectionClose(rtcConnection) {

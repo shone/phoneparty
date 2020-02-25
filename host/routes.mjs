@@ -1,53 +1,16 @@
-import {players, listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
+import {
+  players,
+  listenForAllPlayers, stopListeningForAllPlayers,
+  acceptAllPlayers, stopAcceptingPlayers,
+  listenForLeavingPlayer,
+  stopListeningForLeavingPlayer,
+} from '/host/players.mjs';
 
 const routes = {};
 export default routes;
 
 export let currentRoute = null;
 export let currentRouteCounter = null;
-
-async function notFoundRouteHandler() {
-  document.body.style.backgroundColor = '#fff';
-  document.body.insertAdjacentHTML('beforeend', `
-    <div id="route-404">
-      <h1>404</h1>
-      <p>No handler found for route: <b>${currentRoute}</b></p>
-    </div>
-  `);
-  const div = document.body.lastElementChild;
-
-  await waitForRouteToEnd();
-  div.remove();
-}
-
-export async function waitForRouteToEnd() {
-  if (location.hash !== currentRoute) {
-    return;
-  } else {
-    await new Promise(resolve => {
-      function onHashchange() {
-        if (location.hash !== currentRoute) finish();
-      }
-      function onKeypress(event) {
-        if (event.key === ' ') finish();
-      }
-      window.addEventListener('hashchange', onHashchange);
-      window.addEventListener('keypress', onKeypress);
-      function finish() {
-        window.removeEventListener('hashchange', onHashchange);
-        window.removeEventListener('keypress', onKeypress);
-        resolve();
-      }
-    });
-  }
-}
-
-export function listenForPlayersOnCurrentRoute(callback) {
-  listenForAllPlayers(callback);
-  waitForRouteToEnd().then(() => {
-    stopListeningForAllPlayers(callback);
-  });
-}
 
 export async function startRouting({defaultRoute}) {
 
@@ -94,4 +57,63 @@ export async function startRouting({defaultRoute}) {
 
     currentRouteCounter++;
   }
+}
+
+export async function waitForRouteToEnd() {
+  // Wait for the browser to be navigated to a different URL hash, or for the
+  // the current route to be skipped by pressing spacebar.
+  if (location.hash !== currentRoute) {
+    return;
+  } else {
+    await new Promise(resolve => {
+      function onHashchange() {
+        if (location.hash !== currentRoute) finish();
+      }
+      function onKeypress(event) {
+        if (event.key === ' ') finish();
+      }
+      window.addEventListener('hashchange', onHashchange);
+      window.addEventListener('keypress', onKeypress);
+      function finish() {
+        window.removeEventListener('hashchange', onHashchange);
+        window.removeEventListener('keypress', onKeypress);
+        resolve();
+      }
+    });
+  }
+}
+
+export function acceptAllPlayersOnCurrentRoute(callback) {
+  acceptAllPlayers(callback);
+  waitForRouteToEnd().then(() => {
+    stopAcceptingPlayers();
+  });
+}
+
+export function listenForPlayersOnCurrentRoute(callback) {
+  listenForAllPlayers(callback);
+  waitForRouteToEnd().then(() => {
+    stopListeningForAllPlayers(callback);
+  });
+}
+
+export function listenForLeavingPlayersOnCurrentRoute(callback) {
+  listenForLeavingPlayer(callback);
+  waitForRouteToEnd().then(() => {
+    stopListeningForLeavingPlayer(callback);
+  });
+}
+
+async function notFoundRouteHandler() {
+  document.body.style.backgroundColor = '#fff';
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="route-not-found">
+      <h1>404</h1>
+      <p>No handler found for route: <b>${currentRoute}</b></p>
+    </div>
+  `);
+  const div = document.body.lastElementChild;
+
+  await waitForRouteToEnd();
+  div.remove();
 }

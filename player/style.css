@@ -184,3 +184,26 @@ button::-moz-focus-inner {
    75% { transform: scale(1.1); }
   100% { transform: scale(1.0); }
 }
+
+button.camera-retry-button {
+  padding: 1vmin;
+  min-width: 20vmin;
+  border-radius: 1vmin;
+  margin-top: 2vmin;
+}
+
+#route-not-found {
+  position: fixed;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items:     center;
+}
+#route-not-found h1,
+#route-not-found p {
+  z-index: 2;
+}

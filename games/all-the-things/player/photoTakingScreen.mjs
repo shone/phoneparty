@@ -1,7 +1,9 @@
 import {stream} from '/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
+import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from '/routes.mjs';
 
-export default async function photoTakingScreen(channel, getThing, rtcConnection) {
+routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
+  document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-screen">
       <video playsinline autoplay muted></video>
@@ -23,7 +25,7 @@ export default async function photoTakingScreen(channel, getThing, rtcConnection
   const switchCamerasButton = photoScreen.querySelector('.switch-cameras-button');
   const cleanups = [() => photoScreen.remove()];
 
-  const thing = await getThing();
+  const thing = 'sock';// await getThing();
   photoScreen.querySelector('.goal .label').textContent = thing;
   photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
 

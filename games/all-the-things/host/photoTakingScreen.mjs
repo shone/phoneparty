@@ -2,15 +2,24 @@ import {waitForNSeconds} from '/shared/utils.mjs';
 import {players, acceptAllPlayers, stopAcceptingPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
 import {startPlayerGrid} from './allTheThings.mjs';
 
-export default async function photoTakingScreen() {
+import routes, {
+  currentRoute,
+  waitForRouteToEnd,
+  acceptAllPlayersOnCurrentRoute,
+} from '/host/routes.mjs';
+
+routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
+  document.body.style.backgroundColor = '#98947f';
+  const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
+  const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
+
   await waitForNSeconds(1);
 
   const playerPhotos = new Map();
 
   // Layout players as a grid of bubbles
-  acceptAllPlayers(player => {
-    player.classList.add('bubble');
-    player.classList.add('moving-to-grid');
+  acceptAllPlayersOnCurrentRoute(player => {
+    player.classList.add('bubble', 'moving-to-grid');
     if (!player.parentElement) {
       document.body.appendChild(player);
     }
@@ -25,12 +34,8 @@ export default async function photoTakingScreen() {
   }
   await waitForNSeconds(0.5);
   for (const player of players) {
-    player.classList.remove('scale-down');
-    player.classList.remove('bubble');
+    player.classList.remove('scale-down', 'bubble');
   }
-
-  const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
-  const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
 
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-taking-screen">
@@ -40,19 +45,18 @@ export default async function photoTakingScreen() {
   const photoTakingScreen = document.body.lastElementChild;
 
   // Wait for every player to take a photo
-  const photoChannels = [];
-  const timers = [];
   await new Promise(resolve => {
+    const timers = [];
     function checkIfAllPhotosTaken() {
-      if (players.length > 0 && players.every(p => playerPhotos.has(p))) {
+      if (players.length >= 2 && players.every(player => playerPhotos.has(player))) {
         resolve();
         stopAcceptingPlayers();
         stopListeningForLeavingPlayer(checkIfAllPhotosTaken);
+        while (timers.length > 0) clearTimeout(timers.pop());
       }
     }
-    acceptAllPlayers(player => {
-      player.classList.add('taking-photo');
-      player.classList.add('moving-to-grid');
+    acceptAllPlayersOnCurrentRoute(player => {
+      player.classList.add('taking-photo', 'moving-to-grid');
       player.insertAdjacentHTML('beforeend', `
         <div class="all-the-things phone">
           <div class="phone-background"></div>
@@ -64,19 +68,13 @@ export default async function photoTakingScreen() {
         document.body.appendChild(player);
       }
       timers.push(setTimeout(() => player.classList.add('video-not-visible'), 15000));
-      const photoChannel = player.rtcConnection.createDataChannel('all-the-things_photo');
-      photoChannels.push(photoChannel);
-      photoChannel.onmessage = async function(event) {
+      player.createChannelOnCurrentRoute().onmessage = async function(event) {
         shutterSound.play().catch(() => {});
-        const arrayBuffer = event.data;
-        const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
-        const image = new Image();
-        image.src = URL.createObjectURL(blob);
+        const image = createImageElementFromChannelMessage(event);
         const photoContainer = document.createElement('div');
-        photoContainer.classList.add('all-the-things');
-        photoContainer.classList.add('photo-container');
+        photoContainer.classList.add('all-the-things', 'photo-container');
         photoContainer.player = player;
-        photoContainer.arrayBuffer = arrayBuffer;
+        photoContainer.arrayBuffer = event.data;
         const cropContainer = document.createElement('div');
         cropContainer.classList.add('crop-container');
         cropContainer.appendChild(image);
@@ -97,9 +95,7 @@ export default async function photoTakingScreen() {
         setTimeout(() => player.classList.remove('camera-shutter'), 200);
         setTimeout(() => {
           player.remove();
-          player.classList.remove('moving-to-grid');
-          player.classList.remove('taking-photo');
-          player.classList.remove('photo-taken');
+          player.classList.remove('moving-to-grid', 'taking-photo', 'photo-taken');
           player.style.width  = '';
           player.style.height = '';
           player.querySelector('.phone').remove();
@@ -131,16 +127,19 @@ export default async function photoTakingScreen() {
   }
 
   // Clean up
-  for (const channel of photoChannels) {
-    channel.close();
-  }
   photoTakingScreen.remove();
   for (const player of players) {
     player.classList.remove('video-not-visible');
   }
-  for (const timerId of timers) {
-    clearTimeout(timerId);
-  }
 
-  return [playerPhotos, playerGrid];
+//   return [playerPhotos, playerGrid];
+  return '#games/all-the-things/photo-judgement';
+}
+
+function createImageElementFromChannelMessage(event) {
+  const arrayBuffer = event.data;
+  const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
+  const image = new Image();
+  image.src = URL.createObjectURL(blob);
+  return image;
 }

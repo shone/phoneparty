@@ -2,7 +2,7 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 import {listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
 
-import routes, {waitForRouteToEnd, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
+import routes, {currentRoute, waitForRouteToEnd, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
@@ -50,28 +50,17 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
 
   await countdownPieTimer(thingChoosingScreen.querySelector('.timer'), 5);
+  // TODO: cleanup and return if route changes during countdown
 
   stopJuggling();
 
   const chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
   chosenThingElement.classList.add('chosen');
 
-//   const channels = [];
+  // Send thing name to all players
   listenForPlayersOnCurrentRoute(player => {
-    const channel = player.createChannelOnCurrentRoute();
-//     channels.push(channel);
-    channel.onopen = () => {
-      if (chosenThingElement !== null) {
-        channel.send(chosenThingElement.dataset.name);
-      }
-    }
+    player.createChannelOnCurrentRoute().onopen = event => event.target.send(chosenThingElement.dataset.name);
   });
-
-//   for (const channel of channels) {
-//     if (channel.readyState === 'open') {
-//       channel.send(chosenThingElement.dataset.name);
-//     }
-//   }
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
@@ -93,11 +82,18 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
+  const routesThatUseThingInCorner = new Set([currentRoute, '#games/all-the-things/goal']);
+  if (!routesThatUseThingInCorner.has(location.hash)) {
+    chosenThingElement.remove();
+    return;
+  }
+
   chosenThingElement.classList.remove('chosen');
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
 
-  return `#games/all-the-things/goal-screen?thing=${chosenThingElement.dataset.name}`;
+  // TODO: append thing name to route, e.g. goal?thing=sock
+  return `#games/all-the-things/goal`;
 }
 
 export function chooseThing(thingName) {
@@ -124,13 +120,14 @@ function juggleElements(elements) {
     lastTimestamp = timestamp;
 
     const gravity = 0.00012;
+    const floorY = -15;
 
     for (const element of elements) {
       element.momentum.y -= gravity * delta;
       element.position.x += element.momentum.x * delta;
       element.position.y += element.momentum.y * delta;
-      if (element.position.y < -15) {
-        element.position.y = -15;
+      if (element.position.y < floorY) {
+        element.position.y = floorY;
         element.momentum.y = 0;
       }
       if (element.position.x < 0) {

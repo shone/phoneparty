@@ -80,7 +80,7 @@ body {
   100% { transform: scale(1.0); }
 }
 
-#route-404 {
+#route-not-found {
   position: fixed;
   left:   0;
   top:    0;
@@ -91,7 +91,7 @@ body {
   justify-content: center;
   align-items:     center;
 }
-#route-404 h1,
-#route-404 p {
+#route-not-found h1,
+#route-not-found p {
   z-index: 2;
 }

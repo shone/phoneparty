@@ -60,6 +60,14 @@ export function clearSpeechBubblesFromPlayer(player, options={}) {
   }
 }
 
+export function clearAllSpeechBubbles() {
+  const speechBubbles = [...document.querySelectorAll('.player .speech-bubble:not(.cleared)')];
+  for (const speechBubble of speechBubbles) {
+    speechBubble.classList.add('cleared');
+    setTimeout(() => speechBubble.remove(), 500);
+  }
+}
+
 const channels = [];
 function handlePlayer(player) {
   const channel = player.rtcConnection.createDataChannel('messaging');

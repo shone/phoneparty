@@ -1,9 +1,38 @@
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
-import {players, listenForAllPlayers, stopListeningForAllPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
-import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
-import * as audience from '/host/audienceMode.mjs';
 
-export default async function goalScreen(chosenThingElement) {
+import routes, {
+  currentRoute,
+  waitForRouteToEnd,
+  listenForPlayersOnCurrentRoute,
+  listenForLeavingPlayersOnCurrentRoute,
+} from '/host/routes.mjs';
+
+import {
+  players,
+  listenForAllPlayers,
+  stopListeningForAllPlayers,
+  listenForLeavingPlayer,
+  stopListeningForLeavingPlayer
+} from '/host/players.mjs';
+
+import {addSpeechBubbleToPlayer, clearAllSpeechBubbles} from '/host/messaging.mjs';
+import * as audienceMode from '/host/audienceMode.mjs';
+
+routes['#games/all-the-things/goal'] = async function goalScreen() {
+  let chosenThingElement = document.querySelector('.all-the-things.thing.show-in-top-right');
+  if (!chosenThingElement) {
+    const thingName = 'sock';
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="all-the-things thing show-in-top-right" data-name="${thingName}">
+        <img src="/games/all-the-things/things/${thingName}.svg">
+      </div>
+    `);
+    chosenThingElement = document.body.lastElementChild;
+  }
+
+  audienceMode.start();
+
+  document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things goal-screen">
       <h1>THE GOAL:</h1>
@@ -39,66 +68,58 @@ export default async function goalScreen(chosenThingElement) {
 
   await Promise.race([waitForNSeconds(4.5), waitForKeypress(' ')]);
 
-  for (const player of players) {
-    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    if (speechBubble) {
-      speechBubble.classList.add('cleared');
-      setTimeout(() => speechBubble.remove(), 500);
-    }
-  }
+  clearAllSpeechBubbles();
 
   goalScreen.querySelector('h2').classList.add('fade-in-text');
 
-  await waitForNSeconds(1);
-
-  audience.setMinPlayers(2);
+  audienceMode.setMinPlayers(2);
 
   // Wait for players to be ready
-  await new Promise(resolve => {
+  const waitForPlayersResult = await new Promise(resolve => {
     const confirmedPlayers = new Set();
-    const channels = [];
-    function checkIfPlayersReady() {
-      if (players.length >= 2 && players.every(p => confirmedPlayers.has(p))) {
-        resolve();
-        stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkIfPlayersReady);
-        for (const channel of channels) {
-          channel.close();
-        }
-      }
-    }
+    listenForPlayersOnCurrentRoute(handlePlayer);
+    listenForLeavingPlayersOnCurrentRoute(checkIfPlayersReady);
     function handlePlayer(player) {
-      const channel = player.rtcConnection.createDataChannel('all-the-things_ready-to-start-looking');
-      channel.onmessage = () => {
+      player.createChannelOnCurrentRoute().onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
         checkIfPlayersReady();
       }
-      channels.push(channel);
     }
-    listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayer(checkIfPlayersReady);
+    function checkIfPlayersReady() {
+      // If there's at least two players and all players have confirmed
+      if (players.length >= 2 && players.every(player => confirmedPlayers.has(player))) {
+        resolve('got-players');
+        stopListeningForAllPlayers(handlePlayer);
+        stopListeningForLeavingPlayer(checkIfPlayersReady);
+      }
+    }
+    waitForRouteToEnd().then(() => {
+      resolve('route-ended');
+      stopListeningForAllPlayers(handlePlayer);
+      stopListeningForLeavingPlayer(checkIfPlayersReady);
+    });
   });
 
-  // Highlight all the 'thumbs up' speech bubbles
-  for (const player of players) {
-    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    if (speechBubble) {
+  if (waitForPlayersResult === 'got-players') {
+    // Highlight all the 'thumbs up' speech bubbles
+    const speechBubbles = [...document.querySelectorAll('.player .speech-bubble:not(.cleared)')];
+    for (const speechBubble of speechBubbles) {
       speechBubble.classList.add('highlight');
     }
+    await waitForNSeconds(1.5);
   }
 
-  await waitForNSeconds(1.5);
-
-  for (const player of players) {
-    const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    if (speechBubble) {
-      speechBubble.classList.remove('highlight');
-      speechBubble.classList.add('cleared');
-      setTimeout(() => speechBubble.remove(), 500);
-    }
-  }
+  clearAllSpeechBubbles();
   await waitForNSeconds(0.5);
 
   goalScreen.remove();
+
+  const routesThatUseThingInCorner = new Set([currentRoute, '#games/all-the-things/photo-taking']);
+  if (!routesThatUseThingInCorner.has(location.hash)) {
+    chosenThingElement.remove();
+    return;
+  }
+
+  return '#games/all-the-things/photo-taking';
 }
