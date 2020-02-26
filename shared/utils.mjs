@@ -58,7 +58,7 @@ export async function waitForWebsocketClose(websocket) {
   }
 }
 
-export async function waitForRtcConnectedState(rtcConnection) {
+export async function waitForRtcConnect(rtcConnection) {
   switch (rtcConnection.iceConnectionState) {
     case 'connected': case 'completed':
       return 'rtc-connected';
@@ -82,19 +82,21 @@ export async function waitForRtcConnectedState(rtcConnection) {
   }
 }
 
-export function waitForRtcConnectionClose(rtcConnection) {
-  return new Promise((resolve, reject) => {
-    if (rtcConnection.connectionState === 'failed' || rtcConnection.connectionState === 'closed') {
-      resolve();
-    } else {
-      rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-        if (rtcConnection.iceConnectionState === 'failed' || rtcConnection.iceConnectionState === 'closed') {
-          resolve();
-          rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-        }
+export function waitForRtcClose(rtcConnection) {
+  switch (rtcConnection.connectionState) {
+    case 'failed': case 'closed':
+      return 'rtc-closed';
+    default:
+      return new Promise(resolve => {
+        rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
+          switch (rtcConnection.iceConnectionState) {
+            case 'failed': case 'closed':
+              resolve('rtc-closed');
+              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
+          }
+        });
       });
-    }
-  });
+  }
 }
 
 export async function waitForDataChannelOpen(dataChannel) {
