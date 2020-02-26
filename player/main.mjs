@@ -10,8 +10,8 @@ import {
   waitForPageToBeVisible,
   waitForWebsocketOpen,
   waitForWebsocketClose,
-  waitForRtcConnectedState,
-  waitForRtcConnectionClose
+  waitForRtcConnect,
+  waitForRtcClose
 } from '/shared/utils.mjs';
 
 import {playTone} from './audio.mjs';
@@ -264,7 +264,7 @@ async function connectRtcAndStartGame(websocket) {
     }
   });
 
-  var connectResult = await Promise.race([waitForRtcConnectedState(rtcConnection), waitForWebsocketClose(websocket)]);
+  var connectResult = await Promise.race([waitForRtcConnect(rtcConnection), waitForWebsocketClose(websocket)]);
   rtcConnection.onicegatheringstatechange = null;
   if (connectResult === 'websocket-closed') {
     await showStatus('error', 'failed to connect', 'websocket closed before RTC connection could be established');
@@ -290,6 +290,8 @@ async function connectRtcAndStartGame(websocket) {
 
   const waitForCloseChannel = new Promise(resolve => closeChannel.onmessage = () => resolve('close-channel'));
 
+  const waitForRouting = startRouting(rtcConnection, routeChannel);
+
   showStatus('waiting', 'Waiting to be accepted');
   const acceptResult = await new Promise(resolve => {
     acceptPlayerChannel.onmessage = () => resolve('accepted');
@@ -302,9 +304,7 @@ async function connectRtcAndStartGame(websocket) {
   }
   showStatus('');
 
-  const waitForRouting = startRouting(rtcConnection, routeChannel);
-
-  var result = await Promise.race([waitForRtcConnectionClose(rtcConnection), waitForCloseChannel]);
+  var result = await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel]);
   rtcConnection.close();
   await waitForRouting;
   await showStatus('error', 'Host disconnected', 'reconnecting in 2 seconds..');

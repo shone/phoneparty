@@ -1,19 +1,22 @@
 import {currentRoute, currentRouteCounter} from './routes.mjs';
+import {waitForRtcClose} from '/shared/utils.mjs';
 
 export const players = [];
 
-let acceptAllPlayersCallback = null;
-let nowAcceptingPlayersCallbacks = new Set();
-export function acceptAllPlayers(callback = () => {}) {
-  for (const callback of nowAcceptingPlayersCallbacks) {
+const playersWaitingToBeAccepted = [];
+
+let acceptedPlayerHandler = null;
+export function acceptAllPlayers(handler = () => {}) {
+  while (playersWaitingToBeAccepted.length > 0) {
+    const callback = playersWaitingToBeAccepted.pop();
     callback();
   }
-  listenForAllPlayers(callback);
-  acceptAllPlayersCallback = callback;
+  listenForAllPlayers(handler);
+  acceptedPlayerHandler = handler;
 }
 export function stopAcceptingPlayers() {
-  stopListeningForAllPlayers(acceptAllPlayersCallback);
-  acceptAllPlayersCallback = null;
+  stopListeningForAllPlayers(acceptedPlayerHandler);
+  acceptedPlayerHandler = null;
 }
 
 const listenForNewPlayersCallbacks = [];
@@ -174,13 +177,13 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     return rtcConnection.createDataChannel(currentRoute + '@' + currentRouteCounter);
   }
 
-  if (!acceptAllPlayersCallback) {
-    await new Promise(resolve => {
-      nowAcceptingPlayersCallbacks.add(function callback() {
-        resolve();
-        nowAcceptingPlayersCallbacks.delete(callback);
-      });
-    });
+  if (!acceptedPlayerHandler) {
+    const waitToBeAccepted = new Promise(resolve => playersWaitingToBeAccepted.push(() => resolve('accepted')));
+    const waitResult = Promise.race([waitToBeAccepted, waitForRtcClose(rtcConnection)]);
+    if (waitResult === 'rtc-closed') {
+      players.splice(players.indexOf(player), 1);
+      return;
+    }
   }
   if (acceptPlayerChannel.readyState === 'open') {
     acceptPlayerChannel.send(true);
@@ -194,6 +197,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   setTimeout(() => player.classList.remove('new'), 500);
 
   players.push(player);
+
   for (const callback of listenForAllPlayersCallbacks) {
     callback(player);
   }
@@ -203,16 +207,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   newPlayerSound.play().catch(() => {});
 
-  const rtcConnectionClosed = new Promise(resolve => {
-    rtcConnection.addEventListener('connectionstatechange', function callback() {
-      if (rtcConnection.connectionState === 'failed' || rtcConnection.connectionState === 'closed') {
-        resolve();
-        rtcConnection.removeEventListener('connectionstatechange', callback);
-      }
-    });
-  });
-
-  const rtcCloseSignalReceived = new Promise(resolve => player.closeChannel.onmessage = resolve);
+  const waitForCloseChannel = new Promise(resolve => player.closeChannel.onmessage = resolve);
 
   const waitForPlayerKicked = new Promise(resolve => {
     player.addEventListener('contextmenu', event => {
@@ -221,7 +216,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     }, {once: true});
   });
 
-  await Promise.race([rtcConnectionClosed, rtcCloseSignalReceived, waitForPlayerKicked]);
+  await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel, waitForPlayerKicked]);
 
   player.closeChannel.send('true');
   rtcConnection.close();
