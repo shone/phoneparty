@@ -1,12 +1,18 @@
 import {waitForNSeconds} from '/shared/utils.mjs';
-import {players, acceptAllPlayers, stopAcceptingPlayers, listenForLeavingPlayer, stopListeningForLeavingPlayer} from '/host/players.mjs';
+
+import {
+  players,
+  acceptAllPlayers,
+  stopAcceptingPlayers,
+  listenForLeavingPlayer,
+  stopListeningForLeavingPlayer
+} from '/host/players.mjs';
+
 import {startPlayerGrid} from './allTheThings.mjs';
 
-import routes, {
-  currentRoute,
-  waitForRouteToEnd,
-  acceptAllPlayersOnCurrentRoute,
-} from '/host/routes.mjs';
+import routes, {acceptAllPlayersOnCurrentRoute} from '/host/routes.mjs';
+
+import {playerPhotos, getNextPhotoId} from './allTheThings.mjs';
 
 routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -15,7 +21,9 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   await waitForNSeconds(1);
 
-  const playerPhotos = new Map();
+  while (playerPhotos.length > 0) {
+    playerPhotos.pop();
+  }
 
   // Layout players as a grid of bubbles
   acceptAllPlayersOnCurrentRoute(player => {
@@ -48,7 +56,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   await new Promise(resolve => {
     const timers = [];
     function checkIfAllPhotosTaken() {
-      if (players.length >= 2 && players.every(player => playerPhotos.has(player))) {
+      if (players.length >= 2 && players.every(player => playerPhotos.find(photo => photo.player === player))) {
         resolve();
         stopAcceptingPlayers();
         stopListeningForLeavingPlayer(checkIfAllPhotosTaken);
@@ -82,11 +90,14 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
         player.classList.add('photo-taken');
         photoContainer.appendChild(cropContainer);
         document.body.appendChild(photoContainer);
-        playerPhotos.set(player, photoContainer);
+        playerPhotos.push({player, photoContainer, id: getNextPhotoId()});
         listenForLeavingPlayer(function callback(leavingPlayer) {
           if (leavingPlayer === player) {
             photoContainer.remove();
-            playerPhotos.delete(player);
+            const photoIndex = playerPhotos.findIndex(photo => photo.player === player);
+            if (photoIndex !== -1) {
+              playerPhotos.splice(photoIndex, 1);
+            }
             stopListeningForLeavingPlayer(callback);
           }
         });
@@ -116,14 +127,14 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   // Highlight all photos
   const highlightDurationSecs = 0.4;
   for (const [index, player] of players.entries()) {
-    const photo = playerPhotos.get(player);
-    photo.style.animationDelay = (highlightDurationSecs * (index / (players.length-1))) + 's';
-    photo.classList.add('all-photos-taken-highlight');
+    const photo = playerPhotos.find(photo => photo.player === player);
+    photo.photoContainer.style.animationDelay = (highlightDurationSecs * (index / (players.length-1))) + 's';
+    photo.photoContainer.classList.add('all-photos-taken-highlight');
   }
   await waitForNSeconds(1);
-  for (const photo of playerPhotos.values()) {
-    photo.style.animationDelay = '';
-    photo.classList.remove('all-photos-taken-highlight');
+  for (const photo of playerPhotos) {
+    photo.photoContainer.style.animationDelay = '';
+    photo.photoContainer.classList.remove('all-photos-taken-highlight');
   }
 
   // Clean up
@@ -132,7 +143,6 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
     player.classList.remove('video-not-visible');
   }
 
-//   return [playerPhotos, playerGrid];
   return '#games/all-the-things/photo-judgement';
 }
 

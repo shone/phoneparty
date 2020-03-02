@@ -117,9 +117,9 @@ export async function startRouting(rtcConnection, routeChannel_) {
 
 export function waitForRouteToEnd() {
   if (!routeChannel || (routeChannel.readyState === 'closing' || routeChannel.readyState === 'closed')) {
-    return;
+    return 'route-ended';
   }
-  return new Promise(resolve => routeEndListeners.push(resolve));
+  return new Promise(resolve => routeEndListeners.push(() => resolve('route-ended')));
 }
 
 export function listenForChannelOnCurrentRoute(callback) {

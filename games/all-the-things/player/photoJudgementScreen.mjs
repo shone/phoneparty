@@ -1,23 +1,25 @@
-import {waitForDataChannelClose} from '/shared/utils.mjs';
+import routes, {
+  waitForRouteToEnd,
+  listenForChannelOnCurrentRoute
+} from '/routes.mjs';
 
-export async function photoJudgement(channel, getThing) {
-  const thing = await getThing();
+routes['#games/all-the-things/photo-judgement'] = async function photoJudgement() {
+  const thing = 'sock';// await getThing();
 
   const subjectPanel = document.getElementById('subject-panel');
   const image = document.createElement('img');
   image.classList.add('photo-judgement-image');
   subjectPanel.appendChild(image);
   image.classList.add('active');
-  channel.onmessage = event => {
+  listenForChannelOnCurrentRoute(channel => channel.onmessage = event => {
     const arrayBuffer = event.data;
     const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
     image.src = URL.createObjectURL(blob);
-  }
+  });
 
   const messagingPanel = document.getElementById('messaging-panel');
   const judgementScreen = document.createElement('div');
-  judgementScreen.classList.add('all-the-things');
-  judgementScreen.classList.add('photo-judgement-screen');
+  judgementScreen.classList.add('all-the-things', 'photo-judgement-screen');
   judgementScreen.insertAdjacentHTML('beforeend', `
     <h1>Is this photo really of:</h1>
     <img src="/games/all-the-things/things/${thing}.svg">
@@ -40,7 +42,7 @@ export async function photoJudgement(channel, getThing) {
     }
   }
 
-  await waitForDataChannelClose(channel);
+  await waitForRouteToEnd();
   image.classList.remove('active');
   judgementScreen.classList.remove('active');
   setTimeout(() => {
@@ -59,8 +61,7 @@ export async function photoSelfJudgement(channel, getThing, photoCanvas) {
 
   const messagingPanel = document.getElementById('messaging-panel');
   const selfJudgementScreen = document.createElement('div');
-  selfJudgementScreen.classList.add('all-the-things');
-  selfJudgementScreen.classList.add('photo-self-judgement-screen');
+  selfJudgementScreen.classList.add('all-the-things', 'photo-self-judgement-screen');
   selfJudgementScreen.insertAdjacentHTML('beforeend', `
     <h1>Is your photo really of:</h1>
     <img src="/games/all-the-things/things/${thing}.svg">

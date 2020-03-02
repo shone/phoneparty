@@ -1,44 +1,91 @@
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
-import {players, waitForPlayerToLeave, listenForAllPlayers, listenForLeavingPlayer, stopListeningForAllPlayers, stopListeningForLeavingPlayer} from '/host/players.mjs';
+
+import {
+  players,
+  waitForPlayerToLeave,
+  listenForAllPlayers,
+  listenForLeavingPlayer,
+  stopListeningForAllPlayers,
+  stopListeningForLeavingPlayer
+} from '/host/players.mjs';
+
 import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messaging.mjs';
 
-export default async function presentingPhotosScreen(playerPhotos) {
+import routes from '/host/routes.mjs';
+
+import {playerPhotos} from './allTheThings.mjs';
+
+routes['#games/all-the-things/photo-judgement'] = async function presentingPhotosScreen() {
   await waitForNSeconds(2);
 
-  const playersWithPhotos = players.filter(player => playerPhotos.has(player));
-
-  for (const playerPresentingPhoto of playersWithPhotos) {
-    if (players.indexOf(playerPresentingPhoto) === -1) {
-      continue; // Player has left, continue to next player
-    }
-
-    playerPresentingPhoto.classList.remove('wiggleable');
-    playerPresentingPhoto.style.transform = '';
-    playerPresentingPhoto.classList.add('highlight-in-audience');
-
-    const photo = playerPhotos.get(playerPresentingPhoto);
-    await presentPhoto(playerPresentingPhoto, photo);
-
-    playerPresentingPhoto.classList.remove('highlight-in-audience');
-    playerPresentingPhoto.classList.add('wiggleable');
-    photo.classList.remove('reveal-full-photo');
-    await waitForNSeconds(2);
-    photo.classList.remove('fullscreen');
-    for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
-      otherPhoto.classList.remove('de-emphasize');
-    }
-    await waitForNSeconds(2);
+  if (playerPhotos.length === 0) {
+    //await waitForNSeconds(2);
+    // TODO: show message about there being no photos to present
+    return '#games/all-the-things';
   }
 
-  for (const photoContainer of [...document.getElementsByClassName('photo-container')]) {
-    photoContainer.remove();
+  for (const photo of playerPhotos) {
+    routes[`#games/all-the-things/photo-judgement/${photo.id}`] = async () => presentPhoto(photo.player, photo.photoContainer, photo.id);
   }
+
+  return `#games/all-the-things/photo-judgement/${playerPhotos[0].id}`;
+
+//   const playersWithPhotos = players.filter(player => playerPhotos.has(player));
+// 
+//   for (const playerPresentingPhoto of playersWithPhotos) {
+//     if (players.indexOf(playerPresentingPhoto) === -1) {
+//       continue; // Player has left, continue to next player
+//     }
+// 
+//     playerPresentingPhoto.classList.remove('wiggleable');
+//     playerPresentingPhoto.style.transform = '';
+//     playerPresentingPhoto.classList.add('highlight-in-audience');
+// 
+//     const photo = playerPhotos.get(playerPresentingPhoto);
+//     await presentPhoto(playerPresentingPhoto, photo);
+// 
+//     playerPresentingPhoto.classList.remove('highlight-in-audience');
+//     playerPresentingPhoto.classList.add('wiggleable');
+//     photo.classList.remove('reveal-full-photo');
+//     await waitForNSeconds(2);
+//     photo.classList.remove('fullscreen');
+//     for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+//       otherPhoto.classList.remove('de-emphasize');
+//     }
+//     await waitForNSeconds(2);
+//   }
+// 
+//   for (const photoContainer of [...document.getElementsByClassName('photo-container')]) {
+//     photoContainer.remove();
+//   }
+// 
+//   return '#games/all-the-things/another-round';
 }
 
 const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
 const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
 
-async function presentPhoto(playerPresentingPhoto, photo) {
+async function presentPhoto(playerPresentingPhoto, photo, photoId) {
+
+  function getNextRoute() {
+    const photoIndex = playerPhotos.findIndex(photo => photo.id === photoId);
+    if (photoIndex !== -1 && photoIndex < playerPhotos.length - 1) {
+      // TODO skip players that have left?
+      return `#games/all-the-things/photo-judgement/${playerPhotos[photoIndex + 1].id}`;
+    } else {
+      return '#games/all-the-things/another-round';
+    }
+  }
+
+  // If the player has left, move on to the next player
+  if (players.indexOf(playerPresentingPhoto) === -1) {
+    return getNextRoute();
+  }
+
+  playerPresentingPhoto.classList.remove('wiggleable');
+  playerPresentingPhoto.style.transform = '';
+  playerPresentingPhoto.classList.add('highlight-in-audience');
+
   // Show photo full-screen
   photo.classList.add('fullscreen');
   for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
@@ -95,8 +142,7 @@ async function presentPhoto(playerPresentingPhoto, photo) {
       otherPhoto.classList.add('de-emphasize');
     }
 
-    player.classList.add('transitioning-to-fullscreen-in-audience');
-    player.classList.add('fullscreen-in-audience');
+    player.classList.add('fullscreen-in-audience', 'transitioning-to-fullscreen-in-audience');
     await waitForNSeconds(1);
 
     if (otherPlayerResponses.get(player) === selfJudgementResult) {
@@ -120,12 +166,24 @@ async function presentPhoto(playerPresentingPhoto, photo) {
   for (const otherPlayer of players) {
     clearPlayerFooledState(otherPlayer);
   }
+
+  playerPresentingPhoto.classList.remove('highlight-in-audience');
+  playerPresentingPhoto.classList.add('wiggleable');
+  photo.classList.remove('reveal-full-photo');
+  await waitForNSeconds(2);
+  photo.classList.remove('fullscreen');
+  for (const otherPhoto of [...document.getElementsByClassName('photo-container')]) {
+    otherPhoto.classList.remove('de-emphasize');
+  }
+  await waitForNSeconds(2);
+
+  return getNextRoute();
 }
 
 async function judgePhoto(playerPresentingPhoto, photo) {
   const croppedPhotoArrayBuffer = await makeCroppedImageArrayBuffer(photo.image);
 
-  const selfJudgementChannel = playerPresentingPhoto.rtcConnection.createDataChannel('all-the-things_photo-self-judgement');
+  const selfJudgementChannel = playerPresentingPhoto.createChannelOnCurrentRoute();
   const otherPlayerChannels = [];
 
   const getAllPlayerResponses = new Promise(resolve => {
@@ -150,7 +208,7 @@ async function judgePhoto(playerPresentingPhoto, photo) {
       if (player === playerPresentingPhoto) {
         return;
       }
-      const channel = player.rtcConnection.createDataChannel('all-the-things_photo-judgement');
+      const channel = player.createChannelOnCurrentRoute();//'all-the-things_photo-judgement'
       channel.onopen = () => channel.send(croppedPhotoArrayBuffer);
       channel.onmessage = event => {
         otherPlayerResponses.set(player, event.data);
@@ -178,29 +236,30 @@ async function judgePhoto(playerPresentingPhoto, photo) {
 
 function setPlayerFooled(player) {
   fooledSound.play().catch(() => {});
-  const fooledStamp = document.createElement('div');
-  fooledStamp.classList.add('all-the-things');
-  fooledStamp.classList.add('fooled-stamp');
-  fooledStamp.textContent = 'FOOLED';
-  player.appendChild(fooledStamp);
-  const fooledOverlay = document.createElement('div');
-  fooledOverlay.classList.add('all-the-things');
-  fooledOverlay.classList.add('fooled-overlay');
-  player.appendChild(fooledOverlay);
+//   const fooledStamp = document.createElement('div');
+//   fooledStamp.classList.add('all-the-things', 'fooled-stamp');
+//   fooledStamp.textContent = 'FOOLED';
+//   player.appendChild(fooledStamp);
+//   const fooledOverlay = document.createElement('div');
+//   fooledOverlay.classList.add('all-the-things', 'fooled-overlay');
+//   player.appendChild(fooledOverlay);
+  player.insertAdjacentHTML('beforeend', `
+    <div class="all-the-things fooled-overlay"></div>
+    <div class="all-the-things fooled-stamp">FOOLED</div>
+  `);
 }
 
 function setPlayerNotFooled(player) {
   notFooledSound.play().catch(() => {});
-  const notFooledStamp = document.createElement('div');
-  notFooledStamp.classList.add('all-the-things');
-  notFooledStamp.classList.add('not-fooled-stamp');
-  notFooledStamp.textContent = 'not fooled';
-  player.appendChild(notFooledStamp);
+//   const notFooledStamp = document.createElement('div');
+//   notFooledStamp.classList.add('all-the-things', 'not-fooled-stamp');
+//   notFooledStamp.textContent = 'not fooled';
+//   player.appendChild(notFooledStamp);
+  player.insertAdjacentHTML('beforeend', '<div class="all-the-things not-fooled-stamp">not fooled</div>');
   const lightbulbsCount = 6;
   for (let i=0; i < lightbulbsCount; i++) {
     const lightbulb = document.createElement('div');
-    lightbulb.classList.add('all-the-things');
-    lightbulb.classList.add('lightbulb');
+    lightbulb.classList.add('all-the-things', 'lightbulb');
     lightbulb.style.animationDelay = (0.7 * (i / lightbulbsCount)) + 's';
     lightbulb.style.transform = `translate(${((Math.random() - 0.5) * 2) * 250}%, ${((Math.random() - 0.5) * 2) * 250}%) rotate(${((Math.random() - 0.5) * 2) * 40}deg)`;
     player.appendChild(lightbulb);
@@ -208,21 +267,25 @@ function setPlayerNotFooled(player) {
 }
 
 function clearPlayerFooledState(player) {
-  const fooledStamp = player.querySelector('.fooled-stamp');
-  if (fooledStamp) {
-    fooledStamp.remove();
+  const elements = player.querySelectorAll('.fooled-stamp, .fooled-overlay, .not-fooled-stamp, .lightbulb');
+  for (const element of [...elements]) {
+    element.remove();
   }
-  const fooledOverlay = player.querySelector('.fooled-overlay');
-  if (fooledOverlay) {
-    fooledOverlay.remove();
-  }
-  const notFooledStamp = player.querySelector('.not-fooled-stamp');
-  if (notFooledStamp) {
-    notFooledStamp.remove();
-  }
-  for (const lightbulb of [...player.getElementsByClassName('lightbulb')]) {
-    lightbulb.remove();
-  }
+//   const fooledStamp = player.querySelector('.fooled-stamp');
+//   if (fooledStamp) {
+//     fooledStamp.remove();
+//   }
+//   const fooledOverlay = player.querySelector('.fooled-overlay');
+//   if (fooledOverlay) {
+//     fooledOverlay.remove();
+//   }
+//   const notFooledStamp = player.querySelector('.not-fooled-stamp');
+//   if (notFooledStamp) {
+//     notFooledStamp.remove();
+//   }
+//   for (const lightbulb of [...player.getElementsByClassName('lightbulb')]) {
+//     lightbulb.remove();
+//   }
 }
 
 async function makeCroppedImageArrayBuffer(image) {
