@@ -1,7 +1,7 @@
 import './titleScreen.mjs';
-import {photoJudgement, photoSelfJudgement} from './photoJudgementScreen.mjs';
 import './thingChoosingScreen.mjs';
 import './photoTakingScreen.mjs';
+import './photoJudgementScreen.mjs';
 
 import routes, {
   listenForChannelOnCurrentRoute,

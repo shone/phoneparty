@@ -1,6 +1,10 @@
 import {stream} from '/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
-import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from '/routes.mjs';
+
+import routes, {
+  waitForRouteToEnd,
+  listenForChannelOnCurrentRoute
+} from '/routes.mjs';
 
 routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -61,11 +65,8 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   // Wait for video stream to load
   if (video.srcObject) {
-    const [videoLoaded, channelClosed] = await new Promise(resolve => {
-      video.onloadeddata = () => resolve([true, false]);
-      channel.addEventListener('close', () => resolve([false, true]), {once: true});
-    });
-    if (channelClosed) {
+    const waitForVideoResult = await Promise.race([new Promise(resolve => video.onloadeddata = () => resolve('video-loaded')), waitForRouteToEnd()]);
+    if (waitForVideoResult === 'route-ended') {
       cleanups.forEach(f => f());
       return null;
     }
@@ -100,7 +101,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
 
   // Wait for photo to be taken (or channel closed)
-  return await new Promise(resolve => {
+  await new Promise(resolve => {
     takePhotoButton.onclick = async function() {
       shutterSound.play().catch(() => {});
       if (video.srcObject) {
@@ -123,17 +124,16 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
       }
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
       const arrayBuffer = await new Response(blob).arrayBuffer();
-      // TODO: determine maximum message size
-      channel.send(arrayBuffer);
+      listenForChannelOnCurrentRoute(channel => {
+        // TODO: determine maximum message size
+        channel.send(arrayBuffer);
+      });
       photoScreen.classList.add('photo-taken');
       takePhotoButton.remove();
       switchCamerasButton.remove();
-      resolve(canvas);
-    }
-
-    channel.onclose = channel.onerror = event => {
-      cleanups.forEach(f => f());
-      resolve(null);
+      resolve();
     }
   });
+
+  cleanups.forEach(f => f());
 }

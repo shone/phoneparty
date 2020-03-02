@@ -2,7 +2,7 @@ import './titleScreen.mjs';
 import './thingChoosingScreen.mjs';
 import './goalScreen.mjs';
 import './photoTakingScreen.mjs';
-import presentingPhotosScreen from './presentingPhotosScreen.mjs';
+import './presentingPhotosScreen.mjs';
 import anotherRoundScreen from './anotherRoundScreen.mjs';
 
 import {
@@ -14,6 +14,10 @@ import {
   listenForLeavingPlayer,
   stopListeningForLeavingPlayer
 } from '/host/players.mjs';
+
+export const playerPhotos = [];
+let nextPhotoId = 1;
+export function getNextPhotoId() { return nextPhotoId++ };
 
 // routes['#games/all-the-things/next'] = async function AllTheThings() {
 //   let chosenThingElement = null;
@@ -134,12 +138,12 @@ export function startPlayerGrid(playerPhotos) {
           player.style.width  = playerSize + 'px';
           player.style.height = playerSize + 'px';
         }
-        if (playerPhotos.has(player)) {
-          const photo = playerPhotos.get(player);
-          photo.style.left   = (cellLeft + ((cellWidth  - playerSize) / 2)) + 'px';
-          photo.style.top    = (cellTop  + ((cellHeight - playerSize) / 2)) + 'px';
-          photo.style.width  = playerSize + 'px';
-          photo.style.height = playerSize + 'px';
+        const photo = playerPhotos.find(photo => photo.player === player);
+        if (photo) {
+          photo.photoContainer.style.left   = (cellLeft + ((cellWidth  - playerSize) / 2)) + 'px';
+          photo.photoContainer.style.top    = (cellTop  + ((cellHeight - playerSize) / 2)) + 'px';
+          photo.photoContainer.style.width  = playerSize + 'px';
+          photo.photoContainer.style.height = playerSize + 'px';
         }
         playerIndex++;
       }
