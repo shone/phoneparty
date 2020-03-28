@@ -13,7 +13,9 @@ import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messa
 
 import routes from '/host/routes.mjs';
 
-import {playerPhotos} from './allTheThings.mjs';
+import {playerPhotos, routesWithPlayerGrid} from './allTheThings.mjs';
+
+import * as playerGrid from './playerGrid.mjs';
 
 routes['#games/all-the-things/photo-judgement'] = async function presentingPhotosScreen() {
   await waitForNSeconds(2);
@@ -26,6 +28,10 @@ routes['#games/all-the-things/photo-judgement'] = async function presentingPhoto
 
   for (const photo of playerPhotos) {
     routes[`#games/all-the-things/photo-judgement/${photo.id}`] = async () => presentPhoto(photo.player, photo.photoContainer, photo.id);
+  }
+
+  if (!routesWithPlayerGrid.has(location.hash)) {
+    playerGrid.stop();
   }
 
   return `#games/all-the-things/photo-judgement/${playerPhotos[0].id}`;
