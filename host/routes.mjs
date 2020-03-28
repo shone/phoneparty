@@ -35,7 +35,7 @@ export async function startRouting({defaultRoute}) {
     listenForAllPlayers(handlePlayer);
 
     // Call route handler
-    const routeHandler = routes[currentRoute] || routeNotFoundScreen;
+    const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
     const nextRouteFromHandler = await routeHandler();
 
     // Stop sending current route to all players

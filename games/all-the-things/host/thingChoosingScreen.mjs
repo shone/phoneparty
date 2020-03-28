@@ -92,8 +92,7 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
 
-  // TODO: append thing name to route, e.g. goal?thing=sock
-  return `#games/all-the-things/goal`;
+  return `#games/all-the-things/goal?thing=${chosenThingElement.dataset.name}`;
 }
 
 export function chooseThing(thingName) {
