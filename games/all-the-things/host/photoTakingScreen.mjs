@@ -8,11 +8,15 @@ import {
   stopListeningForLeavingPlayer
 } from '/host/players.mjs';
 
-import {startPlayerGrid} from './allTheThings.mjs';
+import * as playerGrid from './playerGrid.mjs';
 
 import routes, {acceptAllPlayersOnCurrentRoute} from '/host/routes.mjs';
 
-import {playerPhotos, getNextPhotoId} from './allTheThings.mjs';
+import {
+  playerPhotos,
+  getNextPhotoId,
+  routesWithPlayerGrid
+} from './allTheThings.mjs';
 
 routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -32,7 +36,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
       document.body.appendChild(player);
     }
   });
-  const playerGrid = startPlayerGrid(playerPhotos);
+  playerGrid.start();
   await waitForNSeconds(2.5);
   stopAcceptingPlayers();
 
@@ -141,6 +145,10 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   photoTakingScreen.remove();
   for (const player of players) {
     player.classList.remove('video-not-visible');
+  }
+
+  if (!routesWithPlayerGrid.has(location.hash)) {
+    playerGrid.stop();
   }
 
   return '#games/all-the-things/photo-judgement';
