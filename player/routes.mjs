@@ -96,7 +96,7 @@ export async function startRouting(rtcConnection, routeChannel_) {
     });
 
     // Call handler for this route
-    const routeHandler = routes[currentRoute] || notFoundRouteHandler;
+    const routeHandler = routes[currentRoute] || routeNotFoundScreen;
     await routeHandler();
   }
 
@@ -133,15 +133,16 @@ export function listenForChannelOnCurrentRoute(callback) {
   routeChannelListeners.push(callback);
 }
 
-async function notFoundRouteHandler() {
+async function routeNotFoundScreen() {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
       <h1>404</h1>
-      <p>No handler found for route: <b>${currentRoute}</b></p>
+      <p>No handler found for route: <b class="route"></b></p>
     </div>
   `);
   const div = document.body.lastElementChild;
+  div.querySelector('.route').textContent = currentRoute;
 
   await waitForRouteToEnd();
   div.remove();

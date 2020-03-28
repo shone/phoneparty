@@ -35,8 +35,8 @@ export async function startRouting({defaultRoute}) {
     listenForAllPlayers(handlePlayer);
 
     // Call route handler
-    const routeHandler = routes[currentRoute] || notFoundRouteHandler;
-    const routeHandlerNextRoute = await routeHandler();
+    const routeHandler = routes[currentRoute] || routeNotFoundScreen;
+    const nextRouteFromHandler = await routeHandler();
 
     // Stop sending current route to all players
     stopListeningForAllPlayers(handlePlayer);
@@ -48,8 +48,8 @@ export async function startRouting({defaultRoute}) {
     // that as the next route
     if (location.hash !== currentRoute) {
       currentRoute = location.hash;
-    } else if (routeHandlerNextRoute) {
-      currentRoute = routeHandlerNextRoute;
+    } else if (nextRouteFromHandler) {
+      currentRoute = nextRouteFromHandler;
     } else {
       await new Promise(resolve => window.addEventListener('hashchange', resolve, {once: true}));
       currentRoute = location.hash;
@@ -104,15 +104,16 @@ export function listenForLeavingPlayersOnCurrentRoute(callback) {
   });
 }
 
-async function notFoundRouteHandler() {
+async function routeNotFoundScreen() {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
       <h1>404</h1>
-      <p>No handler found for route: <b>${currentRoute}</b></p>
+      <p>No handler found for route: <b class="route"></b></p>
     </div>
   `);
   const div = document.body.lastElementChild;
+  div.querySelector('.route').textContent = currentRoute;
 
   await waitForRouteToEnd();
   div.remove();
