@@ -30,7 +30,7 @@ routes['#games/all-the-things/photo-judgement'] = async function presentingPhoto
     routes[`#games/all-the-things/photo-judgement/${photo.id}`] = async () => presentPhoto(photo.player, photo.photoContainer, photo.id);
   }
 
-  if (!routesWithPlayerGrid.has(location.hash)) {
+  if (!routesWithPlayerGrid.has(location.hash.split('?'))) {
     playerGrid.stop();
   }
 

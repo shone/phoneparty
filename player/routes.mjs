@@ -96,7 +96,7 @@ export async function startRouting(rtcConnection, routeChannel_) {
     });
 
     // Call handler for this route
-    const routeHandler = routes[currentRoute] || routeNotFoundScreen;
+    const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
     await routeHandler();
   }
 

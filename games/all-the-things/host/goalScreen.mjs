@@ -18,17 +18,14 @@ import {
 import {addSpeechBubbleToPlayer, clearAllSpeechBubbles} from '/host/messaging.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
+import {
+  setupCurrentThingIndicator,
+  currentThingIndicatorRouteEnd
+} from './allTheThings.mjs';
+
 routes['#games/all-the-things/goal'] = async function goalScreen() {
-  let chosenThingElement = document.querySelector('.all-the-things.thing.show-in-top-right');
-  if (!chosenThingElement) {
-    const thingName = 'sock';
-    document.body.insertAdjacentHTML('beforeend', `
-      <div class="all-the-things thing show-in-top-right" data-name="${thingName}">
-        <img src="/games/all-the-things/things/${thingName}.svg">
-      </div>
-    `);
-    chosenThingElement = document.body.lastElementChild;
-  }
+
+  const chosenThingElement = setupCurrentThingIndicator();
 
   audienceMode.start();
 
@@ -115,11 +112,7 @@ routes['#games/all-the-things/goal'] = async function goalScreen() {
 
   goalScreen.remove();
 
-  const routesThatUseThingInCorner = new Set([currentRoute, '#games/all-the-things/photo-taking']);
-  if (!routesThatUseThingInCorner.has(location.hash)) {
-    chosenThingElement.remove();
-    return;
-  }
+  currentThingIndicatorRouteEnd();
 
-  return '#games/all-the-things/photo-taking';
+  return `#games/all-the-things/photo-taking?thing=${chosenThingElement.dataset.name}`;
 }
