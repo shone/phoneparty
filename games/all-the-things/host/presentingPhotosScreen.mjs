@@ -187,7 +187,7 @@ async function presentPhoto(playerPresentingPhoto, photo, photoId) {
 }
 
 async function judgePhoto(playerPresentingPhoto, photo) {
-  const croppedPhotoArrayBuffer = await makeCroppedImageArrayBuffer(photo.image);
+  const croppedPhotoArrayBuffer = await makeCroppedImageArrayBuffer(photo.querySelector('img'));
 
   const selfJudgementChannel = playerPresentingPhoto.createChannelOnCurrentRoute();
   const otherPlayerChannels = [];
