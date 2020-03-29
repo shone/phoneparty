@@ -10,10 +10,7 @@ import {
 
 import * as playerGrid from './playerGrid.mjs';
 
-import routes, {
-  currentRoute,
-  acceptAllPlayersOnCurrentRoute
-} from '/host/routes.mjs';
+import routes, {acceptAllPlayersOnCurrentRoute} from '/host/routes.mjs';
 
 import {
   playerPhotos,
@@ -69,10 +66,10 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
     const timers = [];
     function checkIfAllPhotosTaken() {
       if (players.length >= 2 && players.every(player => playerPhotos.find(photo => photo.player === player))) {
-        resolve();
         stopAcceptingPlayers();
         stopListeningForLeavingPlayer(checkIfAllPhotosTaken);
         while (timers.length > 0) clearTimeout(timers.pop());
+        resolve();
       }
     }
     acceptAllPlayersOnCurrentRoute(player => {
@@ -90,39 +87,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
       timers.push(setTimeout(() => player.classList.add('video-not-visible'), 15000));
       player.createChannelOnCurrentRoute().onmessage = async function(event) {
         shutterSound.play().catch(() => {});
-        const image = createImageElementFromChannelMessage(event);
-        const photoContainer = document.createElement('div');
-        photoContainer.classList.add('all-the-things', 'photo-container');
-        photoContainer.player = player;
-        photoContainer.arrayBuffer = event.data;
-        const cropContainer = document.createElement('div');
-        cropContainer.classList.add('crop-container');
-        cropContainer.appendChild(image);
-        photoContainer.image = image;
-        player.classList.add('photo-taken');
-        photoContainer.appendChild(cropContainer);
-        document.body.appendChild(photoContainer);
-        playerPhotos.push({player, photoContainer, id: getNextPhotoId()});
-        listenForLeavingPlayer(function callback(leavingPlayer) {
-          if (leavingPlayer === player) {
-            photoContainer.remove();
-            const photoIndex = playerPhotos.findIndex(photo => photo.player === player);
-            if (photoIndex !== -1) {
-              playerPhotos.splice(photoIndex, 1);
-            }
-            stopListeningForLeavingPlayer(callback);
-          }
-        });
-        playerGrid.updateLayout();
-        player.classList.add('camera-shutter');
-        setTimeout(() => player.classList.remove('camera-shutter'), 200);
-        setTimeout(() => {
-          player.remove();
-          player.classList.remove('moving-to-grid', 'taking-photo', 'photo-taken');
-          player.style.width  = '';
-          player.style.height = '';
-          player.querySelector('.phone').remove();
-        }, 1000);
+        acceptPhotoFromPlayer(player, event.data);
         checkIfAllPhotosTaken();
       }
     });
@@ -164,10 +129,44 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   return '#games/all-the-things/photo-judgement';
 }
 
-function createImageElementFromChannelMessage(event) {
-  const arrayBuffer = event.data;
-  const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
-  const image = new Image();
-  image.src = URL.createObjectURL(blob);
-  return image;
+function acceptPhotoFromPlayer(player, photoArrayBuffer) {
+  const photoBlob = new Blob([photoArrayBuffer], {type: 'image/jpeg'});
+  const photoUrl = URL.createObjectURL(photoBlob);
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="all-the-things photo-container">
+      <div class="crop-container">
+        <img src="${photoUrl}">
+      </div>
+    </div>
+  `);
+  const photoContainer = document.body.lastElementChild;
+  photoContainer.player = player;
+  photoContainer.arrayBuffer = photoArrayBuffer;
+
+  playerPhotos.push({player, photoContainer, id: getNextPhotoId()});
+
+  player.classList.add('photo-taken', 'camera-shutter');
+  setTimeout(() => player.classList.remove('camera-shutter'), 200);
+
+  playerGrid.updateLayout();
+
+  setTimeout(() => {
+    player.remove();
+    player.classList.remove('moving-to-grid', 'taking-photo', 'photo-taken');
+    player.style.width  = '';
+    player.style.height = '';
+    player.querySelector('.phone').remove();
+  }, 1000);
+
+  listenForLeavingPlayer(function callback(leavingPlayer) {
+    if (leavingPlayer === player) {
+      photoContainer.remove();
+      const photoIndex = playerPhotos.findIndex(photo => photo.player === player);
+      if (photoIndex !== -1) {
+        playerPhotos.splice(photoIndex, 1);
+      }
+      stopListeningForLeavingPlayer(callback);
+    }
+  });
 }
