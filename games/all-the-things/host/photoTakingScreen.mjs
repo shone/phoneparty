@@ -26,7 +26,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   const chosenThingElement = setupCurrentThingIndicator();
 
-  const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
+  const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.wav');
   const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
 
   audienceMode.stop();
