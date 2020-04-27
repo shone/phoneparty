@@ -1,8 +1,19 @@
-import {players, listenForAllPlayers, listenForLeavingPlayer, stopListeningForAllPlayers, stopListeningForLeavingPlayer} from '/host/players.mjs';
+import {players} from '/host/players.mjs';
+
 import {waitForNSeconds} from '/shared/utils.mjs';
+
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
 
-export default async function anotherRoundScreen() {
+import routes, {
+  waitForRouteToEnd,
+  listenForPlayersOnCurrentRoute,
+  listenForLeavingPlayersOnCurrentRoute
+} from '/host/routes.mjs';
+
+import * as audienceMode from '/host/audienceMode.mjs';
+
+routes['#games/all-the-things/another-round'] = async function anotherRoundScreen() {
+  document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things another-round-screen">
       <h1>Play another round?</h1>
@@ -10,41 +21,41 @@ export default async function anotherRoundScreen() {
   `);
   const anotherRoundScreen = document.body.lastElementChild;
 
-  // Wait for all players to confirm
-  await new Promise(resolve => {
+  audienceMode.start();
+
+  const waitForAllPlayers = new Promise(resolve => {
     const confirmedPlayers = new Set();
-    const channels = [];
     function checkIfAllPlayersConfirmed() {
-      if (players.length > 0 && players.every(p => confirmedPlayers.has(p))) {
+      if (players.length > 0 && players.every(player => confirmedPlayers.has(player))) {
         resolve();
-        stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkIfAllPlayersConfirmed);
-        for (const channel of channels) {
-          channel.close();
-        }
       }
     }
-    function handlePlayer(player) {
-      const channel = player.rtcConnection.createDataChannel('all-the-things_another-round');
-      channel.onmessage = () => {
+    listenForPlayersOnCurrentRoute(player => {
+      player.createChannelOnCurrentRoute().onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
         checkIfAllPlayersConfirmed();
       }
-      channels.push(channel);
-    }
-    listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayer(checkIfAllPlayersConfirmed);
+    })
+    listenForLeavingPlayersOnCurrentRoute(checkIfAllPlayersConfirmed);
   });
+
+  const result = await Promise.race([waitForAllPlayers, waitForRouteToEnd()]);
+  if (result === 'route-ended') {
+    anotherRoundScreen.remove();
+    return;
+  }
+
+  // Highlight speech bubbles
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
     if (speechBubble) {
       speechBubble.classList.add('highlight');
     }
   }
-
   await waitForNSeconds(1.5);
 
+  // Clear speech bubbles
   for (const player of players) {
     const speechBubble = player.querySelector('.speech-bubble:not(.cleared)');
     if (speechBubble) {
@@ -56,4 +67,6 @@ export default async function anotherRoundScreen() {
   await waitForNSeconds(0.5);
 
   anotherRoundScreen.remove();
+
+  return '#games/all-the-things/thing-choosing';
 }

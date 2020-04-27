@@ -63,9 +63,9 @@ export async function waitForRouteToEnd() {
   // Wait for the browser to be navigated to a different URL hash, or for the
   // the current route to be skipped by pressing spacebar.
   if (location.hash !== currentRoute) {
-    return;
+    return 'route-ended';
   } else {
-    await new Promise(resolve => {
+    return new Promise(resolve => {
       function onHashchange() {
         if (location.hash !== currentRoute) finish();
       }
@@ -77,7 +77,7 @@ export async function waitForRouteToEnd() {
       function finish() {
         window.removeEventListener('hashchange', onHashchange);
         window.removeEventListener('keypress', onKeypress);
-        resolve();
+        resolve('route-ended');
       }
     });
   }

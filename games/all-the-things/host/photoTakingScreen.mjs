@@ -9,6 +9,7 @@ import {
 } from '/host/players.mjs';
 
 import * as playerGrid from './playerGrid.mjs';
+import * as audienceMode from '/host/audienceMode.mjs';
 
 import routes, {acceptAllPlayersOnCurrentRoute} from '/host/routes.mjs';
 
@@ -27,6 +28,8 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
   const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
+
+  audienceMode.stop();
 
   await waitForNSeconds(1);
 
@@ -126,7 +129,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   currentThingIndicatorRouteEnd();
 
-  return '#games/all-the-things/photo-judgement';
+  return `#games/all-the-things/present-photos?thing=${chosenThingElement.dataset.name}`;
 }
 
 function acceptPhotoFromPlayer(player, photoArrayBuffer) {
@@ -162,9 +165,11 @@ function acceptPhotoFromPlayer(player, photoArrayBuffer) {
   listenForLeavingPlayer(function callback(leavingPlayer) {
     if (leavingPlayer === player) {
       photoContainer.remove();
-      const photoIndex = playerPhotos.findIndex(photo => photo.player === player);
-      if (photoIndex !== -1) {
-        playerPhotos.splice(photoIndex, 1);
+      const playerPhoto = playerPhotos.find(photo => photo.player === player);
+      if (playerPhoto) {
+        playerPhoto.player = null;
+        playerPhoto.photoContainer = null;
+        playerPhoto.id = null;
       }
       stopListeningForLeavingPlayer(callback);
     }

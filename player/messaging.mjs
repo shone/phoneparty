@@ -1,8 +1,7 @@
 export default function handleMessaging(channel) {
   const messagingPanel = document.getElementById('messaging-panel');
   const container = document.createElement('div');
-  container.classList.add('container');
-  container.classList.add('active');
+  container.classList.add('container', 'active');
   container.insertAdjacentHTML('beforeend', `
     <button class="clear-button push-button">clear</button>
     <div class="options"></div>
@@ -17,7 +16,7 @@ export default function handleMessaging(channel) {
     speechBubble.remove();
   }
 
-  const possibleMessages = ['👍', '👎', '👌', '😄', '😆', '😅', '🤣', '😂', '🙂', '😉', '😇', '☺️', '😛', '🥰', '🤔', '🤫', '🤨', '😬', '😏', '😌', '😴', '😟', '🙁', '😯', '😥', '👋', '✌️', '🤞'];
+  const possibleMessages = ['👍','👎','👌','😄','😆','😅','🤣','😂','🙂','😉','😇','☺️','😛','🥰','🤔','🤫','🤨','😬','😏','😌','😴','😟','🙁','😯','😥','👋','✌️','🤞'];
   const revealDurationSecs = 0.8;
   for (const [index, message] of possibleMessages.entries()) {
     options.insertAdjacentHTML('beforeend', `
@@ -51,6 +50,6 @@ export default function handleMessaging(channel) {
     container.classList.remove('active');
     setTimeout(() => {
       container.remove();
-    });
+    }, 500);
   }
 }

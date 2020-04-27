@@ -21,7 +21,9 @@ export function stopAcceptingPlayers() {
 
 const listenForNewPlayersCallbacks = [];
 export function listenForNewPlayers(callback) {
-  listenForNewPlayersCallbacks.push(callback);
+  if (!listenForNewPlayersCallbacks.includes(callback)) {
+    listenForNewPlayersCallbacks.push(callback);
+  }
 }
 export function stopListeningForNewPlayers(callback) {
   const index = listenForNewPlayersCallbacks.indexOf(callback);
@@ -35,7 +37,9 @@ export function listenForAllPlayers(callback) {
   for (const player of players) {
     callback(player);
   }
-  listenForAllPlayersCallbacks.push(callback);
+  if (!listenForAllPlayersCallbacks.includes(callback)) {
+    listenForAllPlayersCallbacks.push(callback);
+  }
 }
 export function stopListeningForAllPlayers(callback) {
   const index = listenForAllPlayersCallbacks.indexOf(callback);
@@ -153,18 +157,20 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     const wiggliness = 0.002;
     const antiWiggliness = 0.02;
     window.requestAnimationFrame(function callback(timestamp) {
-      const delta = timestamp - timeOnLastWiggleUpdate;
-      player.wigglePosition.x += player.wiggleMomentum.x * delta * wiggliness;
-      player.wigglePosition.y += player.wiggleMomentum.y * delta * wiggliness;
+      if (player.classList.contains('wiggleable')) {
+        const delta = timestamp - timeOnLastWiggleUpdate;
+        player.wigglePosition.x += player.wiggleMomentum.x * delta * wiggliness;
+        player.wigglePosition.y += player.wiggleMomentum.y * delta * wiggliness;
 
-      player.wiggleMomentum.x -= player.wigglePosition.x * delta * antiWiggliness * 2;
-      player.wiggleMomentum.y -= player.wigglePosition.y * delta * antiWiggliness * 2;
+        player.wiggleMomentum.x -= player.wigglePosition.x * delta * antiWiggliness * 2;
+        player.wiggleMomentum.y -= player.wigglePosition.y * delta * antiWiggliness * 2;
 
-      player.wiggleMomentum.x *= Math.max(0, 1 - (delta * antiWiggliness));
-      player.wiggleMomentum.y *= Math.max(0, 1 - (delta * antiWiggliness));
+        player.wiggleMomentum.x *= Math.max(0, 1 - (delta * antiWiggliness));
+        player.wiggleMomentum.y *= Math.max(0, 1 - (delta * antiWiggliness));
 
-      player.style.transform = `translate(${(player.wigglePosition.x) + 'vw'}, ${(player.wigglePosition.y) + 'vw'})`;
-      timeOnLastWiggleUpdate = timestamp;
+        player.style.transform = `translate(${(player.wigglePosition.x) + 'vw'}, ${(player.wigglePosition.y) + 'vw'})`;
+        timeOnLastWiggleUpdate = timestamp;
+      }
       if (accelerometerChannel.readyState === 'open') {
         window.requestAnimationFrame(callback);
       }
@@ -173,8 +179,12 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
-  player.createChannelOnCurrentRoute = () => {
-    return rtcConnection.createDataChannel(currentRoute + '@' + currentRouteCounter);
+  player.createChannelOnCurrentRoute = name => {
+    let channelLabel = currentRoute + '@' + currentRouteCounter;
+    if (name) {
+      channelLabel += '%' + name;
+    }
+    return rtcConnection.createDataChannel(channelLabel);
   }
 
   if (!acceptedPlayerHandler) {

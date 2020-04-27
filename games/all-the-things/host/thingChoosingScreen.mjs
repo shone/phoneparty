@@ -1,10 +1,17 @@
-import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
-import {randomInArray} from '/shared/utils.mjs';
-import {listenForAllPlayers, stopListeningForAllPlayers} from '/host/players.mjs';
+import {
+  waitForNSeconds,
+  waitForKeypress,
+  randomInArray
+} from '/shared/utils.mjs';
 
-import routes, {currentRoute, waitForRouteToEnd, listenForPlayersOnCurrentRoute} from '/host/routes.mjs';
+import routes, {
+  currentRoute,
+  waitForRouteToEnd,
+  listenForPlayersOnCurrentRoute
+} from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
+import * as messaging from '/host/messaging.mjs';
 
 routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -27,6 +34,7 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   const thingChoosingScreen = document.body.lastElementChild;
 
   audienceMode.start();
+  messaging.start();
 
   await waitForNSeconds(0.5);
 
@@ -91,6 +99,8 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   chosenThingElement.classList.remove('chosen');
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
+
+  messaging.stop();
 
   return `#games/all-the-things/goal?thing=${chosenThingElement.dataset.name}`;
 }
