@@ -1,5 +1,7 @@
-import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from '/routes.mjs';
-import {waitForNSeconds} from '/shared/utils.mjs';
+import routes, {
+  waitForRouteToEnd,
+  listenForChannelOnCurrentRoute
+} from '/routes.mjs';
 
 routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -28,9 +30,5 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   });
 
   await waitForRouteToEnd();
-
-//   thingChoosingScreen.classList.remove('active');
-//   await waitForNSeconds(0.5);
-
   thingChoosingScreen.remove();
 }

@@ -2,6 +2,7 @@ import {acceptAllPlayers} from '/host/players.mjs';
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
+import * as messaging from '/host/messaging.mjs';
 
 import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
@@ -18,6 +19,7 @@ routes['#games/all-the-things'] = async function titleScreen() {
   const titleScreen = document.body.lastElementChild;
 
   audienceMode.start();
+  messaging.start();
 
   await waitForRouteToEnd();
 
@@ -25,7 +27,9 @@ routes['#games/all-the-things'] = async function titleScreen() {
   setTimeout(() => { titleScreen.remove() }, 2000);
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
-  if (location.hash !== '#games/all-the-things') {
+  messaging.stop();
+
+  if (!location.hash.startsWith('#games/all-the-things')) {
     audienceMode.stop();
   }
   return '#games/all-the-things/thing-choosing';

@@ -1,7 +1,7 @@
 const routes = {};
 export default routes;
 
-let currentRoute = null;
+export let currentRoute = null;
 let currentRouteCounter = -1;
 
 const routeEndListeners = [];
@@ -51,7 +51,8 @@ export async function startRouting(rtcConnection, routeChannel_) {
       });
       if (counter === currentRouteCounter) {
         for (const callback of routeChannelListeners) {
-          callback(event.channel);
+          const name = event.channel.label.split('%')[1];
+          callback(event.channel, name);
         }
       }
     } else {
@@ -124,10 +125,11 @@ export function waitForRouteToEnd() {
 
 export function listenForChannelOnCurrentRoute(callback) {
   for (const channel of routeChannels) {
-    let [route, counter] = channel.label.split('@');
+    const [route, counterAndName] = channel.label.split('@');
+    let [counter, name] = counterAndName.split('%');
     counter = parseInt(counter);
     if (route === currentRoute && counter === currentRouteCounter) {
-      callback(channel);
+      callback(channel, name);
     }
   }
   routeChannelListeners.push(callback);

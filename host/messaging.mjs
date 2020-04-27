@@ -1,10 +1,18 @@
-import {players, listenForAllPlayers, stopListeningForAllPlayers} from './players.mjs';
+import {
+  players,
+  listenForAllPlayers,
+  stopListeningForAllPlayers,
+  listenForLeavingPlayer,
+  stopListeningForLeavingPlayer
+} from './players.mjs';
 
 let started = false;
+const channels = new Map();
 
 export function start() {
   if (!started) {
     listenForAllPlayers(handlePlayer);
+    listenForLeavingPlayer(handleLeavingPlayer);
     started = true;
   }
 }
@@ -12,13 +20,18 @@ export function start() {
 export function stop() {
   if (started) {
     stopListeningForAllPlayers(handlePlayer);
-    for (const channel of channels) {
+    stopListeningForLeavingPlayer(handleLeavingPlayer);
+
+    for (const channel of channels.values()) {
+      channel.onmessage = null;
       channel.close();
     }
-    channels.length = 0;
+    channels.clear();
+
     for (const player of players) {
       clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
     }
+
     started = false;
   }
 }
@@ -68,10 +81,9 @@ export function clearAllSpeechBubbles() {
   }
 }
 
-const channels = [];
 function handlePlayer(player) {
   const channel = player.rtcConnection.createDataChannel('messaging');
-  channels.push(channel);
+  channels.set(player, channel);
   channel.onmessage = event => {
     const previousSpeechBubble = player.querySelector('.speech-bubble:not(.cleared)');
     if (previousSpeechBubble) {
@@ -84,5 +96,14 @@ function handlePlayer(player) {
     if (event.data !== 'clear') {
       addSpeechBubbleToPlayer(player, event.data);
     }
+  }
+}
+
+function handleLeavingPlayer(player) {
+  const channel = channels.get(player);
+  if (channel) {
+    channel.onmessage = null;
+    channel.close();
+    channels.delete(player);
   }
 }

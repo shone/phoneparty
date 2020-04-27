@@ -14,6 +14,7 @@ export function getNextPhotoId() { return nextPhotoId++ };
 
 export const routesWithPlayerGrid = new Set([
   '#games/all-the-things/photo-taking',
+  '#games/all-the-things/present-photos',
   '#games/all-the-things/photo-judgement',
 ]);
 
@@ -40,6 +41,7 @@ export function currentThingIndicatorRouteEnd() {
   switch (location.hash.split('?')[0]) {
     case '#games/all-the-things/goal':
     case '#games/all-the-things/photo-taking':
+    case '#games/all-the-things/present-photos':
     case '#games/all-the-things/photo-judgement':
       return;
     default:

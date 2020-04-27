@@ -2,11 +2,17 @@ import {stream} from '/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 
 import routes, {
+  currentRoute,
   waitForRouteToEnd,
   listenForChannelOnCurrentRoute
 } from '/routes.mjs';
 
+export let canvas = null;
+
 routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
+  const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
+  const thing = routeParams.get('thing');
+
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things photo-screen">
@@ -23,13 +29,12 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   `);
   const photoScreen = document.body.lastElementChild;
   const video  = photoScreen.querySelector('video');
-  const canvas = photoScreen.querySelector('canvas');
+  canvas = photoScreen.querySelector('canvas');
   const cropGuide = photoScreen.querySelector('.crop-guide');
   const takePhotoButton = photoScreen.querySelector('.take-photo-button');
   const switchCamerasButton = photoScreen.querySelector('.switch-cameras-button');
   const cleanups = [() => photoScreen.remove()];
 
-  const thing = 'sock';// await getThing();
   photoScreen.querySelector('.goal .label').textContent = thing;
   photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
 
@@ -97,7 +102,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   video.onloadedmetadata = updateCropGuide;
   updateCropGuide();
 
-  // TODO: convert to mp3
+  // TODO: convert to WAV
   const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
 
   // Wait for photo to be taken (or channel closed)
