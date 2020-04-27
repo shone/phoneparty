@@ -102,8 +102,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   video.onloadedmetadata = updateCropGuide;
   updateCropGuide();
 
-  // TODO: convert to WAV
-  const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.ogg');
+  const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.wav');
 
   // Wait for photo to be taken (or channel closed)
   await new Promise(resolve => {
