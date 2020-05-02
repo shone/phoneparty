@@ -27,7 +27,11 @@ h1.all-the-things, h2.all-the-things {
   position: absolute;
   width:  100%;
   height: 100%;
-  background: no-repeat center / contain url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.9 16.9" height="64" width="64"><path d="M3.7 7.5l-3-3.8L5 6 5.7.5l2.1 4.1L12.3.2l-1.7 5.2 4.3-1.6-3 4.2h4.5l-4.6 2.7 2.4 3.8-4.4-1.2-.2 3L7.8 13l-.4 2-.4-1.6-1.9 3 .3-4.4-3.8 3.6 1.8-4.3-3-.8 3.3-3z" fill="%23fdfe00"/></svg>');
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="%23fdfe00" d="M3.7 7.5l-3-3.8L5 6 5.7.5l2.1 4.1L12.3.2l-1.7 5.2 4.3-1.6-3 4.2h4.5l-4.6 2.7 2.4 3.8-4.4-1.2-.2 3L7.8 13l-.4 2-.4-1.6-1.9 3 .3-4.4-3.8 3.6 1.8-4.3-3-.8 3.3-3z"/>\
+    </svg>\
+  ');
   transform: scale(1.7);
 }
 .thing.present-in-center {

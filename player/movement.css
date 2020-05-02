@@ -1,22 +1,22 @@
 .movement {
   position: absolute;
-  left:  0;
-  top:   0;
-  right: 0;
+  left:   0;
+  top:    0;
+  right:  0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items:     center;
   justify-content: center;
 }
 
 button[data-button="down"]:after  { transform: rotate(180deg); }
 button[data-button="left"]:after  { transform: rotate(-90deg); }
-button[data-button="right"]:after { transform: rotate(90deg);  }
+button[data-button="right"]:after { transform: rotate( 90deg);  }
 .arrow-buttons {
   position: relative;
   flex-shrink: 0;
-  flex-grow: 0;
+  flex-grow:   0;
 }
 .arrow-buttons button {
   position: absolute;
@@ -28,10 +28,10 @@ button[data-button="right"]:after { transform: rotate(90deg);  }
 .arrow-buttons button::-moz-focus-inner {
   border: 0;
 }
-.arrow-buttons [data-button="up"]    { left:  50%; top:     10%;  margin-left: -15%; }
-.arrow-buttons [data-button="down"]  { left:  50%; bottom:  10%;  margin-left: -15%; }
-.arrow-buttons [data-button="left"]  { left:   10%;  top:    50%; margin-top:  -15%; }
-.arrow-buttons [data-button="right"] { right:  10%;  top:    50%; margin-top:  -15%; }
+.arrow-buttons [data-button="up"]    { left:  50%;    top: 10%; margin-left: -15%; }
+.arrow-buttons [data-button="down"]  { left:  50%; bottom: 10%; margin-left: -15%; }
+.arrow-buttons [data-button="left"]  { left:  10%;    top: 50%;  margin-top: -15%; }
+.arrow-buttons [data-button="right"] { right: 10%;    top: 50%;  margin-top: -15%; }
 .arrow-button:after {
   content: '';
   position: absolute;
@@ -39,5 +39,9 @@ button[data-button="right"]:after { transform: rotate(90deg);  }
   top:  0;
   width:  100%;
   height: 100%;
-  background: no-repeat center / 70% url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="32" height="32"><path d="M 0,0.8 0.5,0.2 1,0.8 z" style="fill:black;stroke:none;" /></svg>');
+  background: no-repeat center / 70% url('data:image/svg+xml,\
+    <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="black" stroke="none" d="M 0,0.8 0.5,0.2 1,0.8 z"/>\
+    </svg>\
+  ');
 }
