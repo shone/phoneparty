@@ -8,6 +8,8 @@ import routes, {
   waitForRouteToEnd,
 } from '/routes.mjs';
 
+import {waitForNSeconds} from '/shared/utils.mjs';
+
 routes['#games/all-the-things/goal'] = async function goalScreen() {
   document.body.style.backgroundColor = '#98947f';
   await confirmation('Ready to start looking?');
@@ -49,11 +51,17 @@ async function confirmation(text) {
 
   if (heading) {
     heading.classList.remove('active', 'flash');
-    setTimeout(() => heading.remove(), 500);
   }
-
   if (yesButton) {
     yesButton.classList.remove('active');
-    setTimeout(() => yesButton.remove(), 500);
+  }
+
+  await waitForNSeconds(0.5);
+
+  if (heading) {
+    heading.remove();
+  }
+  if (yesButton) {
+    yesButton.remove();
   }
 }

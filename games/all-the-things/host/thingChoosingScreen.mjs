@@ -10,8 +10,10 @@ import routes, {
   listenForPlayersOnCurrentRoute
 } from '/host/routes.mjs';
 
+import {currentThingIndicatorRouteEnd} from './allTheThings.mjs';
+
 import * as audienceMode from '/host/audienceMode.mjs';
-import * as messaging from '/host/messaging.mjs';
+import * as messaging    from '/host/messaging.mjs';
 
 routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
@@ -32,6 +34,11 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
     </div>
   `);
   const thingChoosingScreen = document.body.lastElementChild;
+
+  const existingThingIndicator = document.querySelector('.all-the-things.thing.show-in-top-right');
+  if (existingThingIndicator) {
+    existingThingIndicator.remove();
+  }
 
   audienceMode.start();
   messaging.start();
@@ -90,15 +97,11 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
-  const routesThatUseThingInCorner = new Set([currentRoute, '#games/all-the-things/goal']);
-  if (!routesThatUseThingInCorner.has(location.hash)) {
-    chosenThingElement.remove();
-    return;
-  }
-
   chosenThingElement.classList.remove('chosen');
   chosenThingElement.classList.add('show-in-top-right');
   chosenThingElement.classList.remove('present-in-center');
+
+  currentThingIndicatorRouteEnd();
 
   messaging.stop();
 

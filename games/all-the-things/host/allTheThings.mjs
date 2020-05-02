@@ -39,6 +39,7 @@ export function setupCurrentThingIndicator() {
 
 export function currentThingIndicatorRouteEnd() {
   switch (location.hash.split('?')[0]) {
+    case '#games/all-the-things/thing-choosing':
     case '#games/all-the-things/goal':
     case '#games/all-the-things/photo-taking':
     case '#games/all-the-things/present-photos':
