@@ -113,7 +113,12 @@ async function getCameraStream() {
       } else {
         await showStatus('error', 'Could not get camera', error);
       }
-      statusDetail.insertAdjacentHTML('beforeend', '<button class="camera-retry-button push-button">retry</button>');
+      const statusDetail = document.getElementById('status-detail');
+      statusDetail.insertAdjacentHTML('beforeend', `
+        <button class="camera-retry-button push-button">
+          retry
+        </button>
+      `);
       const retryButton = statusDetail.lastElementChild;
       await new Promise(resolve => retryButton.onclick = resolve);
       retryButton.remove();
