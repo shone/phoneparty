@@ -35,6 +35,7 @@ async function showStatus(status, description='', detail='') {
 }
 
 export let stream = null;
+export let rtcConnection = null;
 
 (async function main() {
 
@@ -171,7 +172,7 @@ function setupFullscreenButton() {
 async function connectRtcAndStartGame(websocket) {
   showStatus('waiting', 'Establishing WebRTC connection', 'Setting up connection object');
 
-  var rtcConnection = new RTCPeerConnection();
+  rtcConnection = new RTCPeerConnection();
 
   if (stream) {
     stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));

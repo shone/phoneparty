@@ -1,4 +1,4 @@
-import {stream} from '/main.mjs';
+import {stream, rtcConnection} from '/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 
 import routes, {
@@ -23,8 +23,8 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
         <img>
         <div class="label"></div>
       </div>
-      <button class="take-photo-button hide"></button>
-      <button class="push-button switch-cameras-button hide"></button>
+      <button class="push-button hide take-photo-button"></button>
+      <button class="push-button hide switch-cameras-button"></button>
     </div>
   `);
   const photoScreen = document.body.lastElementChild;
@@ -41,11 +41,11 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   // Setup video streams
   async function switchCamera(options) {
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: options, audio: false});
-      video.srcObject = stream;
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: options, audio: false});
+      video.srcObject = newStream;
       const flip = (options === true) || (options.facingMode && options.facingMode.exact === 'user');
       video.classList.toggle('flip', flip);
-      rtcConnection.getSenders()[0].replaceTrack(stream.getVideoTracks()[0]);
+      rtcConnection.getSenders()[0].replaceTrack(newStream.getVideoTracks()[0]);
       return true;
     } catch(error) {
       return false;
@@ -104,40 +104,44 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.wav');
 
-  // Wait for photo to be taken (or channel closed)
-  await new Promise(resolve => {
-    takePhotoButton.onclick = async function() {
-      shutterSound.play().catch(() => {});
-      if (video.srcObject) {
-        canvas.width  = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext('2d');
-        if (video.classList.contains('flip')) {
-          context.translate(canvas.width, 0);
-          context.scale(-1, 1);
-        }
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      } else if (location.hostname === 'localhost') {
-        const testImage = new Image();
-        testImage.src = `/games/all-the-things/test_photos/${randomInArray(['1', '2', '3', '4'])}.jpg`;
-        await new Promise(resolve => testImage.onload = resolve);
-        canvas.width  = testImage.width;
-        canvas.height = testImage.height;
-        const context = canvas.getContext('2d');
-        context.drawImage(testImage, 0, 0, canvas.width, canvas.height);
+  takePhotoButton.onclick = async function() {
+
+    shutterSound.play().catch(() => {});
+
+    // Draw photo onto canvas
+    if (video.srcObject) {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      if (video.classList.contains('flip')) {
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
       }
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    } else if (location.hostname === 'localhost') {
+      const testImage = new Image();
+      testImage.src = `/games/all-the-things/test_photos/${randomInArray(['1', '2', '3', '4'])}.jpg`;
+      await new Promise(resolve => testImage.onload = resolve);
+      canvas.width  = testImage.width;
+      canvas.height = testImage.height;
+      const context = canvas.getContext('2d');
+      context.drawImage(testImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Send photo to host
+    listenForChannelOnCurrentRoute(async channel => {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
       const arrayBuffer = await new Response(blob).arrayBuffer();
-      listenForChannelOnCurrentRoute(channel => {
-        // TODO: determine maximum message size
-        channel.send(arrayBuffer);
-      });
-      photoScreen.classList.add('photo-taken');
-      takePhotoButton.remove();
-      switchCamerasButton.remove();
-      resolve();
-    }
-  });
+      // TODO: determine maximum message size
+      channel.send(arrayBuffer);
+    });
+
+    photoScreen.classList.add('photo-taken');
+    takePhotoButton.remove();
+    switchCamerasButton.remove();
+  }
+
+  await waitForRouteToEnd();
 
   cleanups.forEach(f => f());
 }
