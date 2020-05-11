@@ -6,6 +6,7 @@
   bottom: 0;
   display: flex;
   flex-direction: column;
+  padding: 2vmin;
 }
 
 #messaging-panel .clear-button {
@@ -23,6 +24,20 @@
   align-items: flex-end;
   flex-wrap: wrap;
   overflow-y: auto;
+  margin: -2vmin;
+  margin-right: -0.5vmin;
+  scrollbar-color: #ddd transparent;
+}
+#messaging-panel .options::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+#messaging-panel .options::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+#messaging-panel .options::-webkit-scrollbar-thumb:hover {
+  background: #ddd;
 }
 
 #messaging-panel .speech-bubble {
