@@ -19,19 +19,24 @@ WebRTC is used to make direct connections between the players and the host web b
 
 ## Usage
 
-For a locally running demo:
-
-*Requies [Go](https://golang.org/)
+To run Phone Party locally, a linux binary is included which can be run directly from a fresh checkout:
 
 ```bash
-# Requires websocket library
-$ go get github.com/gorilla/websocket
-
-# serves on port 8080
-$ go run server.go
+$ ./server
 ```
 
 - Host a game at http://localhost:8080/host
 - Join as a player at http://localhost:8080
 
 **Note:** this will only work when opening browser tabs on the same machine, and video streaming is not allowed because of the lack of HTTPS. For multiplayer over WIFI with video streaming, an HTTPS-enabled proxy server (like [Caddy](https://caddyserver.com/)) must be used.
+
+## Building
+
+To build the server for a non-linux platform, compile with [Go](https://golang.org/):
+
+```bash
+# Requires websocket library
+$ go get github.com/gorilla/websocket
+
+$ go build server.go
+```
