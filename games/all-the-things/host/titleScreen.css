@@ -43,8 +43,21 @@
 }
 
 .all-the-things.title-screen h1 .closeup-trickery {
+  display: inline-block;
   font-size: 11vmin;
   position: relative;
+  --reveal-duration: 2s;
+  --reveal-delay: 5s;
+}
+.all-the-things.title-screen h1 .closeup-trickery .text {
+  line-height: 8vmin;
+  animation: closeup-trickery-keyframes both;
+  animation-duration: var(--reveal-duration);
+  animation-delay: var(--reveal-delay);
+}
+@keyframes closeup-trickery-keyframes {
+  from { clip-path: inset(-3vmin 115% -3vmin -3vmin); }
+  to   { clip-path: inset(-3vmin -15% -3vmin -3vmin); }
 }
 
 .all-the-things.title-screen .magnifying-glass-container {
@@ -53,48 +66,34 @@
   height: 20vmin;
   top: -1.5vmin;
   left: calc(50% - 10vmin);
-  --reveal-duration: 2s;
-  --reveal-delay: 5s;
   animation: magnifying-glass-container-keyframes both;
   animation-duration: var(--reveal-duration);
   animation-delay: var(--reveal-delay);
 }
 @keyframes magnifying-glass-container-keyframes {
-  from { transform: translate(-25vmin); }
+  from { transform: translate(-35vmin); }
   to   { transform: translate( 35vmin); }
 }
 
-.all-the-things.title-screen .magnifying-glass-container::before {
-  content: '';
-  background: #98947f;
-  position: absolute;
-  left: 9vmin;
-  top: 0;
-  z-index: -1;
-  height: 15vmin;
-  width: 100vw;
-}
-
 .all-the-things.title-screen .magnifying-glass-container .zoomed-text {
-  transform: scale(1.5) translateZ(0);
-  clip-path: circle(2.7vmin at center);
+  transform: scale(1.3);
+  clip-path: circle(3.1vmin at center);
   position: absolute;
   width: 60vmin;
+  height: 8vmin;
   left: calc(50% - 30.9vmin);
   top: 1vmin;
   white-space: nowrap;
-  background: #98947f;
 }
 .all-the-things.title-screen .magnifying-glass-container .zoomed-text > div {
-  translate( 8vmin);
   animation: zoomed-text-keyframes both;
   animation-duration: var(--reveal-duration);
   animation-delay: var(--reveal-delay);
 }
 @keyframes zoomed-text-keyframes {
-  0%   { transform: translate( 8vmin); opacity: 0; }
-  15%  { opacity: 1; }
-  100% { transform: translate(-28vmin); opacity: 1; }
+  0%   { transform: translate( 8vmin); opacity: 0; background: transparent; }
+  15%  { opacity: 1; background: #98947f; }
+  100% { transform: translate(-28vmin); opacity: 1; background: #98947f; }
 }
 
 .all-the-things.title-screen .magnifying-glass {

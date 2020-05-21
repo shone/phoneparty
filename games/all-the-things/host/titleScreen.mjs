@@ -11,16 +11,16 @@ routes['#games/all-the-things'] = async function titleScreen() {
   document.body.insertAdjacentHTML('beforeend', `
     <div class="all-the-things title-screen">
       <h1>
-        Tunnel Vision
-        <div class="closeup-trickery">
-          Closeup trickery
+        <div>Tunnel Vision</div>
+        <span class="closeup-trickery">
+          <div class="text">Closeup trickery</div>
           <div class="magnifying-glass-container">
             <div class="zoomed-text">
               <div>Closeup trickery</div>
             </div>
             <div class="magnifying-glass"></div>
           </div>
-        </div>
+        </span>
       </h1>
       <canvas width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
     </div>
