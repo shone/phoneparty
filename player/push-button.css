@@ -1,17 +1,26 @@
-.push-button {
+push-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 0;
+
   background-color: #d6d6d6;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+
   box-shadow: inset -1vmin -1vmin 1vmin #888, inset 1vmin 1vmin 1vmin white;
-  padding: 0;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.push-button:hover {
+push-button:hover {
   background-color: #ecebeb;
 }
 
-.push-button.pressed {
+push-button.pressed {
   background-color: #a0a0a0;
   box-shadow: inset -1vmin -1vmin 1vmin white, inset 1vmin 1vmin 1vmin black;
 }

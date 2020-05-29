@@ -15,7 +15,7 @@ import {
 } from '/shared/utils.mjs';
 
 import {playTone} from './audio.mjs';
-import './push-buttons.mjs';
+import './push-button.mjs';
 import {startRouting} from './routes.mjs';
 
 import handleMessaging from './messaging.mjs';
@@ -120,9 +120,9 @@ async function getCameraStream() {
       }
       const statusDetail = document.getElementById('status-detail');
       statusDetail.insertAdjacentHTML('beforeend', `
-        <button class="camera-retry-button push-button">
+        <push-button class="camera-retry-button">
           retry
-        </button>
+        </push-button>
       `);
       const retryButton = statusDetail.lastElementChild;
       await new Promise(resolve => retryButton.onclick = resolve);

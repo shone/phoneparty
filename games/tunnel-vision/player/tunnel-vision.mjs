@@ -32,7 +32,7 @@ async function confirmation(text) {
 
   const messagingPanel = document.getElementById('messaging-panel');
   messagingPanel.insertAdjacentHTML('beforeend', `
-    <button class="tunnel-vision yes-button push-button active"></button>
+    <push-button class="tunnel-vision yes-button active"></push-button>
   `);
   const yesButton = messagingPanel.lastElementChild;
 

@@ -23,8 +23,8 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
         <img>
         <div class="label"></div>
       </div>
-      <button class="push-button hide take-photo-button"></button>
-      <button class="push-button hide switch-cameras-button"></button>
+      <push-button class="hide take-photo-button"></push-button>
+      <push-button class="hide switch-cameras-button"></push-button>
     </div>
   `);
   const photoScreen = document.body.lastElementChild;

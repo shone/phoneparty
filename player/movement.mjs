@@ -5,10 +5,10 @@ export default function handleMovement(channel) {
   container.classList.add('active');
   container.insertAdjacentHTML('beforeend', `
     <div class="arrow-buttons">
-      <button data-button="up"    class="arrow-button push-button" data-key="ArrowUp">   </button>
-      <button data-button="down"  class="arrow-button push-button" data-key="ArrowDown"> </button>
-      <button data-button="left"  class="arrow-button push-button" data-key="ArrowLeft"> </button>
-      <button data-button="right" class="arrow-button push-button" data-key="ArrowRight"></button>
+      <push-button data-button="up"    data-key="ArrowUp">   </push-button>
+      <push-button data-button="down"  data-key="ArrowDown"> </push-button>
+      <push-button data-button="left"  data-key="ArrowLeft"> </push-button>
+      <push-button data-button="right" data-key="ArrowRight"></push-button>
     </div>
   `);
   subjectPanel.appendChild(container);
@@ -22,7 +22,7 @@ export default function handleMovement(channel) {
   updateContainerSize();
   window.addEventListener('resize', updateContainerSize);
 
-  for (const button of buttons.getElementsByTagName('button')) {
+  for (const button of buttons.getElementsByTagName('push-button')) {
     button.addEventListener('pressed',   () => channel.send(button.dataset.button + ' true'));
     button.addEventListener('unpressed', () => channel.send(button.dataset.button + ' false'));
   }

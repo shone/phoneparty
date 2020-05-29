@@ -25,8 +25,8 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement()
       <img>
       <label></label>
       <div class="real-or-fake">
-        <button class="push-button" data-option="real">real</button>
-        <button class="push-button" data-option="fake">fake</button>
+        <push-button data-option="real">real</push-button>
+        <push-button data-option="fake">fake</push-button>
       </div>
     `);
     judgementScreen.querySelector('label').textContent = thing;

@@ -212,11 +212,12 @@ button::-moz-focus-inner {
   100% { transform: scale(1.0); }
 }
 
-button.camera-retry-button {
+push-button.camera-retry-button {
   padding: 1vmin;
   min-width: 20vmin;
   border-radius: 1vmin;
   margin-top: 2vmin;
+  color: black;
 }
 
 #route-not-found {

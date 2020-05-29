@@ -3,7 +3,7 @@ export default function handleMessaging(channel) {
   const container = document.createElement('div');
   container.classList.add('container', 'active');
   container.insertAdjacentHTML('beforeend', `
-    <button class="clear-button push-button">clear</button>
+    <push-button class="clear-button">clear</push-button>
     <div class="options"></div>
   `);
   messagingPanel.appendChild(container);
