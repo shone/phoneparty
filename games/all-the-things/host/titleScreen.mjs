@@ -171,11 +171,8 @@ function createTunnelEffect(canvas) {
 
   gl.blendFunc(gl.ONE, gl.ONE);
 
-  let stop = false;
-
   const startTimestamp = performance.now();
-  let previousTimestamp = startTimestamp;
-  requestAnimationFrame(function callback(timestamp) {
+  let animationFrameId = requestAnimationFrame(function callback(timestamp) {
     const journeyCompletionRatio = (timestamp - startTimestamp) / tunnelJourneyDurationMs;
 
     const fadeIn = Math.max(1 - (journeyCompletionRatio / 0.1), 0);
@@ -187,7 +184,6 @@ function createTunnelEffect(canvas) {
 
     const translation = -tunnelDepth * (1 - journeyCompletionRatio);
     gl.uniform1f(uCameraZ, translation);
-    console.log(translation);
 
     perspectiveSkew = 0.01 + journeyCompletionRatio;
     setProjectionMatrixSkew(projectionMatrix, fieldOfViewYrad, aspect, perspectiveSkew);
@@ -208,14 +204,18 @@ function createTunnelEffect(canvas) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    if (journeyCompletionRatio < 1 && !stop) {
-      requestAnimationFrame(callback);
+    if (journeyCompletionRatio < 1) {
+      animationFrameId = requestAnimationFrame(callback);
+    } else {
+      animationFrameId = null;
     }
   });
 
   return {
     stop() {
-      stop = true;
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener('resize', onWindowResize);
     }
   }
