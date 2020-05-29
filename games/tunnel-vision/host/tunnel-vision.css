@@ -1,13 +1,13 @@
 @font-face {
   font-family: "Timothy";
-  src: url("/games/all-the-things/timothy.woff2") format("woff2");
+  src: url("/games/tunnel-vision/timothy.woff2") format("woff2");
 }
 
-h1.all-the-things, h2.all-the-things {
+h1.tunnel-vision, h2.tunnel-vision {
   font-weight: normal;
 }
 
-.all-the-things {
+.tunnel-vision {
   font-family: Timothy;
 }
 
@@ -57,12 +57,12 @@ h1.all-the-things, h2.all-the-things {
   font-size: 7vmin;
 }
 
-.all-the-things.photo-container {
+.tunnel-vision.photo-container {
   position: absolute;
   z-index: 4;
   transition: opacity 1s, left 0.8s ease-in-out, top 0.8s ease-in-out, width 0.8s ease-in-out, height 0.8s ease-in-out;
 }
-.all-the-things.photo-container .crop-container {
+.tunnel-vision.photo-container .crop-container {
   position: absolute;
   left:   40%;
   top:    33%;
@@ -75,7 +75,7 @@ h1.all-the-things, h2.all-the-things {
 @keyframes scale-up-taken-photo {
   to { left: 0; top: 0; right: 0; bottom: 0; }
 }
-.all-the-things.photo-container img {
+.tunnel-vision.photo-container img {
   position: absolute;
   width:  100%;
   height: 100%;

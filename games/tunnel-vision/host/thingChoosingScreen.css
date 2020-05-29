@@ -1,7 +1,7 @@
-.all-the-things.thing-choosing-screen.fade-out {
+.tunnel-vision.thing-choosing-screen.fade-out {
   animation: fade-out 1s forwards;
 }
-.all-the-things.thing-choosing-screen h1 {
+.tunnel-vision.thing-choosing-screen h1 {
   text-align: center;
   position: fixed;
   left:  0;
@@ -11,14 +11,14 @@
   opacity: 0;
   animation: fade-in 0.5s 1.5s forwards;
 }
-.all-the-things.thing-choosing-screen .timer {
+.tunnel-vision.thing-choosing-screen .timer {
   position: fixed;
   left: calc(50% - 10vmin);
   top:  calc(50% - 10vmin);
   width:  20vmin;
   height: 20vmin;
 }
-.all-the-things.thing-choosing-screen .timer .pie-slice {
+.tunnel-vision.thing-choosing-screen .timer .pie-slice {
   position: absolute;
   left: 0;
   top:  0;
@@ -30,14 +30,14 @@
     </svg>\
   ');
 }
-.all-the-things.thing-choosing-screen .timer .pie-slice2 { transform: rotate(45deg);  }
-.all-the-things.thing-choosing-screen .timer .pie-slice3 { transform: rotate(90deg);  }
-.all-the-things.thing-choosing-screen .timer .pie-slice4 { transform: rotate(135deg); }
-.all-the-things.thing-choosing-screen .timer .pie-slice5 { transform: rotate(180deg); }
-.all-the-things.thing-choosing-screen .timer .pie-slice6 { transform: rotate(225deg); }
-.all-the-things.thing-choosing-screen .timer .pie-slice7 { transform: rotate(270deg); }
-.all-the-things.thing-choosing-screen .timer .pie-slice8 { transform: rotate(315deg); }
-.all-the-things.thing-choosing-screen .thinking-emoji {
+.tunnel-vision.thing-choosing-screen .timer .pie-slice2 { transform: rotate(45deg);  }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice3 { transform: rotate(90deg);  }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice4 { transform: rotate(135deg); }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice5 { transform: rotate(180deg); }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice6 { transform: rotate(225deg); }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice7 { transform: rotate(270deg); }
+.tunnel-vision.thing-choosing-screen .timer .pie-slice8 { transform: rotate(315deg); }
+.tunnel-vision.thing-choosing-screen .thinking-emoji {
   position: absolute;
   left: 10%;
   top:  10%;
@@ -54,6 +54,6 @@
   ');
   transform: scale(0);
 }
-.all-the-things.thing-choosing-screen .thinking-emoji.appear {
+.tunnel-vision.thing-choosing-screen .thinking-emoji.appear {
   animation: 0.5s ease-out forwards pop-in;
 }

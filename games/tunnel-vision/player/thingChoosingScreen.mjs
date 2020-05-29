@@ -3,12 +3,12 @@ import routes, {
   listenForChannelOnCurrentRoute
 } from '/routes.mjs';
 
-routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
 
   const subjectPanel = document.getElementById('subject-panel');
   subjectPanel.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things thing-choosing-screen active">
+    <div class="tunnel-vision thing-choosing-screen active">
       <h1>Choosing thing...</h1>
       <div class="thinking-emoji"></div>
     </div>
@@ -22,7 +22,7 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
       const thingName = event.data;
       thingChoosingScreen.insertAdjacentHTML('beforeend', `
         <div class="thing">
-          <img src="/games/all-the-things/things/${thingName}.svg">
+          <img src="/games/tunnel-vision/things/${thingName}.svg">
           <label>${thingName}</label>
         </div>
       `);

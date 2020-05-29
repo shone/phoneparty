@@ -12,10 +12,10 @@ import routes, {
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/all-the-things/another-round'] = async function anotherRoundScreen() {
+routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen() {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things another-round-screen">
+    <div class="tunnel-vision another-round-screen">
       <h1>Play another round?</h1>
     </div>
   `);
@@ -68,5 +68,5 @@ routes['#games/all-the-things/another-round'] = async function anotherRoundScree
 
   anotherRoundScreen.remove();
 
-  return '#games/all-the-things/thing-choosing';
+  return '#games/tunnel-vision/thing-choosing';
 }

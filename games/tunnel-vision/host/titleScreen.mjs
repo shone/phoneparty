@@ -6,10 +6,10 @@ import * as messaging from '/host/messaging.mjs';
 
 import routes, {waitForRouteToEnd} from '/host/routes.mjs';
 
-routes['#games/all-the-things'] = async function titleScreen() {
+routes['#games/tunnel-vision'] = async function titleScreen() {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things title-screen">
+    <div class="tunnel-vision title-screen">
       <h1>
         <div>Tunnel Vision</div>
         <span class="closeup-trickery">
@@ -42,10 +42,10 @@ routes['#games/all-the-things'] = async function titleScreen() {
 
   messaging.stop();
 
-  if (!location.hash.startsWith('#games/all-the-things')) {
+  if (!location.hash.startsWith('#games/tunnel-vision')) {
     audienceMode.stop();
   }
-  return '#games/all-the-things/thing-choosing';
+  return '#games/tunnel-vision/thing-choosing';
 }
 
 function createTunnelEffect(canvas) {

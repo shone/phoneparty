@@ -1,4 +1,4 @@
-.all-the-things.another-round-screen {
+.tunnel-vision.another-round-screen {
   position: fixed;
   left:   0;
   top:    0;
@@ -9,7 +9,7 @@
   align-items: center;
 }
 
-.all-the-things.another-round-screen h1 {
+.tunnel-vision.another-round-screen h1 {
   text-align: center;
   font-size: 12vw;
   margin-top: 3vh;

@@ -95,7 +95,7 @@
   to   { transform: scale(0); }
 }
 
-body.all-the-things_all-photos-taken {
+body.tunnel-vision_all-photos-taken {
   transition: background 0.3s;
   background: white !important;
 }

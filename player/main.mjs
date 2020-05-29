@@ -23,7 +23,7 @@ import handleMovement from './movement.mjs';
 
 import './splashScreen.mjs';
 import './joinGameInstructions.mjs';
-import '/games/all-the-things/player/allTheThings.mjs';
+import '/games/tunnel-vision/player/tunnel-vision.mjs';
 
 async function showStatus(status, description='', detail='') {
   document.getElementById('status-container').className = status;

@@ -6,7 +6,7 @@ import routes, {
 
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 
-routes['#games/all-the-things/photo-judgement'] = async function photoJudgement() {
+routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement() {
   const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
   const thing = routeParams.get('thing');
 
@@ -17,7 +17,7 @@ routes['#games/all-the-things/photo-judgement'] = async function photoJudgement(
 
   const messagingPanel = document.getElementById('messaging-panel');
   const judgementScreen = document.createElement('div');
-  judgementScreen.classList.add('all-the-things', 'photo-judgement-screen');
+  judgementScreen.classList.add('tunnel-vision', 'photo-judgement-screen');
 
   listenForChannelOnCurrentRoute((channel, channelName) => {
     judgementScreen.insertAdjacentHTML('beforeend', `
@@ -30,7 +30,7 @@ routes['#games/all-the-things/photo-judgement'] = async function photoJudgement(
       </div>
     `);
     judgementScreen.querySelector('label').textContent = thing;
-    judgementScreen.querySelector('img').src = `/games/all-the-things/things/${thing}.svg`;
+    judgementScreen.querySelector('img').src = `/games/tunnel-vision/things/${thing}.svg`;
     messagingPanel.appendChild(judgementScreen);
     judgementScreen.classList.add('active');
 

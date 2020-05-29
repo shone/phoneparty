@@ -21,9 +21,9 @@ import * as audienceMode from '/host/audienceMode.mjs';
 import {
   setupCurrentThingIndicator,
   currentThingIndicatorRouteEnd
-} from './allTheThings.mjs';
+} from './tunnel-vision.mjs';
 
-routes['#games/all-the-things/goal'] = async function goalScreen() {
+routes['#games/tunnel-vision/goal'] = async function goalScreen() {
 
   const chosenThingElement = setupCurrentThingIndicator();
 
@@ -31,14 +31,14 @@ routes['#games/all-the-things/goal'] = async function goalScreen() {
 
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things goal-screen">
+    <div class="tunnel-vision goal-screen">
       <h1>THE GOAL:</h1>
       <div class="goal-container">
         <span class="goal-text">
           <div class="find-a-piece-of">Find a piece of</div>
           <div class="thing-text">${chosenThingElement.dataset.name}</div>
         </span>
-        <span class="all-the-things phone">
+        <span class="tunnel-vision phone">
           <div class="phone-background"></div>
           <div class="phone-foreground"></div>
         </span>
@@ -114,5 +114,5 @@ routes['#games/all-the-things/goal'] = async function goalScreen() {
 
   currentThingIndicatorRouteEnd();
 
-  return `#games/all-the-things/photo-taking?thing=${chosenThingElement.dataset.name}`;
+  return `#games/tunnel-vision/photo-taking?thing=${chosenThingElement.dataset.name}`;
 }

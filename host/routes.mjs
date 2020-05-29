@@ -2,8 +2,7 @@ import {
   players,
   listenForAllPlayers, stopListeningForAllPlayers,
   acceptAllPlayers, stopAcceptingPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer,
+  listenForLeavingPlayer, stopListeningForLeavingPlayer,
 } from '/host/players.mjs';
 
 const routes = {};

@@ -6,7 +6,7 @@ import {
   stopListeningForLeavingPlayer
 } from '/host/players.mjs';
 
-import {playerPhotos} from './allTheThings.mjs';
+import {playerPhotos} from './tunnel-vision.mjs';
 
 export function start() {
   updateLayout();

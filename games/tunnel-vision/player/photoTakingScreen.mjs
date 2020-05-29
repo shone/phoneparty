@@ -9,13 +9,13 @@ import routes, {
 
 export let canvas = null;
 
-routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen() {
   const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
   const thing = routeParams.get('thing');
 
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things photo-screen">
+    <div class="tunnel-vision photo-screen">
       <video playsinline autoplay muted></video>
       <canvas></canvas>
       <div class="crop-guide"></div>
@@ -36,7 +36,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   const cleanups = [() => photoScreen.remove()];
 
   photoScreen.querySelector('.goal .label').textContent = thing;
-  photoScreen.querySelector('.goal img').src = `/games/all-the-things/things/${thing}.svg`;
+  photoScreen.querySelector('.goal img').src = `/games/tunnel-vision/things/${thing}.svg`;
 
   // Setup video streams
   async function switchCamera(options) {
@@ -102,7 +102,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   video.onloadedmetadata = updateCropGuide;
   updateCropGuide();
 
-  const shutterSound = new Audio('/games/all-the-things/sounds/camera-shutter.wav');
+  const shutterSound = new Audio('/games/tunnel-vision/sounds/camera-shutter.wav');
 
   takePhotoButton.onclick = async function() {
 
@@ -120,7 +120,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
     } else if (location.hostname === 'localhost') {
       const testImage = new Image();
-      testImage.src = `/games/all-the-things/test_photos/${randomInArray(['1', '2', '3', '4'])}.jpg`;
+      testImage.src = `/games/tunnel-vision/test_photos/${randomInArray(['1', '2', '3', '4'])}.jpg`;
       await new Promise(resolve => testImage.onload = resolve);
       canvas.width  = testImage.width;
       canvas.height = testImage.height;

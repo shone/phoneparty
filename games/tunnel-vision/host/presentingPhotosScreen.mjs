@@ -13,12 +13,12 @@ import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messa
 
 import routes, {currentRoute} from '/host/routes.mjs';
 
-import {playerPhotos} from './allTheThings.mjs';
+import {playerPhotos} from './tunnel-vision.mjs';
 
 import * as playerGrid from './playerGrid.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/all-the-things/present-photos'] = async function presentingPhotosScreen() {
+routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosScreen() {
   const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
   const thingName = routeParams.get('thing');
 
@@ -30,18 +30,18 @@ routes['#games/all-the-things/present-photos'] = async function presentingPhotos
     //await waitForNSeconds(2);
     // TODO: show message about there being no photos to present
     playerGrid.stop();
-    return '#games/all-the-things';
+    return '#games/tunnel-vision';
   }
 
   playerGrid.start();
 
-  return `#games/all-the-things/photo-judgement?thing=${thingName}&index=0`;
+  return `#games/tunnel-vision/photo-judgement?thing=${thingName}&index=0`;
 }
 
-const fooledSound    = new Audio('/games/all-the-things/sounds/fooled.mp3');
-const notFooledSound = new Audio('/games/all-the-things/sounds/not-fooled.mp3');
+const fooledSound    = new Audio('/games/tunnel-vision/sounds/fooled.mp3');
+const notFooledSound = new Audio('/games/tunnel-vision/sounds/not-fooled.mp3');
 
-routes['#games/all-the-things/photo-judgement'] = async function presentPhoto() {
+routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto() {
 
   const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
   const index = parseInt(routeParams.get('index'));
@@ -49,7 +49,7 @@ routes['#games/all-the-things/photo-judgement'] = async function presentPhoto() 
 
   if (index >= playerPhotos.length) {
     // TODO: show message about invalid index?
-    return '#games/all-the-things/another-round';
+    return '#games/tunnel-vision/another-round';
   }
 
   const playerPresentingPhoto = playerPhotos[index].player;
@@ -63,16 +63,16 @@ routes['#games/all-the-things/photo-judgement'] = async function presentPhoto() 
 
   function finish() {
     if ((index < playerPhotos.length - 1) && (location.hash.split('?')[0] === currentRoute.split('?')[0])) {
-      return `#games/all-the-things/photo-judgement?thing=${thing}&index=${index+1}`;
+      return `#games/tunnel-vision/photo-judgement?thing=${thing}&index=${index+1}`;
     } else {
       playerGrid.stop();
       document.querySelectorAll('.photo-container').forEach(photo => photo.remove());
       while (playerPhotos.length) playerPhotos.pop();
-      const thingIndicator = document.querySelector('.all-the-things.thing.show-in-top-right');
+      const thingIndicator = document.querySelector('.tunnel-vision.thing.show-in-top-right');
       if (thingIndicator) {
         thingIndicator.remove();
       }
-      return '#games/all-the-things/another-round';
+      return '#games/tunnel-vision/another-round';
     }
   }
 
@@ -224,20 +224,20 @@ function setPlayerFooled(player) {
   fooledSound.play().catch(() => {});
 
   player.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things fooled-overlay"></div>
-    <div class="all-the-things fooled-stamp">FOOLED</div>
+    <div class="tunnel-vision fooled-overlay"></div>
+    <div class="tunnel-vision fooled-stamp">FOOLED</div>
   `);
 }
 
 function setPlayerNotFooled(player) {
   notFooledSound.play().catch(() => {});
 
-  player.insertAdjacentHTML('beforeend', '<div class="all-the-things not-fooled-stamp">not fooled</div>');
+  player.insertAdjacentHTML('beforeend', '<div class="tunnel-vision not-fooled-stamp">not fooled</div>');
 
   const lightbulbsCount = 6;
   for (let i=0; i < lightbulbsCount; i++) {
     const lightbulb = document.createElement('div');
-    lightbulb.classList.add('all-the-things', 'lightbulb');
+    lightbulb.classList.add('tunnel-vision', 'lightbulb');
     const x     = ((Math.random() - 0.5) * 2) * 250;
     const y     = ((Math.random() - 0.5) * 2) * 250;
     const angle = ((Math.random() - 0.5) * 2) * 40;

@@ -1,16 +1,16 @@
 @font-face {
   font-family: "Timothy";
-  src: url("/games/all-the-things/timothy.woff2") format("woff2");
+  src: url("/games/tunnel-vision/timothy.woff2") format("woff2");
 }
 
-.all-the-things, .all-the-things button {
+.tunnel-vision, .tunnel-vision button {
   font-family: Timothy;
 }
-.all-the-things h1, .all-the-things h2 {
+.tunnel-vision h1, .tunnel-vision h2 {
   font-weight: normal;
 }
 
-.all-the-things.confirmation {
+.tunnel-vision.confirmation {
   font-size: 20vmin;
   color: #d03e3e;
   text-shadow: 0 0 4vmin #b7b7b7;
@@ -26,14 +26,14 @@
   align-items: center;
   opacity: 1;
 }
-.all-the-things.confirmation.flash {
+.tunnel-vision.confirmation.flash {
   animation: 0.5s flash-confirmation ease-in-out alternate infinite;
 }
 @keyframes flash-confirmation {
   from { opacity: 1; }
   to   { opacity: 0.2; }
 }
-.all-the-things.yes-button {
+.tunnel-vision.yes-button {
   position: absolute;
   left:    16vmin;
   top:     16vmin;
@@ -46,7 +46,7 @@
     </svg>\
   ');
 }
-.all-the-things.yes-button.selected {
+.tunnel-vision.yes-button.selected {
   outline: 3vmin solid yellow;
   outline-offset: 2vmin;
 }

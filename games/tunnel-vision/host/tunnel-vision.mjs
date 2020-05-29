@@ -13,25 +13,25 @@ let nextPhotoId = 1;
 export function getNextPhotoId() { return nextPhotoId++ };
 
 export const routesWithPlayerGrid = new Set([
-  '#games/all-the-things/photo-taking',
-  '#games/all-the-things/present-photos',
-  '#games/all-the-things/photo-judgement',
+  '#games/tunnel-vision/photo-taking',
+  '#games/tunnel-vision/present-photos',
+  '#games/tunnel-vision/photo-judgement',
 ]);
 
 export function setupCurrentThingIndicator() {
-  let chosenThingElement = document.querySelector('.all-the-things.thing.show-in-top-right');
+  let chosenThingElement = document.querySelector('.tunnel-vision.thing.show-in-top-right');
   if (!chosenThingElement) {
     const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
     const thingName = routeParams.get('thing');
     document.body.insertAdjacentHTML('beforeend', `
-      <div class="all-the-things thing show-in-top-right">
+      <div class="tunnel-vision thing show-in-top-right">
         <img>
         <label class="thing-label"></label>
       </div>
     `);
     chosenThingElement = document.body.lastElementChild;
     chosenThingElement.dataset.name = thingName;
-    chosenThingElement.querySelector('img').src = `/games/all-the-things/things/${thingName}.svg`;
+    chosenThingElement.querySelector('img').src = `/games/tunnel-vision/things/${thingName}.svg`;
     chosenThingElement.querySelector('label').textContent = thingName;
   }
   return chosenThingElement;
@@ -39,14 +39,14 @@ export function setupCurrentThingIndicator() {
 
 export function currentThingIndicatorRouteEnd() {
   switch (location.hash.split('?')[0]) {
-    case '#games/all-the-things/thing-choosing':
-    case '#games/all-the-things/goal':
-    case '#games/all-the-things/photo-taking':
-    case '#games/all-the-things/present-photos':
-    case '#games/all-the-things/photo-judgement':
+    case '#games/tunnel-vision/thing-choosing':
+    case '#games/tunnel-vision/goal':
+    case '#games/tunnel-vision/photo-taking':
+    case '#games/tunnel-vision/present-photos':
+    case '#games/tunnel-vision/photo-judgement':
       return;
     default:
-      const chosenThingElement = document.querySelector('.all-the-things.thing.show-in-top-right');
+      const chosenThingElement = document.querySelector('.tunnel-vision.thing.show-in-top-right');
       if (chosenThingElement) {
         chosenThingElement.remove();
       }

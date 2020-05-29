@@ -10,15 +10,15 @@ import routes, {
   listenForPlayersOnCurrentRoute
 } from '/host/routes.mjs';
 
-import {currentThingIndicatorRouteEnd} from './allTheThings.mjs';
+import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging    from '/host/messaging.mjs';
 
-routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScreen() {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things thing-choosing-screen">
+    <div class="tunnel-vision thing-choosing-screen">
       <h1>Choosing thing...</h1>
       <div class="timer">
         <div class="pie-slice pie-slice1 hide"></div>
@@ -35,7 +35,7 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   `);
   const thingChoosingScreen = document.body.lastElementChild;
 
-  const existingThingIndicator = document.querySelector('.all-the-things.thing.show-in-top-right');
+  const existingThingIndicator = document.querySelector('.tunnel-vision.thing.show-in-top-right');
   if (existingThingIndicator) {
     existingThingIndicator.remove();
   }
@@ -53,8 +53,8 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
   const thingElements = thingNames.map(thingName => {
     document.body.insertAdjacentHTML('beforeend', `
-      <div class="all-the-things thing" data-name="${thingName}">
-        <img src="/games/all-the-things/things/${thingName}.svg">
+      <div class="tunnel-vision thing" data-name="${thingName}">
+        <img src="/games/tunnel-vision/things/${thingName}.svg">
       </div>
     `);
     return document.body.lastElementChild;
@@ -105,7 +105,7 @@ routes['#games/all-the-things/thing-choosing'] = async function thingChoosingScr
 
   messaging.stop();
 
-  return `#games/all-the-things/goal?thing=${chosenThingElement.dataset.name}`;
+  return `#games/tunnel-vision/goal?thing=${chosenThingElement.dataset.name}`;
 }
 
 export function chooseThing(thingName) {
@@ -113,7 +113,7 @@ export function chooseThing(thingName) {
   element.classList.add('thing');
   element.dataset.name = thingName;
   const img = document.createElement('img');
-  img.src = `/games/all-the-things/things/${thingName}.svg`;
+  img.src = `/games/tunnel-vision/things/${thingName}.svg`;
   element.appendChild(img);
   element.classList.add('show-in-top-right');
   document.body.appendChild(element);

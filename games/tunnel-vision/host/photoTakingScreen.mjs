@@ -19,15 +19,15 @@ import {
   routesWithPlayerGrid,
   setupCurrentThingIndicator,
   currentThingIndicatorRouteEnd
-} from './allTheThings.mjs';
+} from './tunnel-vision.mjs';
 
-routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen() {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen() {
   document.body.style.backgroundColor = '#98947f';
 
   const chosenThingElement = setupCurrentThingIndicator();
 
-  const shutterSound        = new Audio('/games/all-the-things/sounds/camera-shutter.wav');
-  const allPhotosTakenSound = new Audio('/games/all-the-things/sounds/all-photos-taken.mp3');
+  const shutterSound        = new Audio('/games/tunnel-vision/sounds/camera-shutter.wav');
+  const allPhotosTakenSound = new Audio('/games/tunnel-vision/sounds/all-photos-taken.mp3');
 
   audienceMode.stop();
 
@@ -58,7 +58,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   }
 
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things photo-taking-screen">
+    <div class="tunnel-vision photo-taking-screen">
       <h1>Take your photos!</h1>
     </div>
   `);
@@ -78,7 +78,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
     acceptAllPlayersOnCurrentRoute(player => {
       player.classList.add('taking-photo', 'moving-to-grid');
       player.insertAdjacentHTML('beforeend', `
-        <div class="all-the-things phone">
+        <div class="tunnel-vision phone">
           <div class="phone-background"></div>
           <div class="phone-switched-off-black"></div>
           <div class="phone-foreground"></div>
@@ -98,9 +98,9 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
   });
   photoTakingScreen.querySelector('h1').textContent = 'All photos taken';
   allPhotosTakenSound.play().catch(() => {});
-  document.body.classList.add('all-the-things_all-photos-taken');
+  document.body.classList.add('tunnel-vision_all-photos-taken');
   await waitForNSeconds(0.5);
-  document.body.classList.remove('all-the-things_all-photos-taken');
+  document.body.classList.remove('tunnel-vision_all-photos-taken');
 
   await waitForNSeconds(2);
 
@@ -129,7 +129,7 @@ routes['#games/all-the-things/photo-taking'] = async function photoTakingScreen(
 
   currentThingIndicatorRouteEnd();
 
-  return `#games/all-the-things/present-photos?thing=${chosenThingElement.dataset.name}`;
+  return `#games/tunnel-vision/present-photos?thing=${chosenThingElement.dataset.name}`;
 }
 
 function acceptPhotoFromPlayer(player, photoArrayBuffer) {
@@ -137,7 +137,7 @@ function acceptPhotoFromPlayer(player, photoArrayBuffer) {
   const photoUrl = URL.createObjectURL(photoBlob);
 
   document.body.insertAdjacentHTML('beforeend', `
-    <div class="all-the-things photo-container">
+    <div class="tunnel-vision photo-container">
       <div class="crop-container">
         <img src="${photoUrl}">
       </div>

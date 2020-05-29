@@ -19,7 +19,7 @@ import {players, handleNewPlayer} from './players.mjs';
 
 import './splashScreen.mjs';
 import './joinGameInstructions.mjs';
-import '/games/all-the-things/host/allTheThings.mjs';
+import '/games/tunnel-vision/host/tunnel-vision.mjs';
 
 import {startRouting} from './routes.mjs';
 startRouting({defaultRoute: '#splash-screen'});
