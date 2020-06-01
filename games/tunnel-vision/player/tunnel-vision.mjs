@@ -22,35 +22,30 @@ routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen
 
 async function confirmation(text) {
 
-  const subjectPanel = document.getElementById('subject-panel');
-  subjectPanel.insertAdjacentHTML('beforeend', `
-    <h1 class="tunnel-vision confirmation active flash">
-      ${text}
-    </h1>
-  `);
-  const heading = subjectPanel.lastElementChild;
+  const panelA = document.createElement('div');
+  panelA.classList.add('tunnel-vision', 'confirmation-panel-A', 'flash');
+  panelA.innerHTML = `
+    <h1>${text}</h1>
+  `;
 
-  const messagingPanel = document.getElementById('messaging-panel');
-  messagingPanel.insertAdjacentHTML('beforeend', `
-    <push-button class="tunnel-vision yes-button active"></push-button>
-  `);
-  const yesButton = messagingPanel.lastElementChild;
+  const panelB = document.createElement('div');
+  panelB.classList.add('tunnel-vision', 'confirmation-panel-B');
+  panelB.innerHTML = `
+    <push-button class="tunnel-vision"></push-button>
+  `;
 
   listenForChannelOnCurrentRoute(channel => {
-    yesButton.onclick = () => {
+    document.getElementById('panel-A').append(panelA);
+    document.getElementById('panel-B').append(panelB);
+    panelB.querySelector('push-button').onclick = () => {
       channel.send(true);
-      yesButton.classList.add('selected');
-      heading.classList.remove('flash');
+      panelA.classList.remove('flash');
+      panelB.classList.add('selected');
     }
   });
 
   await waitForRouteToEnd();
 
-  heading.classList.remove('active', 'flash');
-  yesButton.classList.remove('active');
-
-  await waitForNSeconds(0.5);
-
-  heading.remove();
-  yesButton.remove();
+  panelA.remove();
+  panelB.remove();
 }

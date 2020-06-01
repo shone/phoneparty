@@ -12,15 +12,14 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement()
 
   document.body.style.backgroundColor = '#98947f';
 
-  const subjectPanel = document.getElementById('subject-panel');
-  let subject = null;
+  const panelA = document.createElement('div');
+  panelA.classList.add('tunnel-vision', 'photo-judgement-panel-A');
 
-  const messagingPanel = document.getElementById('messaging-panel');
-  const judgementScreen = document.createElement('div');
-  judgementScreen.classList.add('tunnel-vision', 'photo-judgement-screen');
+  const panelB = document.createElement('div');
+  panelB.classList.add('tunnel-vision', 'photo-judgement-panel-B');
 
   listenForChannelOnCurrentRoute((channel, channelName) => {
-    judgementScreen.insertAdjacentHTML('beforeend', `
+    panelB.innerHTML = `
       <h1>Is ${channelName === 'self-judgement' ? 'your' : 'this'} photo really of:</h1>
       <img>
       <label></label>
@@ -28,32 +27,31 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement()
         <push-button data-option="real">real</push-button>
         <push-button data-option="fake">fake</push-button>
       </div>
-    `);
-    judgementScreen.querySelector('label').textContent = thing;
-    judgementScreen.querySelector('img').src = `/games/tunnel-vision/things/${thing}.svg`;
-    messagingPanel.appendChild(judgementScreen);
-    judgementScreen.classList.add('active');
+    `;
+    panelB.querySelector('label').textContent = thing;
+    panelB.querySelector('img').src = `/games/tunnel-vision/things/${thing}.svg`;
+    document.getElementById('panel-B').append(panelB);
 
     if (channelName === 'self-judgement') {
-      judgementScreen.classList.add('self-judgement');
-      judgementScreen.querySelector('label').insertAdjacentHTML('afterend', '<div class="be-honest">be honest</div>');
-      photoTakingScreen.canvas.classList.add('photo-judgement-image', 'active');
-      subjectPanel.appendChild(photoTakingScreen.canvas);
-      subject = subjectPanel.lastElementChild;
+      panelB.classList.add('self-judgement');
+      panelB.querySelector('label').insertAdjacentHTML('afterend', '<div class="be-honest">be honest</div>');
+      photoTakingScreen.canvas.classList.add('photo-judgement-image');
+      panelA.append(photoTakingScreen.canvas);
     } else {
-      subjectPanel.insertAdjacentHTML('beforeend', '<img class="photo-judgement-image active"></img');
-      subject = subjectPanel.lastElementChild;
+      panelA.innerHTML = '<img class="photo-judgement-image"></img>';
+      const img = panelA.lastElementChild;
       channel.onmessage = event => {
         const arrayBuffer = event.data;
         const blob = new Blob([arrayBuffer], {type: 'image/jpeg'});
-        subject.src = URL.createObjectURL(blob);
+        img.src = URL.createObjectURL(blob);
       }
     }
+    document.getElementById('panel-A').append(panelA);
 
-    judgementScreen.querySelector('.real-or-fake').onclick = event => {
-      const buttons = judgementScreen.querySelectorAll('.real-or-fake button');
+    panelB.querySelector('.real-or-fake').onclick = event => {
+      const buttons = panelB.querySelectorAll('.real-or-fake push-button');
       buttons.forEach(button => button.classList.remove('selected'));
-      if (event.target.tagName === 'BUTTON') {
+      if (event.target.tagName === 'PUSH-BUTTON') {
         channel.send(event.target.dataset.option);
         event.target.classList.add('selected');
       }
@@ -62,11 +60,6 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement()
 
   await waitForRouteToEnd();
 
-  judgementScreen.classList.remove('active');
-  setTimeout(() => judgementScreen.remove(), 500);
-
-  if (subject) {
-    subject.classList.remove('active');
-    setTimeout(() => subject.remove(), 500);
-  }
+  panelA.remove();
+  panelB.remove();
 }

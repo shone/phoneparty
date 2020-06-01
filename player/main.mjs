@@ -25,6 +25,8 @@ import './splashScreen.mjs';
 import './joinGameInstructions.mjs';
 import '/games/tunnel-vision/player/tunnel-vision.mjs';
 
+import './test.mjs';
+
 async function showStatus(status, description='', detail='') {
   document.getElementById('status-container').className = status;
   document.getElementById('status-description').textContent = description;

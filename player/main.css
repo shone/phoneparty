@@ -1,3 +1,13 @@
+html {
+/*   font-size: 4vmin; */
+  font-size: calc((2vw + 2vh) / 2);
+}
+@media (max-width: 600px), (max-height: 600px) {
+  html {
+    font-size: 16px;
+  }
+}
+
 body {
   margin: 0;
   background: black;
@@ -9,38 +19,6 @@ body {
 @font-face {
   font-family: "NotoColorEmoji_subset";
   src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
-}
-
-#panels {
-  position: fixed;
-  left:   env(safe-area-inset-left);
-  top:    env(safe-area-inset-top);
-  right:  env(safe-area-inset-right);
-  bottom: env(safe-area-inset-bottom);
-  display: flex;
-  justify-content: flex-end;
-}
-@media (orientation: portrait)  { #panels { flex-direction: column; } }
-@media (orientation: landscape) { #panels { flex-direction: row;    } }
-
-.panel {
-  flex-basis: 0;
-  flex-shrink: 1;
-  overflow: hidden;
-  position: relative;
-  transition: flex-grow 0.5s, padding 0.5s;
-}
-.panel:empty { flex-grow: 0; }
-.panel       { flex-grow: 1; }
-
-.panel > * {
-  opacity: 0;
-  animation: 0.5s fade-out forwards;
-  pointer-events: none;
-}
-.panel > .active {
-  animation: 0.5s 0.5s fade-in forwards;
-  pointer-events: auto;
 }
 
 body.host-dragging:after {
@@ -169,8 +147,8 @@ button::-moz-focus-inner {
   position: fixed;
   right: 6vmin;
   top:   6vmin;
-  width:  12vmin;
-  height: 12vmin;
+  width:  3rem;
+  height: 3rem;
   padding: 0;
   z-index: 3;
   animation: 0.5s reveal-fullscreen-button;

@@ -98,3 +98,11 @@ export function waitForRtcClose(rtcConnection) {
       });
   }
 }
+
+export function sendOnChannelWhenOpen(channel, message) {
+  if (channel.readyState === 'open') {
+    channel.send(message);
+  } else {
+    channel.addEventListener('open', () => channel.send(message), {once: true});
+  }
+}

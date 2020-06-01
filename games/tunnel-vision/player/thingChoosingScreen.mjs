@@ -6,14 +6,14 @@ import routes, {
 routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen() {
   document.body.style.backgroundColor = '#98947f';
 
-  const subjectPanel = document.getElementById('subject-panel');
-  subjectPanel.insertAdjacentHTML('beforeend', `
+  const panelA = document.getElementById('panel-A');
+  panelA.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision thing-choosing-screen active">
       <h1>Choosing thing...</h1>
       <div class="thinking-emoji"></div>
     </div>
   `);
-  const thingChoosingScreen = subjectPanel.lastElementChild;
+  const thingChoosingScreen = panelA.lastElementChild;
 
   listenForChannelOnCurrentRoute(channel => {
     channel.onmessage = () => {

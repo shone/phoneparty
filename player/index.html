@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <title>Phone Party</title>
 
@@ -10,7 +11,8 @@
 
     <link rel="manifest" href="/manifest.webmanifest">
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="panels.css">
     <link rel="stylesheet" href="/host/splashScreen.css">
     <link rel="stylesheet" href="push-button.css">
     <link rel="stylesheet" href="movement.css">
@@ -20,12 +22,16 @@
     <link rel="stylesheet" href="/games/tunnel-vision/player/photoTakingScreen.css">
     <link rel="stylesheet" href="/games/tunnel-vision/player/photoJudgementScreen.css">
   </head>
+
   <body>
+
     <div id="panels">
-      <div class="panel" id="subject-panel"></div>
-      <div class="panel" id="messaging-panel"></div>
+      <div class="panel" id="panel-A"></div>
+      <div class="panel" id="panel-B"></div>
     </div>
+
     <button id="fullscreen-button" class="unimplemented"></button>
+
     <div id="status-container" class="waiting">
       <div class="phone-party-logo">
         <div class="phone-party-text"></div>
@@ -40,6 +46,8 @@
       <div id="status-description"></div>
       <div id="status-detail"></div>
     </div>
+
   </body>
+
   <script type="module" src="main.mjs"></script>
 </html>

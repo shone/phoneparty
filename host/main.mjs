@@ -21,6 +21,8 @@ import './splashScreen.mjs';
 import './joinGameInstructions.mjs';
 import '/games/tunnel-vision/host/tunnel-vision.mjs';
 
+import './test.mjs';
+
 import {startRouting} from './routes.mjs';
 startRouting({defaultRoute: '#splash-screen'});
 

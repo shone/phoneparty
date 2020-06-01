@@ -1,0 +1,65 @@
+#panels {
+  position: fixed;
+  left:   env(safe-area-inset-left);
+  top:    env(safe-area-inset-top);
+  right:  env(safe-area-inset-right);
+  bottom: env(safe-area-inset-bottom);
+  display: flex;
+  justify-content: flex-end;
+}
+@media (orientation: portrait)  { #panels { flex-direction: column; --panel-width: 100vw; --panel-height:  50vh; } }
+@media (orientation: landscape) { #panels { flex-direction: row;    --panel-width:  50vw; --panel-height: 100vh; } }
+
+@media (orientation: portrait)  { #panel-B { margin-top:  auto; } }
+@media (orientation: landscape) { #panel-B { margin-left: auto; } }
+
+#panels > .panel {
+  flex-basis: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  transition: flex-grow ease-in-out .5s;
+}
+
+#panels > .panel:not(:empty) {
+  flex-grow: 1;
+}
+
+#panels > .panel > * {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+#test-panel-A { background-color: red;  }
+#test-panel-B { background-color: blue; }
+
+#test-panel-A, #test-panel-B {
+  font-size: calc(min(var(--panel-width), var(--panel-height)));
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-size: 1rem;
+  background-repeat: repeat;
+  background-position: top left;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="none" stroke-width="1" stroke="white" d="M0 10 h10 v-10"/>\
+    </svg>\
+  ');
+
+  transform: scale(1);
+  transition: opacity ease-in-out .5s, transform ease-in-out .5s;
+}
+
+#test-panel-A.removing,
+#test-panel-B.removing{
+  opacity: 0;
+  transform: scale(0.8);
+}

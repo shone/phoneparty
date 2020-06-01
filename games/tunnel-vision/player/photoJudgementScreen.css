@@ -1,56 +1,51 @@
-.tunnel-vision.photo-judgement-screen {
-  position: absolute;
-  left:   0;
-  top:    0;
-  right:  0;
-  bottom: 0;
+.tunnel-vision.photo-judgement-panel-B {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
-.tunnel-vision.photo-judgement-screen h1 {
+.tunnel-vision.photo-judgement-panel-B h1 {
   text-align: center;
-  font-size: 9vw;
+  font-size: 3.5rem;
   margin: 0;
   color: white;
-  text-shadow: black 0.1vw 0.1vw 1vw;
+  text-shadow: black 0.1rem 0.1rem .8rem;
 }
 
-.tunnel-vision.photo-judgement-screen img {
-  width:  25vmin;
-  height: 25vmin;
+.tunnel-vision.photo-judgement-panel-B img {
+  width:  7rem;
+  height: 7rem;
   object-fit: contain;
 }
-.tunnel-vision.photo-judgement-screen.self-judgement img {
-  width:  17vmin;
-  height: 17vmin;
+.tunnel-vision.photo-judgement-panel-B.self-judgement img {
+  width:  4rem;
+  height: 4rem;
 }
 
-.tunnel-vision.photo-judgement-screen label {
-  font-size: 11vmin;
-  text-shadow: 0 0 2vmin white;
+.tunnel-vision.photo-judgement-panel-B label {
+  font-size: 3rem;
+  text-shadow: 0 0 1rem white;
 }
 
-.tunnel-vision.photo-judgement-screen .real-or-fake {
+.tunnel-vision.photo-judgement-panel-B .real-or-fake {
   display: flex;
   justify-content: center;
 }
-.tunnel-vision.photo-judgement-screen .real-or-fake button {
+.tunnel-vision.photo-judgement-panel-B .real-or-fake push-button {
   flex-grow: 1;
-  height: 20vmin;
+  height: 3rem;
   max-width: 80vmin;
-  margin: 2vmin;
-  font-size: 13vmin;
-  border-radius: 4vmin;
-  padding-left:  4vmin;
-  padding-right: 4vmin;
+  margin: 0.5rem;
+  font-size: 3rem;
+  border-radius: 1rem;
+  padding-left:  1rem;
+  padding-right: 1rem;
 }
-.tunnel-vision.photo-judgement-screen .real-or-fake button.selected {
+.tunnel-vision.photo-judgement-panel-B .real-or-fake push-button.selected {
   outline: 3vmin solid yellow;
 }
 
-.photo-judgement-image {
+.tunnel-vision.photo-judgement-panel-A .photo-judgement-image {
   position: absolute;
   left: 0;
   top:  0;
@@ -62,26 +57,15 @@
   background: black;
 }
 
-.tunnel-vision.photo-judgement-screen .be-honest {
+.tunnel-vision.photo-judgement-panel-B .be-honest {
   text-align: center;
-  font-size: 9vmin;
+  font-size: 2rem;
   color: red;
   font-weight: bold;
   animation: 0.5s be-honest-flash alternate infinite;
-  text-shadow: 0 0 2vmin black;
+  text-shadow: 0 0 .5rem black;
 }
 @keyframes be-honest-flash {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-/*.tunnel-vision.photo-judgement-screen canvas {
-  position: absolute;
-  left: 0;
-  top:  0;
-  width:  100%;
-  height: 100%;
-  z-index: -1;
-  object-fit: contain;
-  object-position: top;
-}*/

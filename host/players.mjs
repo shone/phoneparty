@@ -1,4 +1,10 @@
-import {currentRoute, currentRouteCounter} from './routes.mjs';
+import {
+  currentRoute,
+  currentRouteCounter,
+  listenForPlayersOnCurrentRoute,
+  listenForLeavingPlayersOnCurrentRoute
+} from './routes.mjs';
+
 import {waitForRtcClose} from '/shared/utils.mjs';
 
 export const players = [];
@@ -69,6 +75,17 @@ export async function waitForPlayerToLeave(player) {
       });
     });
   }
+}
+
+export function openChannelsOnAllPlayersForCurrentRoute() {
+  const playerChannels = new Map();
+  listenForPlayersOnCurrentRoute(player => {
+    playerChannels.set(player, player.createChannelOnCurrentRoute());
+  });
+  listenForLeavingPlayersOnCurrentRoute(player => {
+    playerChannels.delete(player);
+  });
+  return playerChannels;
 }
 
 const newPlayerSound  = new Audio('/sounds/new_player.mp3');

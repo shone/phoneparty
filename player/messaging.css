@@ -1,12 +1,91 @@
-#messaging-panel .container {
-  position: absolute;
-  left:   0;
-  top:    0;
-  right:  0;
-  bottom: 0;
+#messaging-panel {
+  background: #ddd;
   display: flex;
   flex-direction: column;
-  padding: 2vmin;
+}
+
+@media (orientation: portrait) {
+  #messaging-panel {
+    border-top-left-radius:  1rem;
+    border-top-right-radius: 1rem;
+  }
+}
+@media (orientation: landscape) {
+  #messaging-panel {
+    border-top-left-radius:    1rem;
+    border-bottom-left-radius: 1rem;
+  }
+}
+
+#messaging-panel .emoji-buttons {
+  flex-grow: 1;
+  padding: .5rem;
+  overflow-y: auto;
+  scrollbar-color: #888 transparent;
+}
+#messaging-panel .emoji-buttons::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+#messaging-panel .emoji-buttons::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+#messaging-panel .emoji-buttons::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+#messaging-panel .emoji-buttons button {
+  width:  4rem;
+  height: 4rem;
+  font-family: NotoColorEmoji_subset;
+  font-weight: bold;
+  font-size: 3rem;
+  background: transparent;
+}
+#messaging-panel .emoji-buttons button:hover {
+  transform: scale(1.2);
+}
+
+#messaging-panel .bottom-row {
+  flex-shrink: 0;
+  height: 2.5rem;
+  text-align: right;
+  box-shadow: 0 0 1rem black;
+  border-top: 1px solid #eee;
+  z-index: 1;
+  padding: .3rem;
+}
+
+#messaging-panel .bottom-row button {
+  height: 100%;
+  width: 6rem;
+}
+
+#messaging-panel .bottom-row .clear {
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="-5 -5 74 43" xmlns="http://www.w3.org/2000/svg">\
+      <g fill="none" stroke="black">\
+        <path stroke-width="3" d="m16.37 2.415h40.55c2.678 0 4.835 2.156 4.835 4.835v17.66c0 2.678-2.156 4.835-4.835 4.835h-40.55l-13.81-13.67z"/>\
+        <path stroke-width="4" stroke-linecap="round" d="m31.65 23.12 13.66-13.66m-13.66 0 13.66 13.66"/>\
+      </g>\
+    </svg>\
+  ');
+}
+
+#messaging-panel .bottom-row .shout {
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 64 50" xmlns="http://www.w3.org/2000/svg">\
+      <g fill="none" stroke="black" stroke-linecap="round" stroke-width="3">\
+        <ellipse transform="rotate(-15)" cx="25.56" cy="35.45" rx="4.87" ry="11.5"/>\
+        <path d="m30.51 16.69c-9.105 5.587-18.02 11.35-28.35 15.77 0.2949 3.38 0.9784 6.725 2.674 9.978 10.3-2.268 20.85-3.136 31.45-3.798"/>\
+        <path d="m9.174 29.26c0.5982 4.344 1.828 8.08 3.144 11.73"/>\
+        <path d="m40.18 16.03 8.942-9.913"/>\
+        <path d="m43.37 23.62 17.8-7.071"/>\
+        <path d="m44.99 30.84 15 1.883"/>\
+      </g>\
+      <rect fill="black" transform="rotate(-30)" x="-14.7" y="40" width="5" height="9" ry="2.1"/>\
+    </svg>\
+  ');
 }
 
 #messaging-panel .clear-button {
@@ -15,74 +94,4 @@
   font-size: 7vmin;
   flex-shrink: 0;
   margin-bottom: 2vmin;
-}
-#messaging-panel .options {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  overflow-y: auto;
-  margin: -2vmin;
-  margin-right: -0.5vmin;
-  scrollbar-color: #ddd transparent;
-}
-#messaging-panel .options::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-#messaging-panel .options::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 4px;
-}
-#messaging-panel .options::-webkit-scrollbar-thumb:hover {
-  background: #ddd;
-}
-
-#messaging-panel .speech-bubble {
-  background-color: #fff;
-  border-radius: 3vmin;
-  padding: 1vmin;
-  font-family: NotoColorEmoji_subset;
-  font-weight: bold;
-  min-width: 25vmin;
-  min-height: 15vmin;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 0.6vmin solid black;
-  font-size: 7vmin;
-  position: relative;
-  margin: 2vmin;
-  flex-grow: 1;
-  cursor: pointer;
-  opacity: 0;
-  animation: 0.5s reveal-speech-bubble forwards;
-  -webkit-tap-highlight-color: transparent;
-}
-@keyframes reveal-speech-bubble {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-#messaging-panel .speech-bubble:before {
-  content: '';
-  width: 4vmin;
-  height: 4vmin;
-  background: white;
-  border-left:   0.6vmin solid black;
-  border-bottom: 0.6vmin solid black;
-  transform: rotate(-45deg);
-  position: absolute;
-  top: calc(100% - 1.9vmin);
-  right: 3.5vmin;
-}
-#messaging-panel .speech-bubble.selected {
-  border: 2vmin solid red;
-}
-#messaging-panel .speech-bubble.selected:before {
-  border-left:   1.5vmin solid red;
-  border-bottom: 1.5vmin solid red;
-  top: calc(100% - 1.5vmin);
 }
