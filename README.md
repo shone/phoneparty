@@ -67,3 +67,9 @@ $ go get github.com/gorilla/websocket
 
 $ go build server.go
 ```
+
+## Name
+
+![party-line](docs/party-line.svg)
+
+Phone Party gets its name partly from the "party line" configuration used for early commercial telephone circuits. In this configuration, the same telephone circuit would be shared with multiple subscribers. Everyone on the line would hear everyone else, with the exchange coordinating.
