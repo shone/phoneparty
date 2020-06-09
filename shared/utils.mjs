@@ -106,3 +106,43 @@ export function sendOnChannelWhenOpen(channel, message) {
     channel.addEventListener('open', () => channel.send(message), {once: true});
   }
 }
+
+export async function sendLargeBlobOnChannel(channel, blob) {
+  channel.send(JSON.stringify({size: blob.size, type: blob.type}));
+
+  const fileReader = new FileReader();
+  fileReader.readAsArrayBuffer(blob); // Can't use blob.arrayBuffer() because it's not supported on Safari
+  const arrayBuffer = await new Promise(resolve => fileReader.onloadend = () => resolve(fileReader.result));
+
+  const messageSize = 1024 * 64;
+  for (let i=0; i < arrayBuffer.byteLength; i += messageSize) {
+    const slice = arrayBuffer.slice(i, Math.min(i + messageSize, arrayBuffer.byteLength));
+    channel.send(slice);
+  }
+}
+
+export async function receiveLargeBlobOnChannel(channel) {
+  const {size, type} = await new Promise(resolve => {
+    channel.addEventListener('message', ({data}) => resolve(JSON.parse(data)), {once: true})
+  });
+
+  return new Promise(resolve => {
+    const parts = [];
+    let partsSize = 0;
+
+    function onMessage({data}) {
+      parts.push(data);
+      partsSize += data.byteLength;
+      if (partsSize >= size) {
+        channel.removeEventListener('message', onMessage);
+        resolve(new Blob(parts, {type}));
+      }
+    }
+
+    channel.addEventListener('message', onMessage);
+    channel.addEventListener('close', () => {
+      channel.removeEventListener('message', onMessage);
+      resolve(null);
+    }, {once: true});
+  });
+}

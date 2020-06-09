@@ -1,0 +1,15 @@
+#panel-A .show-and-tell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#panel-A .show-and-tell .upload-button {
+  width: 8rem;
+  height: 4rem;
+  border-radius: 1rem;
+}
+
+#panel-A .show-and-tell input[type="file"] {
+  display: none;
+}
