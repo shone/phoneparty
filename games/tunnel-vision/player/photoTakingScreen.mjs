@@ -9,9 +9,8 @@ import routes, {
 
 export let canvas = null;
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen() {
-  const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
-  const thing = routeParams.get('thing');
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params}) {
+  const thing = params.get('thing');
 
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `

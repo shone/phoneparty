@@ -6,9 +6,8 @@ import routes, {
 
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 
-routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement() {
-  const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
-  const thing = routeParams.get('thing');
+routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({params}) {
+  const thing = params.get('thing');
 
   document.body.style.backgroundColor = '#98947f';
 

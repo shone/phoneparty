@@ -19,6 +19,7 @@ export async function startRouting({defaultRoute}) {
   while (true) {
 
     location.hash = currentRoute;
+    const params = new URLSearchParams(currentRoute.split('?')[1]);
 
     // Send current route to all players
     function handlePlayer(player) {
@@ -35,7 +36,7 @@ export async function startRouting({defaultRoute}) {
 
     // Call route handler
     const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
-    const nextRouteFromHandler = await routeHandler();
+    const nextRouteFromHandler = await routeHandler({params});
 
     // Stop sending current route to all players
     stopListeningForAllPlayers(handlePlayer);

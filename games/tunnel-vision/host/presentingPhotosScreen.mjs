@@ -18,9 +18,8 @@ import {playerPhotos} from './tunnel-vision.mjs';
 import * as playerGrid from './playerGrid.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosScreen() {
-  const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
-  const thingName = routeParams.get('thing');
+routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosScreen({params}) {
+  const thingName = params.get('thing');
 
   audienceMode.start();
 
@@ -41,11 +40,10 @@ routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosS
 const fooledSound    = new Audio('/games/tunnel-vision/sounds/fooled.mp3');
 const notFooledSound = new Audio('/games/tunnel-vision/sounds/not-fooled.mp3');
 
-routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto() {
+routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({params}) {
 
-  const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
-  const index = parseInt(routeParams.get('index'));
-  const thing = routeParams.get('thing');
+  const index = parseInt(params.get('index'));
+  const thing = params.get('thing');
 
   if (index >= playerPhotos.length) {
     // TODO: show message about invalid index?

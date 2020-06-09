@@ -11,9 +11,6 @@ let routeChannel = null;
 let routeChannels = [];
 let routeChannelListeners = [];
 
-let waitingOnRouteHandler = false;
-const waitForRouteHandlerCallbacks = [];
-
 export async function startRouting(rtcConnection, routeChannel_) {
   routeChannel = routeChannel_;
 
@@ -21,8 +18,8 @@ export async function startRouting(rtcConnection, routeChannel_) {
   let nextRouteCounter = null;
   let waitOnNextRouteCallback = null;
 
-  routeChannel.onmessage = event => {
-    [nextRoute, nextRouteCounter] = event.data.split('@');
+  routeChannel.onmessage = ({data}) => {
+    [nextRoute, nextRouteCounter] = data.split('@');
     nextRouteCounter = parseInt(nextRouteCounter);
     while (routeEndListeners.length > 0) {
       const callback = routeEndListeners.pop();
@@ -36,27 +33,27 @@ export async function startRouting(rtcConnection, routeChannel_) {
   }
   routeChannel.onclose = endRouting;
 
-  rtcConnection.addEventListener('datachannel', event => {
-    if (!event.channel.label.startsWith('#')) {
+  rtcConnection.addEventListener('datachannel', ({channel}) => {
+    if (!channel.label.startsWith('#')) {
       return;
     }
 
-    let [route, counter] = event.channel.label.split('@');
+    let [route, counter] = channel.label.split('@');
     counter = parseInt(counter);
 
     if (counter >= currentRouteCounter) {
-      routeChannels.push(event.channel);
-      event.channel.addEventListener('close', () => {
-        routeChannels = routeChannels.filter(channel => channel !== event.channel);
+      routeChannels.push(channel);
+      channel.addEventListener('close', () => {
+        routeChannels = routeChannels.filter(channel => channel !== channel);
       });
       if (counter === currentRouteCounter) {
         for (const callback of routeChannelListeners) {
-          const name = event.channel.label.split('%')[1];
-          callback(event.channel, name);
+          const name = channel.label.split('%')[1];
+          callback(channel, name);
         }
       }
     } else {
-      event.channel.close();
+      channel.close();
     }
   });
 
@@ -80,6 +77,7 @@ export async function startRouting(rtcConnection, routeChannel_) {
     currentRoute = nextRoute;
     currentRouteCounter = nextRouteCounter;
     location.hash = currentRoute;
+    const params = new URLSearchParams(currentRoute.split('?')[1]);
 
     nextRoute = null;
     nextRouteCounter = null;
@@ -98,12 +96,13 @@ export async function startRouting(rtcConnection, routeChannel_) {
 
     // Call handler for this route
     const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
-    await routeHandler();
+    await routeHandler({params});
   }
 
   function endRouting() {
     if (waitOnNextRouteCallback) {
       waitOnNextRouteCallback('routing-ended');
+      waitOnNextRouteCallback = null;
     }
     while (routeEndListeners.length > 0) {
       const callback = routeEndListeners.pop();
