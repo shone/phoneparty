@@ -1,15 +1,20 @@
 package main
 import (
   "net/http"
+  "github.com/gorilla/websocket"
   "log"
   "fmt"
-  "github.com/gorilla/websocket"
+  "flag"
   "sync"
   "sync/atomic"
   "encoding/json"
 )
 
 func main() {
+  var serve_address = flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
+
+  flag.Parse()
+
   http.Handle("/",                                     NoCache(http.FileServer(http.Dir("./player"))))
   http.Handle("/host/",   http.StripPrefix("/host/",   NoCache(http.FileServer(http.Dir("./host")))))
   http.Handle("/sounds/", http.StripPrefix("/sounds/", NoCache(http.FileServer(http.Dir("./sounds")))))
@@ -190,8 +195,9 @@ func main() {
     }
   })
 
-  log.Println("Serving on port 8080..")
-  if err := http.ListenAndServe(":8080", nil); err != nil {
+  log.Println("Starting HTTP server on", *serve_address)
+  err := http.ListenAndServe(*serve_address, nil)
+  if err != nil {
     panic(err)
   }
 }
