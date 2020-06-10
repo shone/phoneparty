@@ -2,9 +2,9 @@ import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 import * as utils from '/shared/utils.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
-import routes, {waitForRouteToEnd} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
-routes['#splash-screen'] = async function splashScreen() {
+routes['#splash-screen'] = async function splashScreen({waitForEnd}) {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -38,7 +38,7 @@ routes['#splash-screen'] = async function splashScreen() {
 
   const timeAtSplashStart = performance.now();
 
-  await waitForRouteToEnd();
+  await Promise.race([waitForEnd(), utils.waitForKeypress(' ')]);
 
   splashScreen.classList.add('finished');
   for (const channel of channels) {

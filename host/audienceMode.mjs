@@ -2,8 +2,8 @@ import {
   players,
   acceptAllPlayers,
   stopAcceptingPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer
+  listenForLeavingPlayers,
+  stopListeningForLeavingPlayers
 } from './players.mjs';
 
 import {waitForNSeconds} from '/shared/utils.mjs';
@@ -128,7 +128,7 @@ async function audienceMode() {
       }
       layoutPlayerSlots(playerSlots);
     }
-    listenForLeavingPlayer(handlePlayerLeaving);
+    listenForLeavingPlayers(handlePlayerLeaving);
 
     // Wait for stop()
     if (started) {
@@ -136,7 +136,7 @@ async function audienceMode() {
     }
 
     stopAcceptingPlayers();
-    stopListeningForLeavingPlayer(handlePlayerLeaving);
+    stopListeningForLeavingPlayers(handlePlayerLeaving);
     setMinPlayersCallback = null;
     for (const player of players) {
       player.classList.remove('audience-mode', 'audience-mode-layout-animation', 'highlight-in-audience');

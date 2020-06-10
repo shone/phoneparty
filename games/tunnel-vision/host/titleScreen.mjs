@@ -4,9 +4,9 @@ import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging from '/host/messaging.mjs';
 
-import routes, {waitForRouteToEnd} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
-routes['#games/tunnel-vision'] = async function titleScreen() {
+routes['#games/tunnel-vision'] = async function titleScreen({waitForEnd}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision title-screen">
@@ -32,13 +32,13 @@ routes['#games/tunnel-vision'] = async function titleScreen() {
 
   const tunnelEffect = createTunnelEffect(titleScreen.querySelector('canvas'));
 
-  await waitForRouteToEnd();
+  await Promise.race([waitForEnd(), waitForKeypress(' ')]);
 
   tunnelEffect.stop();
 
   titleScreen.classList.add('finished');
-  setTimeout(() => { titleScreen.remove() }, 2000);
-  await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
+  await waitForNSeconds(2);
+  titleScreen.remove();
 
   messaging.stop();
 

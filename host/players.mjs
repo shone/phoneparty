@@ -1,8 +1,6 @@
 import {
   currentRoute,
   currentRouteCounter,
-  listenForPlayersOnCurrentRoute,
-  listenForLeavingPlayersOnCurrentRoute
 } from './routes.mjs';
 
 import {waitForRtcClose} from '/shared/utils.mjs';
@@ -55,10 +53,10 @@ export function stopListeningForAllPlayers(callback) {
 }
 
 const leavingPlayerCallbacks = new Set();
-export function listenForLeavingPlayer(callback) {
+export function listenForLeavingPlayers(callback) {
   leavingPlayerCallbacks.add(callback);
 }
-export function stopListeningForLeavingPlayer(callback) {
+export function stopListeningForLeavingPlayers(callback) {
   leavingPlayerCallbacks.delete(callback);
 }
 
@@ -67,25 +65,14 @@ export async function waitForPlayerToLeave(player) {
     return 'player_left';
   } else {
     return new Promise(resolve => {
-      listenForLeavingPlayer(function handlePlayerLeaving(p) {
+      listenForLeavingPlayers(function handlePlayerLeaving(p) {
         if (p === player) {
           resolve('player_left');
-          stopListeningForLeavingPlayer(handlePlayerLeaving);
+          stopListeningForLeavingPlayers(handlePlayerLeaving);
         }
       });
     });
   }
-}
-
-export function openChannelsOnAllPlayersForCurrentRoute() {
-  const playerChannels = new Map();
-  listenForPlayersOnCurrentRoute(player => {
-    playerChannels.set(player, player.createChannelOnCurrentRoute());
-  });
-  listenForLeavingPlayersOnCurrentRoute(player => {
-    playerChannels.delete(player);
-  });
-  return playerChannels;
 }
 
 const newPlayerSound  = new Audio('/sounds/new_player.mp3');
@@ -117,8 +104,8 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     }
   }
 
-  websocket.addEventListener('message', function callback(event) {
-    const message = JSON.parse(event.data);
+  function onWebsocketMessage({data}) {
+    const message = JSON.parse(data);
     if (message.playerId === playerId) {
       if (message.connectionState === 'disconnected') {
         websocket.removeEventListener('message', callback);
@@ -126,7 +113,8 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
         rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
       }
     }
-  });
+  }
+  websocket.addEventListener('message', onWebsocketMessage);
 
   await rtcConnection.setRemoteDescription({type: 'offer', sdp: sdp});
 
@@ -247,6 +235,8 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   player.closeChannel.send('true');
   rtcConnection.close();
+
+  websocket.removeEventListener('message', onWebsocketMessage);
 
   playerLeftSound.play().catch(() => {});
 

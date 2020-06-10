@@ -1,15 +1,11 @@
 import {stream, rtcConnection} from '/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 
-import routes, {
-  currentRoute,
-  waitForRouteToEnd,
-  listenForChannelOnCurrentRoute
-} from '/routes.mjs';
+import routes from '/routes.mjs';
 
 export let canvas = null;
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params}) {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params, waitForEnd, listenForChannel}) {
   const thing = params.get('thing');
 
   document.body.style.backgroundColor = '#98947f';
@@ -69,7 +65,7 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({
 
   // Wait for video stream to load
   if (video.srcObject) {
-    const waitForVideoResult = await Promise.race([new Promise(resolve => video.onloadeddata = () => resolve('video-loaded')), waitForRouteToEnd()]);
+    const waitForVideoResult = await Promise.race([new Promise(resolve => video.onloadeddata = () => resolve('video-loaded')), waitForEnd()]);
     if (waitForVideoResult === 'route-ended') {
       cleanups.forEach(f => f());
       return null;
@@ -128,10 +124,10 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({
     }
 
     // Send photo to host
-    listenForChannelOnCurrentRoute(async channel => {
+    listenForChannel(async channel => {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
       const arrayBuffer = await new Response(blob).arrayBuffer();
-      // TODO: determine maximum message size
+      // TODO: use large buffer transfer function
       channel.send(arrayBuffer);
     });
 
@@ -140,7 +136,7 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({
     switchCamerasButton.remove();
   }
 
-  await waitForRouteToEnd();
+  await waitForEnd();
 
   cleanups.forEach(f => f());
 }

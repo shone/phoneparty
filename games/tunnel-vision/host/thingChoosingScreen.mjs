@@ -4,18 +4,14 @@ import {
   randomInArray
 } from '/shared/utils.mjs';
 
-import routes, {
-  currentRoute,
-  waitForRouteToEnd,
-  listenForPlayersOnCurrentRoute
-} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
 import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging    from '/host/messaging.mjs';
 
-routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen() {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({listenForPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision thing-choosing-screen">
@@ -73,7 +69,7 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScre
   chosenThingElement.classList.add('chosen');
 
   // Send thing name to all players
-  listenForPlayersOnCurrentRoute(player => {
+  listenForPlayers(player => {
     player.createChannelOnCurrentRoute().onopen = event => event.target.send(chosenThingElement.dataset.name);
   });
 

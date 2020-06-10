@@ -1,13 +1,11 @@
-import routes, {waitForRouteToEnd} from './routes.mjs';
-
-import {acceptAllPlayers, openChannelsOnAllPlayersForCurrentRoute} from './players.mjs';
+import routes from './routes.mjs';
 
 import {sendOnChannelWhenOpen} from '/shared/utils.mjs';
 
 import * as messaging from './messaging.mjs';
 import * as audienceMode from './audienceMode.mjs';
 
-routes['#test'] = async function test() {
+routes['#test'] = async function test({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div>
@@ -40,11 +38,13 @@ routes['#test'] = async function test() {
   `);
   const element = document.body.lastElementChild;
 
-  const playerChannels = openChannelsOnAllPlayersForCurrentRoute();
+  const channels = new Map();
+  listenForPlayers(player => channels.set(player, player.createChannelOnCurrentRoute()));
+  listenForLeavingPlayers(player => channels.delete(player));
 
   element.onclick = event => {
     if (event.target.tagName === 'BUTTON' && event.target.dataset.panel) {
-      for (const [player, channel] of playerChannels) {
+      for (const [player, channel] of channels) {
         sendOnChannelWhenOpen(channel, event.target.dataset.panel + ' ' + event.target.dataset.action);
       }
     }
@@ -56,7 +56,7 @@ routes['#test'] = async function test() {
   element.querySelector('[data-action="start-audience-mode"]').onclick = () => audienceMode.start();
   element.querySelector('[data-action="stop-audience-mode"]').onclick  = () => audienceMode.stop();
 
-  await waitForRouteToEnd();
+  await waitForEnd();
 
   element.remove();
   messaging.stop()

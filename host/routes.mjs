@@ -2,7 +2,7 @@ import {
   players,
   listenForAllPlayers, stopListeningForAllPlayers,
   acceptAllPlayers, stopAcceptingPlayers,
-  listenForLeavingPlayer, stopListeningForLeavingPlayer,
+  listenForLeavingPlayers, stopListeningForLeavingPlayers,
 } from '/host/players.mjs';
 
 const routes = {};
@@ -19,7 +19,6 @@ export async function startRouting({defaultRoute}) {
   while (true) {
 
     location.hash = currentRoute;
-    const params = new URLSearchParams(currentRoute.split('?')[1]);
 
     // Send current route to all players
     function handlePlayer(player) {
@@ -34,74 +33,78 @@ export async function startRouting({defaultRoute}) {
     }
     listenForAllPlayers(handlePlayer);
 
+    let hasRouteEnded = false;
+    const routeEndListeners = new Set();
+
+    function onHashChange() {
+      if (location.hash !== currentRoute) {
+        hasRouteEnded = true;
+        routeEndListeners.forEach(callback => callback());
+        routeEndListeners.clear();
+        window.removeEventListener('hashchange', onHashChange);
+      }
+    }
+    window.addEventListener('hashchange', onHashChange);
+
+    const routeContext = {
+      params: new URLSearchParams(currentRoute.split('?')[1]),
+
+      waitForEnd: async () => {
+        // Wait for the browser to be navigated to a different URL hash, or for the
+        // the current route to be skipped by pressing spacebar.
+        if (hasRouteEnded) return 'route-ended';
+        return new Promise(resolve => routeEndListeners.add(() => resolve('route-ended')));
+      },
+
+      acceptAllPlayers: callback => {
+        if (hasRouteEnded) throw 'Route has ended';
+        acceptAllPlayers(callback);
+        routeEndListeners.add(() => stopAcceptingPlayers());
+      },
+
+      listenForPlayers: callback => {
+        if (hasRouteEnded) throw 'Route has ended';
+        listenForAllPlayers(callback);
+        routeEndListeners.add(() => stopListeningForAllPlayers(callback));
+      },
+
+      listenForLeavingPlayers: callback => {
+        if (hasRouteEnded) throw 'Route has ended';
+        listenForLeavingPlayers(callback);
+        routeEndListeners.add(() => stopListeningForLeavingPlayers(callback));
+      },
+    };
+
     // Call route handler
     const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
-    const nextRouteFromHandler = await routeHandler({params});
+    const nextRouteFromHandler = await routeHandler(routeContext);
+
+    window.removeEventListener('hashchange', onHashChange);
+
+    hasRouteEnded = true;
+    routeEndListeners.forEach(callback => callback());
+    routeEndListeners.clear();
 
     // Stop sending current route to all players
     stopListeningForAllPlayers(handlePlayer);
-    for (const player of players) {
-      player.routeChannel.onopen = null;
-    }
+    players.forEach(player => player.routeChannel.onopen = null);
 
-    // If another route has been typed into the browser URL bar, use
-    // that as the next route
+    // Set the new current route
     if (location.hash !== currentRoute) {
+      // If another route (hash) has been typed into the browser URL bar, use
+      // that as the next route
       currentRoute = location.hash;
     } else if (nextRouteFromHandler) {
+      // If the route handler has returned a new route (hash), go to that
       currentRoute = nextRouteFromHandler;
     } else {
+      // Otherwise, wait for the browser to be navigated to a new hash (route)
       await new Promise(resolve => window.addEventListener('hashchange', resolve, {once: true}));
       currentRoute = location.hash;
     }
 
     currentRouteCounter++;
   }
-}
-
-export async function waitForRouteToEnd() {
-  // Wait for the browser to be navigated to a different URL hash, or for the
-  // the current route to be skipped by pressing spacebar.
-  if (location.hash !== currentRoute) {
-    return 'route-ended';
-  } else {
-    return new Promise(resolve => {
-      function onHashchange() {
-        if (location.hash !== currentRoute) finish();
-      }
-      function onKeypress(event) {
-        if (event.key === ' ') finish();
-      }
-      window.addEventListener('hashchange', onHashchange);
-      window.addEventListener('keypress', onKeypress);
-      function finish() {
-        window.removeEventListener('hashchange', onHashchange);
-        window.removeEventListener('keypress', onKeypress);
-        resolve('route-ended');
-      }
-    });
-  }
-}
-
-export function acceptAllPlayersOnCurrentRoute(callback) {
-  acceptAllPlayers(callback);
-  waitForRouteToEnd().then(() => {
-    stopAcceptingPlayers();
-  });
-}
-
-export function listenForPlayersOnCurrentRoute(callback) {
-  listenForAllPlayers(callback);
-  waitForRouteToEnd().then(() => {
-    stopListeningForAllPlayers(callback);
-  });
-}
-
-export function listenForLeavingPlayersOnCurrentRoute(callback) {
-  listenForLeavingPlayer(callback);
-  waitForRouteToEnd().then(() => {
-    stopListeningForLeavingPlayer(callback);
-  });
 }
 
 async function routeNotFoundScreen() {

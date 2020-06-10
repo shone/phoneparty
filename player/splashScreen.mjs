@@ -1,6 +1,6 @@
-import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from './routes.mjs';
+import routes from './routes.mjs';
 
-routes['#splash-screen'] = async function splashScreen() {
+routes['#splash-screen'] = async function splashScreen({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = 'black';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="phone-party-splash-screen">
@@ -24,12 +24,12 @@ routes['#splash-screen'] = async function splashScreen() {
   `);
   const splashScreen = document.body.lastElementChild;
 
-  listenForChannelOnCurrentRoute(channel => {
+  listenForChannel(channel => {
     channel.onmessage = () => {
       splashScreen.classList.add('finished');
     }
   });
 
-  await waitForRouteToEnd();
+  await waitForEnd();
   splashScreen.remove();
 }

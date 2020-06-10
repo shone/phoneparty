@@ -1,23 +1,20 @@
 const routes = {};
 export default routes;
 
-export let currentRoute = null;
+let currentRoute = null;
 let currentRouteCounter = -1;
 
 const routeEndListeners = [];
 
-let routeChannel = null;
-
 let routeChannels = [];
 let routeChannelListeners = [];
 
-export async function startRouting(rtcConnection, routeChannel_) {
-  routeChannel = routeChannel_;
-
+export async function startRouting(rtcConnection, routeChannel) {
   let nextRoute = null;
   let nextRouteCounter = null;
   let waitOnNextRouteCallback = null;
 
+  // Routes received from routeChannel tells us what the current route on the host is
   routeChannel.onmessage = ({data}) => {
     [nextRoute, nextRouteCounter] = data.split('@');
     nextRouteCounter = parseInt(nextRouteCounter);
@@ -33,7 +30,8 @@ export async function startRouting(rtcConnection, routeChannel_) {
   }
   routeChannel.onclose = endRouting;
 
-  rtcConnection.addEventListener('datachannel', ({channel}) => {
+  // Listen for channels that are bound to routes
+  function onChannel({channel}) {
     if (!channel.label.startsWith('#')) {
       return;
     }
@@ -53,19 +51,22 @@ export async function startRouting(rtcConnection, routeChannel_) {
         }
       }
     } else {
+      // The channel is for a route that has already ended, so close it
       channel.close();
     }
-  });
+  }
+  rtcConnection.addEventListener('datachannel', onChannel);
 
   while (true) {
     if (routeChannel.readyState === 'closing' || routeChannel.readyState === 'closed') {
+      currentRouteCounter = -1;
+      location.hash = '';
       return;
     }
 
     if (!nextRoute) {
       const result = await new Promise(resolve => waitOnNextRouteCallback = resolve);
       if (result === 'routing-ended') {
-        currentRoute = null;
         currentRouteCounter = -1;
         location.hash = '';
         return;
@@ -74,10 +75,12 @@ export async function startRouting(rtcConnection, routeChannel_) {
 
     routeChannelListeners = [];
 
-    currentRoute = nextRoute;
-    currentRouteCounter = nextRouteCounter;
-    location.hash = currentRoute;
-    const params = new URLSearchParams(currentRoute.split('?')[1]);
+    const route = nextRoute;
+    const routeCounter = nextRouteCounter;
+    location.hash = route;
+
+    currentRoute = route;
+    currentRouteCounter = routeCounter;
 
     nextRoute = null;
     nextRouteCounter = null;
@@ -94,12 +97,39 @@ export async function startRouting(rtcConnection, routeChannel_) {
       }
     });
 
+    const routeContext = {
+      params: new URLSearchParams(route.split('?')[1]),
+
+      waitForEnd: async () => {
+        switch (routeChannel.readyState) {
+          case 'closing': case 'closed': return 'route-ended';
+        }
+        if (currentRouteCounter !== routeCounter) {
+          return 'route-ended';
+        }
+        return new Promise(resolve => routeEndListeners.push(() => resolve('route-ended')));
+      },
+
+      listenForChannel: callback => {
+        for (const channel of routeChannels) {
+          const [channelRoute, channelCounterAndName] = channel.label.split('@');
+          let [channelCounter, channelName] = channelCounterAndName.split('%');
+          channelCounter = parseInt(channelCounter);
+          if (channelRoute === route && channelCounter === routeCounter) {
+            callback(channel, channelName);
+          }
+        }
+        routeChannelListeners.push(callback);
+      }
+    }
+
     // Call handler for this route
-    const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
-    await routeHandler({params});
+    const routeHandler = routes[route.split('?')[0]] || routeNotFoundScreen;
+    await routeHandler(routeContext);
   }
 
   function endRouting() {
+    rtcConnection.removeEventListener('datachannel', onChannel);
     if (waitOnNextRouteCallback) {
       waitOnNextRouteCallback('routing-ended');
       waitOnNextRouteCallback = null;
@@ -115,26 +145,7 @@ export async function startRouting(rtcConnection, routeChannel_) {
   }
 }
 
-export function waitForRouteToEnd() {
-  if (!routeChannel || (routeChannel.readyState === 'closing' || routeChannel.readyState === 'closed')) {
-    return 'route-ended';
-  }
-  return new Promise(resolve => routeEndListeners.push(() => resolve('route-ended')));
-}
-
-export function listenForChannelOnCurrentRoute(callback) {
-  for (const channel of routeChannels) {
-    const [route, counterAndName] = channel.label.split('@');
-    let [counter, name] = counterAndName.split('%');
-    counter = parseInt(counter);
-    if (route === currentRoute && counter === currentRouteCounter) {
-      callback(channel, name);
-    }
-  }
-  routeChannelListeners.push(callback);
-}
-
-async function routeNotFoundScreen() {
+async function routeNotFoundScreen({waitForEnd}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
@@ -145,6 +156,6 @@ async function routeNotFoundScreen() {
   const div = document.body.lastElementChild;
   div.querySelector('.route').textContent = currentRoute;
 
-  await waitForRouteToEnd();
+  await waitForEnd();
   div.remove();
 }

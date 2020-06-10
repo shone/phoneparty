@@ -1,12 +1,8 @@
-import routes, {
-  currentRoute,
-  waitForRouteToEnd,
-  listenForChannelOnCurrentRoute
-} from '/routes.mjs';
+import routes from '/routes.mjs';
 
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 
-routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({params}) {
+routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({params, waitForEnd, listenForChannel}) {
   const thing = params.get('thing');
 
   document.body.style.backgroundColor = '#98947f';
@@ -17,7 +13,7 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({
   const panelB = document.createElement('div');
   panelB.classList.add('tunnel-vision', 'photo-judgement-panel-B');
 
-  listenForChannelOnCurrentRoute((channel, channelName) => {
+  listenForChannel((channel, channelName) => {
     panelB.innerHTML = `
       <h1>Is ${channelName === 'self-judgement' ? 'your' : 'this'} photo really of:</h1>
       <img>
@@ -57,7 +53,7 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({
     }
   });
 
-  await waitForRouteToEnd();
+  await waitForEnd();
 
   panelA.remove();
   panelB.remove();

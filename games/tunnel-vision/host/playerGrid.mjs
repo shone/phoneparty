@@ -2,8 +2,8 @@ import {
   players,
   listenForNewPlayers,
   stopListeningForNewPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer
+  listenForLeavingPlayers,
+  stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
 import {playerPhotos} from './tunnel-vision.mjs';
@@ -12,13 +12,13 @@ export function start() {
   updateLayout();
   window.addEventListener('resize', updateLayout);
   listenForNewPlayers(updateLayout);
-  listenForLeavingPlayer(updateLayout);
+  listenForLeavingPlayers(updateLayout);
 }
 
 export function stop() {
   window.removeEventListener('resize', updateLayout);
   stopListeningForNewPlayers(updateLayout);
-  stopListeningForLeavingPlayer(updateLayout);
+  stopListeningForLeavingPlayers(updateLayout);
 }
 
 // const debugBlocks = [];

@@ -4,15 +4,11 @@ import {waitForNSeconds} from '/shared/utils.mjs';
 
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
 
-import routes, {
-  waitForRouteToEnd,
-  listenForPlayersOnCurrentRoute,
-  listenForLeavingPlayersOnCurrentRoute
-} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen() {
+routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision another-round-screen">
@@ -30,17 +26,17 @@ routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen
         resolve();
       }
     }
-    listenForPlayersOnCurrentRoute(player => {
+    listenForPlayers(player => {
       player.createChannelOnCurrentRoute().onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
         checkIfAllPlayersConfirmed();
       }
     })
-    listenForLeavingPlayersOnCurrentRoute(checkIfAllPlayersConfirmed);
+    listenForLeavingPlayers(checkIfAllPlayersConfirmed);
   });
 
-  const result = await Promise.race([waitForAllPlayers, waitForRouteToEnd()]);
+  const result = await Promise.race([waitForAllPlayers, waitForEnd()]);
   if (result === 'route-ended') {
     anotherRoundScreen.remove();
     return;

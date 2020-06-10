@@ -1,7 +1,4 @@
-import routes, {
-  waitForRouteToEnd,
-  listenForChannelOnCurrentRoute
-} from '/routes.mjs';
+import routes from '/routes.mjs';
 
 import {sendLargeBlobOnChannel} from '/shared/utils.mjs';
 
@@ -9,7 +6,7 @@ document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/show-and-tell/player/show-and-tell.css">
 `);
 
-routes['#games/show-and-tell'] = async function titleScreen() {
+routes['#games/show-and-tell'] = async function titleScreen({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#000';
 
   const panelA = document.createElement('div');
@@ -23,7 +20,7 @@ routes['#games/show-and-tell'] = async function titleScreen() {
   const uploadButton = panelA.querySelector('.upload-button');
   uploadButton.onclick = () => fileInput.click();
 
-  listenForChannelOnCurrentRoute(channel => {
+  listenForChannel(channel => {
     fileInput.onchange = async event => {
       const files = event.target.files;
       if (files.length === 1) {
@@ -34,7 +31,7 @@ routes['#games/show-and-tell'] = async function titleScreen() {
 
   document.getElementById('panel-A').append(panelA);
 
-  await waitForRouteToEnd();
+  await waitForEnd();
 
   panelA.remove();
 }

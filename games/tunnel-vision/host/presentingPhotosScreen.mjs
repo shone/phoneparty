@@ -4,9 +4,9 @@ import {
   players,
   waitForPlayerToLeave,
   listenForAllPlayers,
-  listenForLeavingPlayer,
+  listenForLeavingPlayers,
   stopListeningForAllPlayers,
-  stopListeningForLeavingPlayer
+  stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
 import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messaging.mjs';
@@ -178,10 +178,10 @@ async function judgePhoto(playerPresentingPhoto, photo) {
       if (selfJudgementResult !== null && otherPlayers.length >= 1 && otherPlayers.every(player => otherPlayerResponses.has(player))) {
         resolve([selfJudgementResult, otherPlayerResponses]);
         stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkAllPlayersResponded);
+        stopListeningForLeavingPlayers(checkAllPlayersResponded);
       } else if (players.indexOf(playerPresentingPhoto) === -1) {
         stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkAllPlayersResponded);
+        stopListeningForLeavingPlayers(checkAllPlayersResponded);
       }
     }
     selfJudgementChannel.onmessage = event => {
@@ -203,7 +203,7 @@ async function judgePhoto(playerPresentingPhoto, photo) {
       otherPlayerChannels.push(channel);
     }
     listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayer(checkAllPlayersResponded);
+    listenForLeavingPlayers(checkAllPlayersResponded);
   });
 
   const result = await Promise.race([

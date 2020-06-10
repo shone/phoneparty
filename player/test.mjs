@@ -1,6 +1,6 @@
-import routes, {waitForRouteToEnd, listenForChannelOnCurrentRoute} from './routes.mjs';
+import routes from './routes.mjs';
 
-routes['#test'] = async function panelTest() {
+routes['#test'] = async function panelTest({waitForEnd, listenForChannel}) {
   const testPanelA = document.createElement('div');
   const testPanelB = document.createElement('div');
 
@@ -10,7 +10,7 @@ routes['#test'] = async function panelTest() {
   testPanelA.textContent = 'A';
   testPanelB.textContent = 'B';
 
-  listenForChannelOnCurrentRoute(channel => {
+  listenForChannel(channel => {
     channel.onmessage = event => {
       switch (event.data) {
         case 'a activate':   document.getElementById('panel-A').append(testPanelA); break;
@@ -21,7 +21,7 @@ routes['#test'] = async function panelTest() {
     }
   });
 
-  await waitForRouteToEnd();
+  await waitForEnd();
 
   testPanelA.remove();
   testPanelB.remove();

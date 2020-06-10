@@ -2,8 +2,8 @@ import {
   players,
   listenForAllPlayers,
   stopListeningForAllPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer
+  listenForLeavingPlayers,
+  stopListeningForLeavingPlayers
 } from './players.mjs';
 
 let started = false;
@@ -12,7 +12,7 @@ const channels = new Map();
 export function start() {
   if (!started) {
     listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayer(handleLeavingPlayer);
+    listenForLeavingPlayers(handleLeavingPlayer);
     started = true;
   }
 }
@@ -20,7 +20,7 @@ export function start() {
 export function stop() {
   if (started) {
     stopListeningForAllPlayers(handlePlayer);
-    stopListeningForLeavingPlayer(handleLeavingPlayer);
+    stopListeningForLeavingPlayers(handleLeavingPlayer);
 
     for (const channel of channels.values()) {
       channel.onmessage = null;

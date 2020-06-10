@@ -1,18 +1,11 @@
 import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
 
-import routes, {
-  currentRoute,
-  waitForRouteToEnd,
-  listenForPlayersOnCurrentRoute,
-  listenForLeavingPlayersOnCurrentRoute,
-} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
 import {
   players,
-  listenForAllPlayers,
   stopListeningForAllPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer
+  stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
 import {addSpeechBubbleToPlayer, clearAllSpeechBubbles} from '/host/messaging.mjs';
@@ -23,7 +16,7 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/goal'] = async function goalScreen() {
+routes['#games/tunnel-vision/goal'] = async function goalScreen({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
 
   const chosenThingElement = setupCurrentThingIndicator();
 
@@ -74,8 +67,8 @@ routes['#games/tunnel-vision/goal'] = async function goalScreen() {
   // Wait for players to be ready
   const waitForPlayersResult = await new Promise(resolve => {
     const confirmedPlayers = new Set();
-    listenForPlayersOnCurrentRoute(handlePlayer);
-    listenForLeavingPlayersOnCurrentRoute(checkIfPlayersReady);
+    listenForPlayers(handlePlayer);
+    listenForLeavingPlayers(checkIfPlayersReady);
     function handlePlayer(player) {
       player.createChannelOnCurrentRoute().onmessage = () => {
         confirmedPlayers.add(player);
@@ -88,13 +81,13 @@ routes['#games/tunnel-vision/goal'] = async function goalScreen() {
       if (players.length >= 2 && players.every(player => confirmedPlayers.has(player))) {
         resolve('got-players');
         stopListeningForAllPlayers(handlePlayer);
-        stopListeningForLeavingPlayer(checkIfPlayersReady);
+        stopListeningForLeavingPlayers(checkIfPlayersReady);
       }
     }
-    waitForRouteToEnd().then(() => {
+    waitForEnd().then(() => {
       resolve('route-ended');
       stopListeningForAllPlayers(handlePlayer);
-      stopListeningForLeavingPlayer(checkIfPlayersReady);
+      stopListeningForLeavingPlayers(checkIfPlayersReady);
     });
   });
 

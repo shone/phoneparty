@@ -1,9 +1,6 @@
-import routes, {
-  waitForRouteToEnd,
-  listenForChannelOnCurrentRoute
-} from '/routes.mjs';
+import routes from '/routes.mjs';
 
-routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen() {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#98947f';
 
   const panelA = document.getElementById('panel-A');
@@ -15,7 +12,7 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScre
   `);
   const thingChoosingScreen = panelA.lastElementChild;
 
-  listenForChannelOnCurrentRoute(channel => {
+  listenForChannel(channel => {
     channel.onmessage = () => {
       thingChoosingScreen.querySelector('h1').remove();
       thingChoosingScreen.querySelector('.thinking-emoji').remove();
@@ -29,6 +26,6 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScre
     }
   });
 
-  await waitForRouteToEnd();
+  await waitForEnd();
   thingChoosingScreen.remove();
 }

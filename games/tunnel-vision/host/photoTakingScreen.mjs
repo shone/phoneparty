@@ -2,16 +2,15 @@ import {waitForNSeconds} from '/shared/utils.mjs';
 
 import {
   players,
-  acceptAllPlayers,
   stopAcceptingPlayers,
-  listenForLeavingPlayer,
-  stopListeningForLeavingPlayer
+  listenForLeavingPlayers,
+  stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
 import * as playerGrid from './playerGrid.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
-import routes, {acceptAllPlayersOnCurrentRoute} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
 import {
   playerPhotos,
@@ -21,7 +20,7 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen() {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({acceptAllPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
 
   const chosenThingElement = setupCurrentThingIndicator();
@@ -33,12 +32,13 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
 
   await waitForNSeconds(1);
 
+  // Clear any photos from previous rounds of the game
   while (playerPhotos.length > 0) {
     playerPhotos.pop();
   }
 
   // Layout players as a grid of bubbles
-  acceptAllPlayersOnCurrentRoute(player => {
+  acceptAllPlayers(player => {
     player.classList.add('bubble', 'moving-to-grid');
     if (!player.parentElement) {
       document.body.appendChild(player);
@@ -49,13 +49,9 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
   stopAcceptingPlayers();
 
   // Hide players, as they will transition into phones next
-  for (const player of players) {
-    player.classList.add('scale-down');
-  }
+  players.forEach(player => player.classList.add('scale-down'));
   await waitForNSeconds(0.5);
-  for (const player of players) {
-    player.classList.remove('scale-down', 'bubble');
-  }
+  players.forEach(player => player.classList.remove('scale-down', 'bubble'));
 
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision photo-taking-screen">
@@ -70,12 +66,12 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
     function checkIfAllPhotosTaken() {
       if (players.length >= 2 && players.every(player => playerPhotos.find(photo => photo.player === player))) {
         stopAcceptingPlayers();
-        stopListeningForLeavingPlayer(checkIfAllPhotosTaken);
+        stopListeningForLeavingPlayers(checkIfAllPhotosTaken);
         while (timers.length > 0) clearTimeout(timers.pop());
         resolve();
       }
     }
-    acceptAllPlayersOnCurrentRoute(player => {
+    acceptAllPlayers(player => {
       player.classList.add('taking-photo', 'moving-to-grid');
       player.insertAdjacentHTML('beforeend', `
         <div class="tunnel-vision phone">
@@ -94,7 +90,7 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
         checkIfAllPhotosTaken();
       }
     });
-    listenForLeavingPlayer(checkIfAllPhotosTaken);
+    listenForLeavingPlayers(checkIfAllPhotosTaken);
   });
   photoTakingScreen.querySelector('h1').textContent = 'All photos taken';
   allPhotosTakenSound.play().catch(() => {});
@@ -119,9 +115,7 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen()
 
   // Clean up
   photoTakingScreen.remove();
-  for (const player of players) {
-    player.classList.remove('video-not-visible');
-  }
+  players.forEach(player => player.classList.remove('video-not-visible'));
 
   if (!routesWithPlayerGrid.has(location.hash.split('?')[0])) {
     playerGrid.stop();
@@ -162,7 +156,7 @@ function acceptPhotoFromPlayer(player, photoArrayBuffer) {
     player.querySelector('.phone').remove();
   }, 1000);
 
-  listenForLeavingPlayer(function callback(leavingPlayer) {
+  listenForLeavingPlayers(function callback(leavingPlayer) {
     if (leavingPlayer === player) {
       photoContainer.remove();
       const playerPhoto = playerPhotos.find(photo => photo.player === player);
@@ -171,7 +165,7 @@ function acceptPhotoFromPlayer(player, photoArrayBuffer) {
         playerPhoto.photoContainer = null;
         playerPhoto.id = null;
       }
-      stopListeningForLeavingPlayer(callback);
+      stopListeningForLeavingPlayers(callback);
     }
   });
 }
