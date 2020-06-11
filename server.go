@@ -1,5 +1,7 @@
 package main
+
 import (
+  "net"
   "net/http"
   "github.com/gorilla/websocket"
   "log"
@@ -10,9 +12,19 @@ import (
   "encoding/json"
 )
 
+type Host struct {
+  Websocket *websocket.Conn
+  SendChannel chan []byte
+}
+
+type Player struct {
+  ID uint64
+  IP string
+  Websocket *websocket.Conn
+}
+
 func main() {
   var serve_address = flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
-
   flag.Parse()
 
   http.Handle("/",                                     NoCache(http.FileServer(http.Dir("./player"))))
@@ -22,10 +34,9 @@ func main() {
   http.Handle("/games/",  http.StripPrefix("/games/",  NoCache(http.FileServer(http.Dir("./games")))))
   http.Handle("/shared/", http.StripPrefix("/shared/", NoCache(http.FileServer(http.Dir("./shared")))))
 
-  var hostWebsocket *websocket.Conn
-  hostSendChan := make(chan []byte)
+  var hosts sync.Map
 
-  var playerWebsockets sync.Map
+  var players sync.Map
   var nextPlayerId uint64
 
   var websocketUpgrader = websocket.Upgrader{
@@ -35,10 +46,19 @@ func main() {
   }
 
   http.HandleFunc("/host/ws", func(response http.ResponseWriter, request *http.Request) {
-    if hostWebsocket != nil {
-      log.Println("A host (Address:", request.RemoteAddr, ") attempted to connect, but there's already a host connected")
+    ip,_,err := net.SplitHostPort(request.RemoteAddr)
+    if err != nil {
+      log.Println("A host attempted to connect, but its remote address could not be parsed into host/port parts:", request.RemoteAddr)
+      response.WriteHeader(http.StatusBadRequest)
+      response.Write([]byte("Could not parse remote address into host/port parts"))
+      return
+    }
+
+    _,foundExistingHost := hosts.Load(ip)
+    if foundExistingHost {
+      log.Println("A host at", request.RemoteAddr, "attempted to connect, but there's already a host connected on that IP")
       response.WriteHeader(http.StatusConflict)
-      response.Write([]byte("A host is already connected"))
+      response.Write([]byte("A host is already connected on this IP"))
       return
     }
 
@@ -47,23 +67,30 @@ func main() {
       log.Println("Unable to upgrade host HTTP connection to websocket: ", err)
       return
     }
-    hostWebsocket = websocket_
     log.Println("Host connected - Address:", request.RemoteAddr)
 
+    host := Host{websocket_, make(chan []byte)}
+
+    hosts.Store(ip, host)
+
     // Notify players that a host has connected
-    playerWebsockets.Range(func (playerId, playerWebsocket interface{}) bool {
-      (playerWebsocket.(*websocket.Conn)).WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+    players.Range(func (playerId, player interface{}) bool {
+      if player.(Player).IP == ip {
+        player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+      }
       return true
     })
 
     hostDisconnectedChan := make(chan bool)
 
     defer func() {
-      hostWebsocket = nil
+      hosts.Delete(ip)
       hostDisconnectedChan <- true
       // Notify players that the host has disconnected
-      playerWebsockets.Range(func (playerId, playerWebsocket interface{}) bool {
-        (playerWebsocket.(*websocket.Conn)).WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
+      players.Range(func (playerId, player interface{}) bool {
+        if player.(Player).IP == ip {
+          player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
+        }
         return true
       })
     }()
@@ -72,7 +99,7 @@ func main() {
     go func() {
       for {
         select {
-          case message := <- hostSendChan:
+          case message := <- host.SendChannel:
             err = websocket_.WriteMessage(websocket.TextMessage, message)
             if err != nil {
               return
@@ -116,9 +143,9 @@ func main() {
       }
       playerId := uint64(playerIdFloat64)
 
-      playerWebsocket,found := playerWebsockets.Load(playerId)
+      player,found := players.Load(playerId)
       if !found {
-        log.Println("Received message from host for player ", playerId, " but a websocket for the player could not be found")
+        log.Println("Received message from host for player", playerId, "but a websocket for the player could not be found")
         continue
       }
 
@@ -129,7 +156,7 @@ func main() {
         log.Println("Could not encode JSON to send to player:", err)
         return
       }
-      err = (playerWebsocket.(*websocket.Conn)).WriteMessage(websocket.TextMessage, messageToPlayer)
+      err = player.(Player).Websocket.WriteMessage(websocket.TextMessage, messageToPlayer)
       if err != nil {
         if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
           log.Println("Player", playerId, "websocket closed unexpectedly")
@@ -138,13 +165,24 @@ func main() {
         } else  {
           log.Println("Error while attempting to write to player websocket: ", err)
         }
-        playerWebsockets.Delete(playerId)
-        hostSendChan <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+        players.Delete(playerId)
+        host,found := hosts.Load(ip)
+        if found {
+          host.(Host).SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+        }
       }
     }
   })
 
   http.HandleFunc("/player/ws", func(response http.ResponseWriter, request *http.Request) {
+    ip,_,err := net.SplitHostPort(request.RemoteAddr)
+    if err != nil {
+      log.Println("A player attempted to connect, but its remote address could not be parsed into host/port parts:", request.RemoteAddr)
+      response.WriteHeader(http.StatusConflict)
+      response.Write([]byte("Could not parse remote address into host/port parts"))
+      return
+    }
+
     websocket_,err := websocketUpgrader.Upgrade(response, request, nil)
     if err != nil {
       log.Println("Unable to upgrade player HTTP connection to websocket: ", err)
@@ -153,14 +191,20 @@ func main() {
     playerId := atomic.AddUint64(&nextPlayerId, 1)
     log.Println("Player connected - ID:", playerId, "Address:", request.RemoteAddr)
 
-    if hostWebsocket != nil {
+    _,found := hosts.Load(ip)
+    if found {
       websocket_.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
     }
 
-    playerWebsockets.Store(playerId, websocket_)
+    player := Player{playerId, ip, websocket_}
+
+    players.Store(playerId, player)
     defer func() {
-      playerWebsockets.Delete(playerId)
-      hostSendChan <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+      players.Delete(playerId)
+      host,found := hosts.Load(ip)
+      if found {
+        host.(Host).SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+      }
     }()
 
     for {
@@ -191,7 +235,10 @@ func main() {
         return
       }
 
-      hostSendChan <- messageWithPlayerId
+      host,found := hosts.Load(ip)
+      if found {
+        host.(Host).SendChannel <- messageWithPlayerId
+      }
     }
   })
 
