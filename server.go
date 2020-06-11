@@ -40,10 +40,10 @@ func main() {
 
   http.Handle("/",                                     NoCache(http.FileServer(http.Dir("./player"))))
   http.Handle("/host/",   http.StripPrefix("/host/",   NoCache(http.FileServer(http.Dir("./host")))))
+  http.Handle("/shared/", http.StripPrefix("/shared/", NoCache(http.FileServer(http.Dir("./shared")))))
   http.Handle("/sounds/", http.StripPrefix("/sounds/", NoCache(http.FileServer(http.Dir("./sounds")))))
   http.Handle("/fonts/",  http.StripPrefix("/fonts/",  NoCache(http.FileServer(http.Dir("./fonts")))))
   http.Handle("/games/",  http.StripPrefix("/games/",  NoCache(http.FileServer(http.Dir("./games")))))
-  http.Handle("/shared/", http.StripPrefix("/shared/", NoCache(http.FileServer(http.Dir("./shared")))))
 
   http.HandleFunc("/host/ws", handleHostWebsocket)
   http.HandleFunc("/player/ws", handlePlayerWebsocket)
@@ -51,7 +51,7 @@ func main() {
   log.Println("Starting HTTP server on", *serve_address)
   err := http.ListenAndServe(*serve_address, nil)
   if err != nil {
-    panic(err)
+    log.Fatal(err)
   }
 }
 
@@ -90,19 +90,9 @@ func handleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 
   hosts.Store(ip, host)
 
-  // Notify players that a host has connected
-  players.Range(func (playerId, player interface{}) bool {
-    if player.(Player).IP == ip {
-      player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
-    }
-    return true
-  })
-
-  hostDisconnectedChan := make(chan bool)
-
   defer func() {
     hosts.Delete(ip)
-    hostDisconnectedChan <- true
+    close(host.SendChannel)
     // Notify players that the host has disconnected
     players.Range(func (playerId, player interface{}) bool {
       if player.(Player).IP == ip {
@@ -112,17 +102,20 @@ func handleHostWebsocket(response http.ResponseWriter, request *http.Request) {
     })
   }()
 
+  // Notify players that a host has connected
+  players.Range(func (playerId, player interface{}) bool {
+    if player.(Player).IP == ip {
+      player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+    }
+    return true
+  })
+
   // Relay messages from players to host
   go func() {
-    for {
-      select {
-        case message := <- host.SendChannel:
-          err = websocket_.WriteMessage(websocket.TextMessage, message)
-          if err != nil {
-            return
-          }
-        case <-hostDisconnectedChan:
-          return
+    for message := range host.SendChannel {
+      err = websocket_.WriteMessage(websocket.TextMessage, message)
+      if err != nil {
+        return
       }
     }
   }()
