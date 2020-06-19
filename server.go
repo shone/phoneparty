@@ -6,15 +6,20 @@ import (
   "github.com/gorilla/websocket"
   "log"
   "fmt"
+  "strings"
   "flag"
+  "os"
+  "path/filepath"
   "sync"
   "sync/atomic"
   "encoding/json"
+  "crypto/tls"
+  "golang.org/x/crypto/acme/autocert"
 )
 
-var hosts sync.Map
-
+var hosts   sync.Map
 var players sync.Map
+
 var nextPlayerId uint64
 
 type Host struct {
@@ -28,38 +33,129 @@ type Player struct {
   Websocket *websocket.Conn
 }
 
-var websocketUpgrader = websocket.Upgrader{
-  ReadBufferSize:  1024,
-  WriteBufferSize: 1024,
-  CheckOrigin: func(r *http.Request) bool { return true }, // Allow all origins
-}
-
 func main() {
-  var serve_address = flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
+  serve_address := flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
+  domain := flag.String("domain", "", "e.g. 'example.com' When specified, will serve HTTPS for the domain using automatically retrieved Let's Encrypt certificates.")
   flag.Parse()
 
-  http.Handle("/",                                     NoCache(http.FileServer(http.Dir("./player"))))
-  http.Handle("/host/",   http.StripPrefix("/host/",   NoCache(http.FileServer(http.Dir("./host")))))
-  http.Handle("/shared/", http.StripPrefix("/shared/", NoCache(http.FileServer(http.Dir("./shared")))))
-  http.Handle("/sounds/", http.StripPrefix("/sounds/", NoCache(http.FileServer(http.Dir("./sounds")))))
-  http.Handle("/fonts/",  http.StripPrefix("/fonts/",  NoCache(http.FileServer(http.Dir("./fonts")))))
-  http.Handle("/games/",  http.StripPrefix("/games/",  NoCache(http.FileServer(http.Dir("./games")))))
+  http.Handle("/",        FileServer("./player", ""))
+  http.Handle("/host/",   FileServer("./host",   "/host/"))
+  http.Handle("/shared/", FileServer("./shared", "/shared/"))
+  http.Handle("/sounds/", FileServer("./sounds", "/sounds/"))
+  http.Handle("/fonts/",  FileServer("./fonts",  "/fonts/"))
+  http.Handle("/games/",  FileServer("./games",  "/games/"))
 
-  http.HandleFunc("/host/ws", handleHostWebsocket)
+  http.HandleFunc("/host/ws",   handleHostWebsocket)
   http.HandleFunc("/player/ws", handlePlayerWebsocket)
 
-  log.Println("Starting HTTP server on", *serve_address)
-  err := http.ListenAndServe(*serve_address, nil)
-  if err != nil {
+  if *domain != "" {
+
+    certManager := autocert.Manager{
+      Prompt:     autocert.AcceptTOS,
+      HostPolicy: autocert.HostWhitelist(*domain),
+      Cache:      autocert.DirCache("certs"),
+    }
+
+    log.Println("Serving HTTP on", *domain, "for ACME and HTTPS redirect")
+    go func() {
+      err := http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+      log.Fatal(err)
+    }()
+
+    server := &http.Server{
+      Addr: ":https",
+      TLSConfig: &tls.Config{
+        GetCertificate: certManager.GetCertificate,
+      },
+    }
+
+    log.Println("Serving HTTPS on", *domain)
+    err := server.ListenAndServeTLS("", "")
+    log.Fatal(err)
+  } else {
+    log.Println("Starting HTTP server on", *serve_address)
+    err := http.ListenAndServe(*serve_address, nil)
     log.Fatal(err)
   }
 }
 
-func NoCache(handler http.Handler) http.Handler {
+func FileServer(directory, prefix string) http.Handler {
+  handler := http.StripPrefix(prefix, http.FileServer(http.Dir(directory)))
+
   return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+
     writer.Header().Set("Cache-Control", "must-revalidate")
+
+    if request.URL.Path == "/" || request.URL.Path == "/host/" {
+      // Rather than needing a build step to bundle JS/CSS into a single file, rely on
+      // HTTP2 server push to transfer all required files immediately.
+      if pusher, ok := writer.(http.Pusher); ok {
+        switch request.URL.Path {
+          case "/":      pushFilesForPlayer(pusher)
+          case "/host/": pushFilesForHost(pusher)
+        }
+      }
+    }
+
     handler.ServeHTTP(writer, request)
   })
+}
+
+func pushFilesForPlayer(pusher http.Pusher) {
+  pushFiles(pusher, "player", "/", "")
+  pushFiles(pusher, "shared", "/shared/", "")
+  pushFiles(pusher, "games", "/games/", "player")
+}
+func pushFilesForHost(pusher http.Pusher) {
+  pushFiles(pusher, "host", "/host/", "")
+  pushFiles(pusher, "shared", "/shared/", "")
+  pushFiles(pusher, "games", "/games/", "host")
+}
+
+func pushFiles(pusher http.Pusher, directory, prefix, matchSubdir string) {
+  err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+    if err != nil {
+      log.Println(err)
+      return err
+    }
+
+    if info.IsDir() {
+      if matchSubdir != "" {
+        parts := strings.Split(path, "/")
+        if len(parts) >= 3 {
+          for _,part := range parts {
+            if part == matchSubdir {
+              return nil
+            }
+          }
+          return filepath.SkipDir
+        }
+      } else {
+        return nil
+      }
+    }
+
+    ext := filepath.Ext(info.Name())
+
+    if ext == ".mjs" || ext == ".css" {
+      url := prefix + path[len(directory)+1:]
+      err := pusher.Push(url, nil)
+      if err != nil {
+        return err
+      }
+    }
+
+    return nil
+  })
+  if err != nil {
+    log.Println(err)
+  }
+}
+
+var websocketUpgrader = websocket.Upgrader{
+  ReadBufferSize:  1024,
+  WriteBufferSize: 1024,
+  CheckOrigin: func(r *http.Request) bool { return true }, // Allow all origins
 }
 
 func handleHostWebsocket(response http.ResponseWriter, request *http.Request) {
