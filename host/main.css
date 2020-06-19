@@ -1,7 +1,9 @@
 html {
   overflow: hidden;
+  height: 100%;
 }
 body {
+  height: 100%;
   margin: 0;
   transition: background-color 1s;
   font-family: "Helvetica Neue", "Roboto";
@@ -10,6 +12,7 @@ body {
 @font-face {
   font-family: "NotoColorEmoji_subset";
   src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
+  font-display: block;
 }
 
 #connection-status {

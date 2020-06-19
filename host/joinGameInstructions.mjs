@@ -39,5 +39,5 @@ routes['#join-game-instructions'] = async function joinGameInstructions({waitFor
 
   messaging.clearAllSpeechBubbles();
 
-  return '#games/tunnel-vision';
+  return '#games';
 };

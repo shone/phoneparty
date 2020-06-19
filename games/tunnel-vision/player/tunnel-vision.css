@@ -1,6 +1,7 @@
 @font-face {
   font-family: "Timothy";
   src: url("/games/tunnel-vision/timothy.woff2") format("woff2");
+  font-display: block;
 }
 
 .tunnel-vision, .tunnel-vision button {

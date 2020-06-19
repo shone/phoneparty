@@ -20,8 +20,7 @@ import {players, handleNewPlayer} from './players.mjs';
 import './splashScreen.mjs';
 import './joinGameInstructions.mjs';
 
-import '/games/tunnel-vision/host/tunnel-vision.mjs';
-import '/games/show-and-tell/host/show-and-tell.mjs';
+import '/games/index.mjs';
 
 import './test.mjs';
 

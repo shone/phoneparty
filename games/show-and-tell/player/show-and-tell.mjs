@@ -6,7 +6,7 @@ document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/show-and-tell/player/show-and-tell.css">
 `);
 
-routes['#games/show-and-tell'] = async function titleScreen({waitForEnd, listenForChannel}) {
+routes['#games/show-and-tell'] = async function showAndTell({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#000';
 
   const panelA = document.createElement('div');

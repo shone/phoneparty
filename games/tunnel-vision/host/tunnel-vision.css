@@ -1,6 +1,19 @@
 @font-face {
   font-family: "Timothy";
   src: url("/games/tunnel-vision/timothy.woff2") format("woff2");
+  font-display: block;
+}
+
+#games-index a[href="#games/tunnel-vision"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #98947f;
+  font-size: 4em;
+  font-family: Timothy;
+  color: white;
+  -webkit-text-stroke: 0.01em black;
+  text-shadow: black 0 0.1em 0.3em;
 }
 
 h1.tunnel-vision, h2.tunnel-vision {

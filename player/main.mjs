@@ -38,7 +38,9 @@ async function showStatus(status, description='', detail='') {
   }
 }
 
-navigator.serviceWorker.register('/service-worker.js');
+if (navigator.serviceWorker) {
+  navigator.serviceWorker.register('/service-worker.js');
+}
 
 location.hash = '';
 
@@ -109,6 +111,9 @@ export let rtcConnection = null;
 async function getCameraStream() {
   while (true) {
     showStatus('waiting', 'Accessing camera..');
+    if (!navigator.mediaDevices) {
+      return null;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
       showStatus('');

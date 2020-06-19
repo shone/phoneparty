@@ -1,5 +1,4 @@
 html {
-/*   font-size: 4vmin; */
   font-size: calc((2vw + 2vh) / 2);
 }
 @media (max-width: 600px), (max-height: 600px) {
@@ -12,13 +11,14 @@ body {
   margin: 0;
   background: black;
   transition: background-color 1s;
-  font-family: "Helvetica Neue", "Roboto";
+  font-family: "Roboto", sans-serif;
   user-select: none;
 }
 
 @font-face {
   font-family: "NotoColorEmoji_subset";
   src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
+  font-display: block;
 }
 
 body.host-dragging:after {

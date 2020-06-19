@@ -1,0 +1,21 @@
+#games-index {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --tile-size: 20rem;
+  font-size: calc(var(--tile-size) / 20);
+}
+
+#games-index > a {
+  width:  var(--tile-size);
+  height: var(--tile-size);
+  background: white;
+  margin: calc(var(--tile-size) / 8);
+  text-decoration: none;
+}
+
+#games-index > a:hover {
+  transform: scale(1.1);
+}
