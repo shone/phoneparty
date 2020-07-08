@@ -1,4 +1,4 @@
-import routes from '/routes.mjs';
+import routes from '/player/routes.mjs';
 
 import {sendLargeBlobOnChannel} from '/shared/utils.mjs';
 

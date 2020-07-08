@@ -1,7 +1,7 @@
-import {stream, rtcConnection} from '/main.mjs';
+import {stream, rtcConnection} from '/player/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 
-import routes from '/routes.mjs';
+import routes from '/player/routes.mjs';
 
 export let canvas = null;
 

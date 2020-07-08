@@ -3,7 +3,7 @@ import './thingChoosingScreen.mjs';
 import './photoTakingScreen.mjs';
 import './photoJudgementScreen.mjs';
 
-import routes from '/routes.mjs';
+import routes from '/player/routes.mjs';
 
 import {waitForNSeconds} from '/shared/utils.mjs';
 

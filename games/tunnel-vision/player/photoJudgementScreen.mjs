@@ -1,4 +1,4 @@
-import routes from '/routes.mjs';
+import routes from '/player/routes.mjs';
 
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 

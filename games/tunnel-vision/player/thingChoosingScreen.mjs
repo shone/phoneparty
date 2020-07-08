@@ -1,4 +1,4 @@
-import routes from '/routes.mjs';
+import routes from '/player/routes.mjs';
 
 routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#98947f';

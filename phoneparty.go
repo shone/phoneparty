@@ -17,12 +17,18 @@ var (
 func main() {
 	flag.Parse()
 
-	http.Handle("/", server.FileServer(http.Dir("./player"), ""))
-	http.Handle("/host/", server.FileServer(http.Dir("./host"), "/host/"))
-	http.Handle("/shared/", server.FileServer(http.Dir("./shared"), "/shared/"))
-	http.Handle("/sounds/", server.FileServer(http.Dir("./sounds"), "/sounds/"))
-	http.Handle("/fonts/", server.FileServer(http.Dir("./fonts"), "/fonts/"))
-	http.Handle("/games/", server.FileServer(http.Dir("./games"), "/games/"))
+	http.Handle("/", http.RedirectHandler("/player/", http.StatusMovedPermanently))
+
+	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
+	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
+
+	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
+	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, http.FileServer(http.Dir("./host")))))
+
+	http.Handle("/shared/", http.StripPrefix("/shared/", http.FileServer(http.Dir("./shared"))))
+	http.Handle("/sounds/", http.StripPrefix("/sounds/", http.FileServer(http.Dir("./sounds"))))
+	http.Handle("/fonts/", http.StripPrefix("/fonts/", http.FileServer(http.Dir("./fonts"))))
+	http.Handle("/games/", http.StripPrefix("/games/", http.FileServer(http.Dir("./games"))))
 
 	http.HandleFunc("/host/ws", server.HandleHostWebsocket)
 	http.HandleFunc("/player/ws", server.HandlePlayerWebsocket)
