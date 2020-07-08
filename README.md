@@ -65,7 +65,7 @@ To build the server, compile with [Go](https://golang.org/):
 # Requires websocket library
 $ go get github.com/gorilla/websocket
 
-$ go build server.go
+$ go build
 ```
 
 ## Name
