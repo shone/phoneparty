@@ -20,23 +20,25 @@ type Host struct {
 func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
-		log.Println("A host attempted to connect, but its remote address could not be parsed into host/port parts:", request.RemoteAddr)
-		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("Could not parse remote address into host/port parts"))
+		msg := fmt.Sprintf("Rejected host connection as its remote address ('%s') could not be parsed into host/port parts: %s", request.RemoteAddr, err)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusBadRequest)
 		return
 	}
 
 	_, foundExistingHost := hosts.Load(ip)
 	if foundExistingHost {
-		log.Println("A host at", request.RemoteAddr, "attempted to connect, but there's already a host connected on that IP")
-		response.WriteHeader(http.StatusConflict)
-		response.Write([]byte("A host is already connected on this IP"))
+		msg := fmt.Sprintf("Rejected host connection '%s' because there's already a host connected on that address", request.RemoteAddr)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusConflict)
 		return
 	}
 
 	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
 	if err != nil {
-		log.Println("Unable to upgrade host HTTP connection to websocket: ", err)
+		msg := fmt.Sprintf("Unable to upgrade host HTTP connection ('%s') to websocket: %s", request.RemoteAddr, err)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusInternalServerError)
 		return
 	}
 	log.Println("Host connected - Address:", request.RemoteAddr)

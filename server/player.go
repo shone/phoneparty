@@ -24,15 +24,17 @@ type Player struct {
 func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
-		log.Println("A player attempted to connect, but its remote address could not be parsed into host/port parts:", request.RemoteAddr)
-		response.WriteHeader(http.StatusConflict)
-		response.Write([]byte("Could not parse remote address into host/port parts"))
+		msg := fmt.Sprintf("Rejected player connection as its remote address could not be parsed into host/port parts: %s", request.RemoteAddr, err)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusBadRequest)
 		return
 	}
 
 	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
 	if err != nil {
-		log.Println("Unable to upgrade player HTTP connection to websocket: ", err)
+		msg := fmt.Sprintf("Unable to upgrade player HTTP connection ('%s') to websocket: %s", request.RemoteAddr, err)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusInternalServerError)
 		return
 	}
 	playerId := atomic.AddUint64(&nextPlayerId, 1)

@@ -14,7 +14,7 @@ func PushFiles(patterns []string, handler http.Handler) http.Handler {
 		regexps[i] = regexp.MustCompile(pattern)
 	}
 
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer handler.ServeHTTP(w, r)
 
 		if r.URL.Path != "/" {
@@ -36,7 +36,7 @@ func PushFiles(patterns []string, handler http.Handler) http.Handler {
 			}
 			for _, re := range regexps {
 				if re.MatchString(path) {
-					pusher.Push("/" + path, nil)
+					pusher.Push("/"+path, nil)
 					return nil
 				}
 			}
