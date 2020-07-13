@@ -108,7 +108,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     const message = JSON.parse(data);
     if (message.playerId === playerId) {
       if (message.connectionState === 'disconnected') {
-        websocket.removeEventListener('message', callback);
+        websocket.removeEventListener('message', onWebsocketMessage);
       } else if (message.iceCandidate) {
         rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
       }
@@ -233,7 +233,9 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel, waitForPlayerKicked]);
 
-  player.closeChannel.send('true');
+  if (player.closeChannel.readyState === 'open') {
+    player.closeChannel.send('true');
+  }
   rtcConnection.close();
 
   websocket.removeEventListener('message', onWebsocketMessage);

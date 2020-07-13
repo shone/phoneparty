@@ -39,7 +39,7 @@ async function showStatus(status, description='', detail='') {
 }
 
 if (navigator.serviceWorker) {
-  navigator.serviceWorker.register('/service-worker.js');
+  navigator.serviceWorker.register('service-worker.js');
 }
 
 location.hash = '';

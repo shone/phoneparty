@@ -72,6 +72,7 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 		for message := range host.SendChannel {
 			err = websocket_.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
+				log.Println("Could not write to websocket while relaying from player to host:", err)
 				return
 			}
 		}
