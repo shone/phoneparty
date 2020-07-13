@@ -1,0 +1,32 @@
+.player-container[data-device='Pixel 4'] {
+  --aspect-ratio: 490 / 1037;
+  --device-image: url('devices/pixel4.png');
+  --screen-resolution-x: 1080px;
+  --screen-resolution-y: 2280px;
+  --top:    5.0%;
+  --left:   3.5%;
+  --right:  3.5%;
+  --bottom: 2.6%;
+}
+
+.player-container[data-device='iPhone 11'] {
+  --aspect-ratio: 662 / 1305;
+  --device-image: url('devices/iphone11.png');
+  --screen-resolution-x: 828px;
+  --screen-resolution-y: 1792px;
+  --top:    3.5%;
+  --left:   7.5%;
+  --right:  7.5%;
+  --bottom: 3.4%;
+}
+
+.player-container[data-device='iPad Pro 2020 11"'] {
+  --aspect-ratio: 1009 / 1396;
+  --device-image: url('devices/ipad_pro_2020_11inch.png');
+  --screen-resolution-x: 1668px;
+  --screen-resolution-y: 2388px;
+  --top:    3.6%;
+  --left:   4.8%;
+  --right:  5.0%;
+  --bottom: 3.4%;
+}

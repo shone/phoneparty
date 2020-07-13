@@ -1,0 +1,162 @@
+html {
+  height: 100%;
+  font-family: sans-serif;
+
+  /* Solarized theme */
+  --base03:  #002b36;
+  --base02:  #073642;
+  --base01:  #586e75;
+  --base00:  #657b83;
+  --base0:   #839496;
+  --base1:   #93a1a1;
+  --base2:   #eee8d5;
+  --base3:   #fdf6e3;
+  --yellow:  #b58900;
+  --orange:  #cb4b16;
+  --red:     #dc322f;
+  --magenta: #d33682;
+  --violet:  #6c71c4;
+  --blue:    #268bd2;
+  --cyan:    #2aa198;
+  --green:   #859900;
+
+  background: var(--base03);
+  color: var(--base0);
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  border: 1px solid var(--base0);
+  height: 40px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+
+header label {
+  display: flex;
+  align-items: center;
+  padding-left:  5px;
+  padding-right: 5px;
+}
+header label input {
+  margin-left: 15px;
+}
+
+input {
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--base0);
+  color: var(--base0);
+  background: none;
+  padding-left: 12px;
+  font-size: 18px;
+}
+input:focus {
+  outline: none;
+  border-color: var(--base3);
+}
+
+button {
+  background: var(--blue);
+  color: var(--base03);
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  height: 25px;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+button:hover {
+  transform: scale(1.1);
+}
+button:focus {
+  outline: none;
+}
+
+#route {
+  width: 350px;
+}
+
+#host {
+  flex-grow: 1;
+}
+
+#splitter {
+  height: 20px;
+  cursor: ns-resize;
+  position: relative;
+}
+#splitter::before {
+  content: '';
+  background: var(--base0);
+  height: 2px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+}
+
+#players-panel {
+  display: flex;
+  --panel-height: 45vh;
+  height: var(--panel-height);
+}
+
+#players {
+  flex-grow: 1;
+  --player-container-height: calc(var(--panel-height) - 2vmin - 40px);
+  flex-grow: 0;
+  padding: 1vmin;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-color: var(--base01) transparent;
+}
+#players::-webkit-scrollbar {
+  width: 16px;
+  background: transparent;
+}
+#players::-webkit-scrollbar-thumb {
+  background: var(--base01);
+  border: 4px solid var(--base03);
+  border-radius: 8px;
+}
+#players::-webkit-scrollbar-thumb:hover {
+  background: var(--base00);
+}
+
+#add-player-panel {
+  margin-left: auto;
+  width: 150px;
+  padding-left:  10px;
+  padding-right: 10px;
+  border-left: 1px solid var(--base0);
+  display: flex;
+  flex-direction: column;
+}
+#add-player-panel h2 {
+  font-size: 18px;
+  margin-top: 0;
+  text-align: center;
+}
+#add-player-panel ul {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+}
+#add-player-panel ul button {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+iframe {
+  border: none;
+}

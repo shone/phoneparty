@@ -17,7 +17,13 @@ var (
 func main() {
 	flag.Parse()
 
-	http.Handle("/", http.RedirectHandler("/player/", http.StatusMovedPermanently))
+	http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path == "/" {
+			http.Redirect(response, request, "/player/", http.StatusSeeOther)
+		} else {
+			http.NotFoundHandler().ServeHTTP(response, request)
+		}
+	})
 
 	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
 	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
@@ -29,6 +35,7 @@ func main() {
 	http.Handle("/sounds/", http.StripPrefix("/sounds/", http.FileServer(http.Dir("./sounds"))))
 	http.Handle("/fonts/", http.StripPrefix("/fonts/", http.FileServer(http.Dir("./fonts"))))
 	http.Handle("/games/", http.StripPrefix("/games/", http.FileServer(http.Dir("./games"))))
+	http.Handle("/sandbox/", http.StripPrefix("/sandbox/", http.FileServer(http.Dir("./sandbox"))))
 
 	http.HandleFunc("/host/ws", server.HandleHostWebsocket)
 	http.HandleFunc("/player/ws", server.HandlePlayerWebsocket)
