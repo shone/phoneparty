@@ -14,7 +14,7 @@ import (
 var players = make(map[uint64]*Player)
 var playersMutex sync.Mutex
 
-var nextPlayerId uint64
+var nextPlayerID uint64
 
 type Player struct {
 	ID        uint64
@@ -45,8 +45,8 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 		http.Error(response, msg, http.StatusInternalServerError)
 		return
 	}
-	playerId := atomic.AddUint64(&nextPlayerId, 1)
-	log.Printf("Player connected - ID: %d Address: %s", playerId, ip)
+	playerID := atomic.AddUint64(&nextPlayerID, 1)
+	log.Printf("Player connected - ID: %d Address: %s", playerID, ip)
 
 	hostsMutex.Lock()
 	_, found := hosts[ip]
@@ -54,26 +54,26 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 	if found {
 		err = websocket_.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
 		if err != nil {
-			log.Printf("Could not write to player %d websocket at '%s' to notify of connected host: %s", playerId, ip, err)
+			log.Printf("Could not write to player %d websocket at '%s' to notify of connected host: %s", playerID, ip, err)
 			return
 		}
 	}
 
-	player := Player{playerId, ip, websocket_}
+	player := Player{playerID, ip, websocket_}
 
 	playersMutex.Lock()
-	players[playerId] = &player
+	players[playerID] = &player
 	playersMutex.Unlock()
 
 	defer func() {
 		playersMutex.Lock()
-		delete(players, playerId)
+		delete(players, playerID)
 		playersMutex.Unlock()
 
 		hostsMutex.Lock()
 		host, found := hosts[ip]
 		if found {
-			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerID))
 		}
 		hostsMutex.Unlock()
 	}()
@@ -83,11 +83,11 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 		_, message, err := websocket_.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("Player %d websocket at %s closed unexpectedly: %s", playerId, ip, err)
+				log.Printf("Player %d websocket at %s closed unexpectedly: %s", playerID, ip, err)
 			} else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("Player %d websocket at %s closed: %s", playerId, ip, err)
+				log.Printf("Player %d websocket at %s closed: %s", playerID, ip, err)
 			} else {
-				log.Printf("Error while reading from player %d websocket at %s: %s", playerId, ip, err)
+				log.Printf("Error while reading from player %d websocket at %s: %s", playerID, ip, err)
 			}
 			return
 		}
@@ -95,22 +95,22 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 		playerMessage := PlayerMessage{}
 		err = json.Unmarshal(message, &playerMessage)
 		if err != nil {
-			log.Printf("Error while decoding JSON from player %d at '%s': %s", playerId, ip, err)
+			log.Printf("Error while decoding JSON from player %d at '%s': %s", playerID, ip, err)
 			return
 		}
 
-		playerMessage.PlayerID = &playerId
+		playerMessage.PlayerID = &playerID
 
-		messageWithPlayerId, err := json.Marshal(playerMessage)
+		messageWithPlayerID, err := json.Marshal(playerMessage)
 		if err != nil {
-			log.Printf("Error while encoding JSON for player %d: %s", playerId, err)
+			log.Printf("Error while encoding JSON for player %d: %s", playerID, err)
 			return
 		}
 
 		hostsMutex.Lock()
 		host, found := hosts[ip]
 		if found {
-			host.SendChannel <- messageWithPlayerId
+			host.SendChannel <- messageWithPlayerID
 		}
 		hostsMutex.Unlock()
 	}
