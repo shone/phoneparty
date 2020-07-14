@@ -23,12 +23,22 @@ type Player struct {
 }
 
 type PlayerMessage struct {
-	PlayerID        *uint64 `json:"playerId"`
-	SDP             *string `json:"sdp"`
-	ICECandidate    *string `json:"iceCandidate"`
+	// The ID of the player this message was received from
+	PlayerID *uint64 `json:"playerId"`
+
+	// A Session Description Protocol used in the process of making a WebRTC connection with a host
+	SDP *string `json:"sdp"`
+
+	// An Interactive Connectivity Establishment candidate used in the process of
+	// making a WebRTC connection with a host
+	ICECandidate *string `json:"iceCandidate"`
+
+	// This will be 'disconnected' when the player websocket disconnects
 	ConnectionState *string `json:"connectionState"`
 }
 
+// Upgrades the HTTP connection to a websocket and relays messages between the player and any host on the
+// same IP to allow the player and host to connect over WebRTC.
 func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {

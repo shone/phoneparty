@@ -8,14 +8,19 @@ import (
 	"regexp"
 )
 
-func PushFiles(patterns []string, handler http.Handler) http.Handler {
+// PushFiles returns an http.Handler that will, when handling a request at the top-level
+// path ('/'), perform an HTTP/2 server push for all filepaths matching the given regular
+// expressions, and then call the given nextHandler.
+func PushFiles(patterns []string, nextHandler http.Handler) http.Handler {
+	// Compile regular expressions
 	regexps := make([]*regexp.Regexp, len(patterns))
 	for i, pattern := range patterns {
 		regexps[i] = regexp.MustCompile(pattern)
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer handler.ServeHTTP(w, r)
+
+		defer nextHandler.ServeHTTP(w, r)
 
 		if r.URL.Path != "/" {
 			return
@@ -23,6 +28,7 @@ func PushFiles(patterns []string, handler http.Handler) http.Handler {
 
 		pusher, isPusher := w.(http.Pusher)
 		if !isPusher {
+			// HTTP/2 server push not supported for this response writer
 			return
 		}
 

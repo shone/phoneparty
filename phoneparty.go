@@ -41,7 +41,6 @@ func main() {
 	http.HandleFunc("/player/ws", server.HandlePlayerWebsocket)
 
 	if *domain != "" {
-
 		certManager := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
 			HostPolicy: autocert.HostWhitelist(*domain),

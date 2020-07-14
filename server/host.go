@@ -24,11 +24,18 @@ type HostMessage struct {
 	// The ID of the player this message should be forwarded to
 	PlayerID *uint64 `json:"playerId"`
 
-	SDP          *string `json:"sdp"`
+	// A Session Description Protocol used in the process of making a WebRTC connection with a player
+	SDP *string `json:"sdp"`
+
+	// An Interactive Connectivity Establishment candidate used in the process of making a WebRTC connection with a host
 	ICECandidate *string `json:"iceCandidate"`
-	HostState    *string `json:"host"`
+
+	// Indicates to players whether the host for their IP is 'connected' or 'disconnected'
+	HostState *string `json:"host"`
 }
 
+// Upgrades the HTTP connection to a websocket and relays messages between the host and players on the same IP
+// to allow them to connect to the host over WebRTC.
 func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
@@ -143,7 +150,7 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 
 		if player.IP != host.IP {
 			log.Printf("Host at '%s' attempted to send a message to player ID %d which is on a different IP ('%s')", host.IP, *hostMessage.PlayerID, player.IP)
-			return
+			continue
 		}
 
 		hostMessage.PlayerID = nil // Don't send the player its own ID
