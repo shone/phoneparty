@@ -10,25 +10,40 @@ import (
 	"sync"
 )
 
-var hosts sync.Map
+var hosts = make(map[string]*Host)
+var hostsMutex sync.Mutex
 
 type Host struct {
+	IP          string
 	Websocket   *websocket.Conn
 	SendChannel chan []byte
+}
+
+// HostMessage(s) are received as JSON from hosts via their websockets
+type HostMessage struct {
+	// The ID of the player this message should be forwarded to
+	PlayerID *uint64 `json:"playerId"`
+
+	SDP          *string `json:"sdp"`
+	ICECandidate *string `json:"iceCandidate"`
+	HostState    *string `json:"host"`
 }
 
 func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
-		msg := fmt.Sprintf("Rejected host connection as its remote address ('%s') could not be parsed into host/port parts: %s", request.RemoteAddr, err)
+		msg := fmt.Sprintf("Rejected host connection as its remote address '%s' could not be parsed into host/port parts: %s", request.RemoteAddr, err)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusBadRequest)
 		return
 	}
 
-	_, foundExistingHost := hosts.Load(ip)
+	hostsMutex.Lock()
+
+	_, foundExistingHost := hosts[ip]
 	if foundExistingHost {
-		msg := fmt.Sprintf("Rejected host connection '%s' because there's already a host connected on that address", request.RemoteAddr)
+		hostsMutex.Unlock()
+		msg := fmt.Sprintf("Rejected host connection '%s' because there's already a host connected on that address", ip)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusConflict)
 		return
@@ -36,43 +51,57 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 
 	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
 	if err != nil {
-		msg := fmt.Sprintf("Unable to upgrade host HTTP connection ('%s') to websocket: %s", request.RemoteAddr, err)
+		hostsMutex.Unlock()
+		msg := fmt.Sprintf("Unable to upgrade host HTTP connection at '%s' to websocket: %s", ip, err)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusInternalServerError)
 		return
 	}
-	log.Println("Host connected - Address:", request.RemoteAddr)
+	log.Println("Host connected - Address:", ip)
 
-	host := Host{websocket_, make(chan []byte)}
+	host := Host{ip, websocket_, make(chan []byte, 20)}
 
-	hosts.Store(ip, host)
+	hosts[ip] = &host
+
+	hostsMutex.Unlock()
 
 	defer func() {
-		hosts.Delete(ip)
+		hostsMutex.Lock()
+		delete(hosts, ip)
 		close(host.SendChannel)
+		hostsMutex.Unlock()
+
 		// Notify players that the host has disconnected
-		players.Range(func(playerId, player interface{}) bool {
-			if player.(Player).IP == ip {
-				player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
+		playersMutex.Lock()
+		for _, player := range players {
+			if player.IP == ip {
+				err := player.Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
+				if err != nil {
+					log.Printf("Could not notify player %d at '%s' that the host had disconnected: %s", player.ID, player.IP, err)
+				}
 			}
-			return true
-		})
+		}
+		playersMutex.Unlock()
 	}()
 
 	// Notify players that a host has connected
-	players.Range(func(playerId, player interface{}) bool {
-		if player.(Player).IP == ip {
-			player.(Player).Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+	playersMutex.Lock()
+	for _, player := range players {
+		if player.IP == ip {
+			err := player.Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+			if err != nil {
+				log.Printf("Could not notify player %d at '%s' that a host had connected: %s", player.ID, player.IP, err)
+			}
 		}
-		return true
-	})
+	}
+	playersMutex.Unlock()
 
 	// Relay messages from players to host
 	go func() {
 		for message := range host.SendChannel {
 			err = websocket_.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
-				log.Println("Could not write to websocket while relaying from player to host:", err)
+				log.Printf("Could not write to websocket while relaying from player to host at '%s': %s", host.IP, err)
 				return
 			}
 		}
@@ -83,61 +112,60 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 		_, message, err := websocket_.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Host websocket closed unexpectedly")
+				log.Printf("Host websocket at %s closed unexpectedly", host.IP)
 			} else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Host websocket closed")
+				log.Printf("Host websocket at %s closed", host.IP)
 			} else {
-				log.Println("Error reading from host websocket: ", err)
+				log.Printf("Error reading from host websocket at %s: %s", host.IP, err)
 			}
 			return
 		}
 
-		messageJson := make(map[string]interface{})
-		err = json.Unmarshal(message, &messageJson)
+		hostMessage := HostMessage{}
+		err = json.Unmarshal(message, &hostMessage)
 		if err != nil {
-			log.Println("Error while decoding JSON from host:", err)
+			log.Printf("Error while decoding JSON from host at '%s': %s", host.IP, err)
 			return
 		}
 
-		playerIdInterface, ok := messageJson["playerId"]
-		if !ok {
-			log.Println("playerId not present in JSON from host:", message)
+		if hostMessage.PlayerID == nil {
+			log.Printf("Message received from host at '%s' does not contain playerId: %s", host.IP, message)
 			return
 		}
-		playerIdFloat64, ok := playerIdInterface.(float64)
-		if !ok {
-			log.Println("playerId in message from host is not of number type:", message)
-			return
-		}
-		playerId := uint64(playerIdFloat64)
 
-		player, found := players.Load(playerId)
+		playersMutex.Lock()
+		player, found := players[*hostMessage.PlayerID]
+		playersMutex.Unlock()
 		if !found {
-			log.Println("Received message from host for player", playerId, "but a websocket for the player could not be found")
+			log.Printf("Received message from host for player '%d' but the player could not be found.", *hostMessage.PlayerID)
 			continue
 		}
 
-		delete(messageJson, "playerId")
-
-		messageToPlayer, err := json.Marshal(messageJson)
-		if err != nil {
-			log.Println("Could not encode JSON to send to player:", err)
+		if player.IP != host.IP {
+			log.Printf("Host at '%s' attempted to send a message to player ID %d which is on a different IP ('%s')", host.IP, *hostMessage.PlayerID, player.IP)
 			return
 		}
-		err = player.(Player).Websocket.WriteMessage(websocket.TextMessage, messageToPlayer)
+
+		hostMessage.PlayerID = nil // Don't send the player its own ID
+
+		messageToPlayer, err := json.Marshal(hostMessage)
+		if err != nil {
+			log.Printf("Could not encode JSON to send to player: %s", err)
+			return
+		}
+		err = player.Websocket.WriteMessage(websocket.TextMessage, messageToPlayer)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Player", playerId, "websocket closed unexpectedly")
+				log.Println("Player", player.ID, "websocket closed unexpectedly")
 			} else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Player", playerId, "websocket closed")
+				log.Println("Player", player.ID, "websocket closed")
 			} else {
 				log.Println("Error while attempting to write to player websocket: ", err)
 			}
-			players.Delete(playerId)
-			host, found := hosts.Load(ip)
-			if found {
-				host.(Host).SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
-			}
+			playersMutex.Lock()
+			delete(players, player.ID)
+			playersMutex.Unlock()
+			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, player.ID))
 		}
 	}
 }

@@ -11,7 +11,8 @@ import (
 	"sync/atomic"
 )
 
-var players sync.Map
+var players = make(map[uint64]*Player)
+var playersMutex sync.Mutex
 
 var nextPlayerId uint64
 
@@ -19,6 +20,13 @@ type Player struct {
 	ID        uint64
 	IP        string
 	Websocket *websocket.Conn
+}
+
+type PlayerMessage struct {
+	PlayerID        *uint64 `json:"playerId"`
+	SDP             *string `json:"sdp"`
+	ICECandidate    *string `json:"iceCandidate"`
+	ConnectionState *string `json:"connectionState"`
 }
 
 func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) {
@@ -32,61 +40,78 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 
 	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
 	if err != nil {
-		msg := fmt.Sprintf("Unable to upgrade player HTTP connection ('%s') to websocket: %s", request.RemoteAddr, err)
+		msg := fmt.Sprintf("Unable to upgrade player HTTP connection at '%s' to websocket: %s", ip, err)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusInternalServerError)
 		return
 	}
 	playerId := atomic.AddUint64(&nextPlayerId, 1)
-	log.Println("Player connected - ID:", playerId, "Address:", request.RemoteAddr)
+	log.Printf("Player connected - ID: %d Address: %s", playerId, ip)
 
-	_, found := hosts.Load(ip)
+	hostsMutex.Lock()
+	_, found := hosts[ip]
+	hostsMutex.Unlock()
 	if found {
-		websocket_.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+		err = websocket_.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
+		if err != nil {
+			log.Printf("Could not write to player %d websocket at '%s' to notify of connected host: %s", playerId, ip, err)
+			return
+		}
 	}
 
 	player := Player{playerId, ip, websocket_}
 
-	players.Store(playerId, player)
+	playersMutex.Lock()
+	players[playerId] = &player
+	playersMutex.Unlock()
+
 	defer func() {
-		players.Delete(playerId)
-		host, found := hosts.Load(ip)
+		playersMutex.Lock()
+		delete(players, playerId)
+		playersMutex.Unlock()
+
+		hostsMutex.Lock()
+		host, found := hosts[ip]
 		if found {
-			host.(Host).SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
+			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerId))
 		}
+		hostsMutex.Unlock()
 	}()
 
+	// Relay messages from player to host
 	for {
 		_, message, err := websocket_.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Player", playerId, "websocket closed unexpectedly:", err)
+				log.Printf("Player %d websocket at %s closed unexpectedly: %s", playerId, ip, err)
 			} else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log.Println("Player", playerId, "websocket closed:", err)
+				log.Printf("Player %d websocket at %s closed: %s", playerId, ip, err)
 			} else {
-				log.Println("Error while reading from player", playerId, "websocket:", err)
+				log.Printf("Error while reading from player %d websocket at %s: %s", playerId, ip, err)
 			}
 			return
 		}
 
-		messageJson := make(map[string]interface{})
-		err = json.Unmarshal(message, &messageJson)
+		playerMessage := PlayerMessage{}
+		err = json.Unmarshal(message, &playerMessage)
 		if err != nil {
-			log.Println("Error while decoding JSON from player", playerId, ":", err)
+			log.Printf("Error while decoding JSON from player %d at '%s': %s", playerId, ip, err)
 			return
 		}
 
-		messageJson["playerId"] = playerId
+		playerMessage.PlayerID = &playerId
 
-		messageWithPlayerId, err := json.Marshal(messageJson)
+		messageWithPlayerId, err := json.Marshal(playerMessage)
 		if err != nil {
-			log.Println("Error while encoding JSON for player", playerId, ":", err)
+			log.Printf("Error while encoding JSON for player %d: %s", playerId, err)
 			return
 		}
 
-		host, found := hosts.Load(ip)
+		hostsMutex.Lock()
+		host, found := hosts[ip]
 		if found {
-			host.(Host).SendChannel <- messageWithPlayerId
+			host.SendChannel <- messageWithPlayerId
 		}
+		hostsMutex.Unlock()
 	}
 }
