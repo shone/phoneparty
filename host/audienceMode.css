@@ -4,7 +4,7 @@
   right: 0;
   bottom: 0;
   height: 20vh;
-  background: linear-gradient(to top, black, rgba(0, 0, 0, 0.58), transparent);
+  background: linear-gradient(to top, black, rgb(0,0,0,.58), transparent);
   z-index: 2;
   animation: 0.2s reveal-audience-mode-background ease-out forwards;
 }
@@ -65,7 +65,7 @@
   margin-left: -6vw;
   margin-top:  -6vw;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgb(0,0,0,.6);
   display: flex;
   justify-content: center;
   align-items: center;
