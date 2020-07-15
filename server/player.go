@@ -42,7 +42,7 @@ type PlayerMessage struct {
 func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) {
 	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
-		msg := fmt.Sprintf("Rejected player connection as its remote address could not be parsed into host/port parts: %s", request.RemoteAddr, err)
+		msg := fmt.Sprintf("Rejected player connection as its remote address ('%s') could not be parsed into host/port parts: %s", request.RemoteAddr, err)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusBadRequest)
 		return
@@ -50,7 +50,7 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 
 	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
 	if err != nil {
-		msg := fmt.Sprintf("Unable to upgrade player HTTP connection at '%s' to websocket: %s", ip, err)
+		msg := fmt.Sprintf("Unable to upgrade player HTTP connection at '%s' to websocket: %s", request.RemoteAddr, err)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusInternalServerError)
 		return
