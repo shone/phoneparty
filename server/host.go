@@ -10,12 +10,13 @@ import (
 	"sync"
 )
 
-var hosts = make(map[string]*Host)
-var hostsMutex sync.Mutex
+var hosts = struct{
+	m map[string]*Host
+	sync.RWMutex
+}{m: make(map[string]*Host)}
 
 type Host struct {
 	IP          string
-	Websocket   *websocket.Conn
 	SendChannel chan []byte
 }
 
@@ -27,7 +28,7 @@ type HostMessage struct {
 	// A Session Description Protocol used in the process of making a WebRTC connection with a player
 	SDP *string `json:"sdp"`
 
-	// An Interactive Connectivity Establishment candidate used in the process of making a WebRTC connection with a host
+	// An Interactive Connectivity Establishment candidate used in the process of making a WebRTC connection with a player
 	ICECandidate *string `json:"iceCandidate"`
 
 	// Indicates to players whether the host for their IP is 'connected' or 'disconnected'
@@ -45,42 +46,31 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	hostsMutex.Lock()
+	hosts.Lock()
 
-	_, foundExistingHost := hosts[ip]
+	_, foundExistingHost := hosts.m[ip]
 	if foundExistingHost {
-		hostsMutex.Unlock()
+		hosts.Unlock()
 		msg := fmt.Sprintf("Rejected host connection '%s' because there's already a host connected on that address", ip)
 		log.Println(msg)
 		http.Error(response, msg, http.StatusConflict)
 		return
 	}
 
-	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
-	if err != nil {
-		hostsMutex.Unlock()
-		msg := fmt.Sprintf("Unable to upgrade host HTTP connection at '%s' to websocket: %s", ip, err)
-		log.Println(msg)
-		http.Error(response, msg, http.StatusInternalServerError)
-		return
-	}
-	log.Println("Host connected - Address:", ip)
+	host := Host{ip, make(chan []byte, 20)}
+	hosts.m[ip] = &host
 
-	host := Host{ip, websocket_, make(chan []byte, 20)}
-
-	hosts[ip] = &host
-
-	hostsMutex.Unlock()
+	hosts.Unlock()
 
 	defer func() {
-		hostsMutex.Lock()
-		delete(hosts, ip)
+		hosts.Lock()
+		delete(hosts.m, ip)
 		close(host.SendChannel)
-		hostsMutex.Unlock()
+		hosts.Unlock()
 
 		// Notify players that the host has disconnected
-		playersMutex.Lock()
-		for _, player := range players {
+		players.RLock()
+		for _, player := range players.m {
 			if player.IP == ip {
 				err := player.Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
 				if err != nil {
@@ -88,12 +78,21 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 				}
 			}
 		}
-		playersMutex.Unlock()
+		players.RUnlock()
 	}()
 
+	websocket_, err := websocketUpgrader.Upgrade(response, request, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to upgrade host HTTP connection at '%s' to websocket: %s", ip, err)
+		log.Println(msg)
+		http.Error(response, msg, http.StatusInternalServerError)
+		return
+	}
+	log.Println("Host connected - Address:", ip)
+
 	// Notify players that a host has connected
-	playersMutex.Lock()
-	for _, player := range players {
+	players.RLock()
+	for _, player := range players.m {
 		if player.IP == ip {
 			err := player.Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
 			if err != nil {
@@ -101,7 +100,7 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 			}
 		}
 	}
-	playersMutex.Unlock()
+	players.RUnlock()
 
 	// Relay messages from players to host
 	go func() {
@@ -140,9 +139,9 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		playersMutex.Lock()
-		player, found := players[*hostMessage.PlayerID]
-		playersMutex.Unlock()
+		players.RLock()
+		player, found := players.m[*hostMessage.PlayerID]
+		players.RUnlock()
 		if !found {
 			log.Printf("Received message from host for player '%d' but the player could not be found.", *hostMessage.PlayerID)
 			continue
@@ -169,9 +168,9 @@ func HandleHostWebsocket(response http.ResponseWriter, request *http.Request) {
 			} else {
 				log.Println("Error while attempting to write to player websocket: ", err)
 			}
-			playersMutex.Lock()
-			delete(players, player.ID)
-			playersMutex.Unlock()
+			players.Lock()
+			delete(players.m, player.ID)
+			players.Unlock()
 			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, player.ID))
 		}
 	}

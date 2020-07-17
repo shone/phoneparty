@@ -11,8 +11,10 @@ import (
 	"sync/atomic"
 )
 
-var players = make(map[uint64]*Player)
-var playersMutex sync.Mutex
+var players = struct{
+	m map[uint64]*Player
+	sync.RWMutex
+}{m: make(map[uint64]*Player)}
 
 var nextPlayerID uint64
 
@@ -58,9 +60,9 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 	playerID := atomic.AddUint64(&nextPlayerID, 1)
 	log.Printf("Player connected - ID: %d Address: %s", playerID, ip)
 
-	hostsMutex.Lock()
-	_, found := hosts[ip]
-	hostsMutex.Unlock()
+	hosts.RLock()
+	_, found := hosts.m[ip]
+	hosts.RUnlock()
 	if found {
 		err = websocket_.WriteMessage(websocket.TextMessage, []byte(`{"host": "connected"}`))
 		if err != nil {
@@ -71,21 +73,21 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 
 	player := Player{playerID, ip, websocket_}
 
-	playersMutex.Lock()
-	players[playerID] = &player
-	playersMutex.Unlock()
+	players.Lock()
+	players.m[playerID] = &player
+	players.Unlock()
 
 	defer func() {
-		playersMutex.Lock()
-		delete(players, playerID)
-		playersMutex.Unlock()
+		players.Lock()
+		delete(players.m, playerID)
+		players.Unlock()
 
-		hostsMutex.Lock()
-		host, found := hosts[ip]
+		hosts.RLock()
+		host, found := hosts.m[ip]
 		if found {
 			host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerID))
 		}
-		hostsMutex.Unlock()
+		hosts.RUnlock()
 	}()
 
 	// Relay messages from player to host
@@ -117,11 +119,11 @@ func HandlePlayerWebsocket(response http.ResponseWriter, request *http.Request) 
 			return
 		}
 
-		hostsMutex.Lock()
-		host, found := hosts[ip]
+		hosts.RLock()
+		host, found := hosts.m[ip]
 		if found {
 			host.SendChannel <- messageWithPlayerID
 		}
-		hostsMutex.Unlock()
+		hosts.RUnlock()
 	}
 }
