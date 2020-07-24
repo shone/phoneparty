@@ -25,8 +25,8 @@ func main() {
 		}
 	})
 
-	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
-	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^shared/.*.mjs"}
+	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^shared/.*.(mjs|css)"}
+	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^shared/.*.(mjs|css)"}
 
 	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
 	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, http.FileServer(http.Dir("./host")))))
