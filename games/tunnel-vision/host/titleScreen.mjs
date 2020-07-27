@@ -182,8 +182,7 @@ function createTunnelEffect(canvas) {
     gl.useProgram(tunnelShaderProgram);
     gl.disable(gl.BLEND);
 
-    const translation = -tunnelDepth * (1 - journeyCompletionRatio);
-    gl.uniform1f(uCameraZ, translation);
+    gl.uniform1f(uCameraZ, -tunnelDepth * (1 - journeyCompletionRatio));
 
     perspectiveSkew = 0.01 + journeyCompletionRatio;
     setProjectionMatrixSkew(projectionMatrix, fieldOfViewYrad, aspect, perspectiveSkew);
