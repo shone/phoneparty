@@ -133,10 +133,10 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   // Wait for RTC connection to connect
   await new Promise((resolve, reject) => {
-    rtcConnection.onconnectionstatechange = () => {
-      if (rtcConnection.connectionState === 'connected') {
+    rtcConnection.oniceconnectionstatechange = () => {
+      if (rtcConnection.iceConnectionState === 'connected') {
         resolve();
-      } else if (rtcConnection.connectionState === 'failed') {
+      } else if (rtcConnection.iceConnectionState === 'failed') {
         reject();
       }
     }
