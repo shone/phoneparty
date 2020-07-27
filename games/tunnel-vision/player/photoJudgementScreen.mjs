@@ -1,6 +1,6 @@
 import routes from '/player/routes.mjs';
 
-import '/shared/push-button.mjs';
+import '/common/push-button.mjs';
 
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 

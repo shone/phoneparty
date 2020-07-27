@@ -3,7 +3,7 @@ import {
   currentRouteCounter,
 } from './routes.mjs';
 
-import {waitForRtcClose} from '/shared/utils.mjs';
+import {waitForRtcClose} from '/common/utils.mjs';
 
 export const players = [];
 

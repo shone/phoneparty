@@ -1,6 +1,6 @@
 import routes from './routes.mjs';
 
-import {sendOnChannelWhenOpen} from '/shared/utils.mjs';
+import {sendOnChannelWhenOpen} from '/common/utils.mjs';
 
 import * as messaging from './messaging.mjs';
 import * as audienceMode from './audienceMode.mjs';

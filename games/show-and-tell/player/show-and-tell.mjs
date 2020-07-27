@@ -1,8 +1,8 @@
 import routes from '/player/routes.mjs';
 
-import '/shared/push-button.mjs';
+import '/common/push-button.mjs';
 
-import {sendLargeBlobOnChannel} from '/shared/utils.mjs';
+import {sendLargeBlobOnChannel} from '/common/utils.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/show-and-tell/player/show-and-tell.css">

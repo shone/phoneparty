@@ -1,5 +1,5 @@
 import {acceptAllPlayers} from '/host/players.mjs';
-import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
+import {waitForNSeconds, waitForKeypress} from '/common/utils.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging from '/host/messaging.mjs';

@@ -25,13 +25,13 @@ func main() {
 		}
 	})
 
-	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^shared/.*.(mjs|css|png)"}
-	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^shared/.*.(mjs|css|png)"}
+	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
+	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
 
 	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
 	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, http.FileServer(http.Dir("./host")))))
 
-	http.Handle("/shared/", server.AllowRootServiceWorker(http.StripPrefix("/shared/", http.FileServer(http.Dir("./shared")))))
+	http.Handle("/common/", server.AllowRootServiceWorker(http.StripPrefix("/common/", http.FileServer(http.Dir("./common")))))
 	http.Handle("/sounds/", http.StripPrefix("/sounds/", http.FileServer(http.Dir("./sounds"))))
 	http.Handle("/fonts/", http.StripPrefix("/fonts/", http.FileServer(http.Dir("./fonts"))))
 	http.Handle("/games/", http.StripPrefix("/games/", http.FileServer(http.Dir("./games"))))

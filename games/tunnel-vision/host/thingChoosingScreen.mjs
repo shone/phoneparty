@@ -2,7 +2,7 @@ import {
   waitForNSeconds,
   waitForKeypress,
   randomInArray
-} from '/shared/utils.mjs';
+} from '/common/utils.mjs';
 
 import routes from '/host/routes.mjs';
 

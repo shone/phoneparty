@@ -3,7 +3,7 @@ import routes from '/host/routes.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging from '/host/messaging.mjs';
 
-import {receiveLargeBlobOnChannel} from '/shared/utils.mjs';
+import {receiveLargeBlobOnChannel} from '/common/utils.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/show-and-tell/host/show-and-tell.css">

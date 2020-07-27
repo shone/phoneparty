@@ -8,17 +8,17 @@
   "description": "Play party games over WiFi",
   "icons": [
     {
-      "src": "/shared/favicon_64x64.png",
+      "src": "/common/favicon_64x64.png",
       "sizes": "64x64",
       "type": "image/png"
     },
     {
-      "src": "/shared/favicon_192x192.png",
+      "src": "/common/favicon_192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/shared/favicon_512x512.png",
+      "src": "/common/favicon_512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

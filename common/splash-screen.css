@@ -1,4 +1,4 @@
-@import url('/shared/push-button.css');
+@import url('/common/push-button.css');
 
 :host {
   position: fixed;

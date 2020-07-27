@@ -6,7 +6,7 @@ import {
   stopListeningForLeavingPlayers
 } from './players.mjs';
 
-import {waitForNSeconds} from '/shared/utils.mjs';
+import {waitForNSeconds} from '/common/utils.mjs';
 
 let started = false;
 let startCallback = null;

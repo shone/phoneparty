@@ -1,6 +1,6 @@
 import {players} from '/host/players.mjs';
 
-import {waitForNSeconds} from '/shared/utils.mjs';
+import {waitForNSeconds} from '/common/utils.mjs';
 
 import {addSpeechBubbleToPlayer} from '/host/messaging.mjs';
 

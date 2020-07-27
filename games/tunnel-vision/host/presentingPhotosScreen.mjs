@@ -1,4 +1,4 @@
-import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
+import {waitForNSeconds, waitForKeypress} from '/common/utils.mjs';
 
 import {
   players,

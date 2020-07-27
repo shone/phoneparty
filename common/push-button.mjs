@@ -1,5 +1,5 @@
 document.head.insertAdjacentHTML('beforeend', `
-  <link rel="stylesheet" href="/shared/push-button.css">
+  <link rel="stylesheet" href="/common/push-button.css">
 `);
 
 class PushButton extends HTMLElement {

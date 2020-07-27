@@ -1,6 +1,6 @@
 import startBubbleField from './bubbleField.mjs';
 import * as messaging from './messaging.mjs';
-import {waitForNSeconds, waitForKeypress} from '/shared/utils.mjs';
+import {waitForNSeconds, waitForKeypress} from '/common/utils.mjs';
 
 let instructionsElement = null;
 

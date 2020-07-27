@@ -5,9 +5,9 @@ import './photoJudgementScreen.mjs';
 
 import routes from '/player/routes.mjs';
 
-import '/shared/push-button.mjs';
+import '/common/push-button.mjs';
 
-import {waitForNSeconds} from '/shared/utils.mjs';
+import {waitForNSeconds} from '/common/utils.mjs';
 
 routes['#games/tunnel-vision/goal'] = async function goalScreen(routeContext) {
   document.body.style.backgroundColor = '#98947f';

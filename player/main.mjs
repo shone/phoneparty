@@ -12,7 +12,7 @@ import {
   waitForWebsocketClose,
   waitForRtcConnect,
   waitForRtcClose
-} from '/shared/utils.mjs';
+} from '/common/utils.mjs';
 
 import {playTone} from './audio.mjs';
 import {startRouting} from './routes.mjs';
@@ -38,7 +38,7 @@ async function showStatus(status, description='', detail='') {
 }
 
 if (navigator.serviceWorker) {
-  navigator.serviceWorker.register('/shared/service-worker.js', {scope: '/'});
+  navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'});
 }
 
 location.hash = '';

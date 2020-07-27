@@ -1,4 +1,4 @@
-import {waitForNSeconds} from '/shared/utils.mjs';
+import {waitForNSeconds} from '/common/utils.mjs';
 
 import {
   players,
