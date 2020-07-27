@@ -5,6 +5,8 @@ import './photoJudgementScreen.mjs';
 
 import routes from '/player/routes.mjs';
 
+import '/shared/push-button.mjs';
+
 import {waitForNSeconds} from '/shared/utils.mjs';
 
 routes['#games/tunnel-vision/goal'] = async function goalScreen(routeContext) {

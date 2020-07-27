@@ -1,13 +1,29 @@
+@import url('/shared/push-button.css');
+
 :host {
   position: fixed;
   left:   0;
   top:    0;
   right:  0;
   bottom: 0;
-  background: black;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#continue-button {
+  position: absolute;
+  right:  1rem;
+  bottom: 1rem;
+  width:  4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background-size: 70%;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="black" d="M0.1,0 v1 L0.9,0.5"/>\
+    </svg>\
+  ')
 }
 
 .inner-container {

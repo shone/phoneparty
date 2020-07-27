@@ -1,8 +1,11 @@
+import '/shared/push-button.mjs';
+
 export default class SplashScreen extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({mode:'open'}).innerHTML = `
-      <link rel="stylesheet" href="/shared/splashScreen.css">
+      <link rel="stylesheet" href="/shared/splash-screen.css">
+
       <div class="inner-container">
         <div class="phone-party-text"></div>
         <div class="white-box"></div>

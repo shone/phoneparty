@@ -1,5 +1,7 @@
 import routes from '/player/routes.mjs';
 
+import '/shared/push-button.mjs';
+
 import {sendLargeBlobOnChannel} from '/shared/utils.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `

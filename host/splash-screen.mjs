@@ -1,28 +1,32 @@
-import {acceptAllPlayers, stopAcceptingPlayers} from './players.mjs';
 import * as utils from '/shared/utils.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
 import routes from '/host/routes.mjs';
 
-import '/shared/splashScreen.mjs';
+import '/shared/splash-screen.mjs';
 
-routes['#splash-screen'] = async function splashScreen({waitForEnd}) {
+routes['#splash-screen'] = async function splashScreen({waitForEnd, acceptAllPlayers}) {
   document.body.style.backgroundColor = 'black';
 
   const splashScreen = document.createElement('splash-screen');
   document.body.append(splashScreen);
 
+  const continueButton = document.createElement('push-button');
+  continueButton.id = 'continue-button';
+  splashScreen.shadowRoot.append(continueButton);
+
   audienceMode.stop();
 
   const channels = [];
-  acceptAllPlayers(player => { // TODO: acceptPlayersOnCurrentRoute
+  acceptAllPlayers(player => {
     player.remove();
     channels.push(player.createChannelOnCurrentRoute());
   });
 
   const timeAtSplashStart = performance.now();
 
-  await Promise.race([waitForEnd(), utils.waitForKeypress(' ')]);
+  const waitForContinueButton = new Promise(resolve => continueButton.onclick = resolve);
+  await Promise.race([waitForEnd(), waitForContinueButton]);
 
   splashScreen.classList.add('finished');
   for (const channel of channels) {
@@ -36,10 +40,6 @@ routes['#splash-screen'] = async function splashScreen({waitForEnd}) {
   }
 
   splashScreen.remove();
-  stopAcceptingPlayers();
-  for (const channel of channels) {
-    channel.close();
-  }
 
   return '#join-game-instructions';
 };

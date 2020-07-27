@@ -1,5 +1,7 @@
 import routes from '/player/routes.mjs';
 
+import '/shared/push-button.mjs';
+
 import * as photoTakingScreen from './photoTakingScreen.mjs';
 
 routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({params, waitForEnd, listenForChannel}) {

@@ -1,3 +1,7 @@
+document.head.insertAdjacentHTML('beforeend', `
+  <link rel="stylesheet" href="/shared/push-button.css">
+`);
+
 class PushButton extends HTMLElement {
   constructor() {
     super();
@@ -62,7 +66,7 @@ document.body.addEventListener('touchend',    handleTouchEndAndCancel);
 document.body.addEventListener('touchcancel', handleTouchEndAndCancel);
 
 function handleKey(event) {
-  const button = document.querySelector(`.push-button[data-key="${event.key}"]`);
+  const button = document.querySelector(`push-button[data-key="${event.key}"]`);
   if (button) {
     event.preventDefault();
     if (event.type === 'keydown' && !button.isKeyDown) {

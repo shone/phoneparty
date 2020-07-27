@@ -15,13 +15,12 @@ import {
 } from '/shared/utils.mjs';
 
 import {playTone} from './audio.mjs';
-import './push-button.mjs';
 import {startRouting} from './routes.mjs';
 
 import handleMessaging from './messaging.mjs';
 import handleMovement from './movement.mjs';
 
-import './splashScreen.mjs';
+import './splash-screen.mjs';
 import './joinGameInstructions.mjs';
 
 import '/games/tunnel-vision/player/tunnel-vision.mjs';

@@ -1,3 +1,5 @@
+import '/shared/push-button.mjs';
+
 export default function handleMovement(channel) {
   const panel = document.createElement('div');
   panel.id = 'movement-panel';

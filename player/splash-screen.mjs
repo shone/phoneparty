@@ -1,6 +1,6 @@
 import routes from './routes.mjs';
 
-import '/shared/splashScreen.mjs';
+import '/shared/splash-screen.mjs';
 
 routes['#splash-screen'] = async function splashScreen({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = 'black';

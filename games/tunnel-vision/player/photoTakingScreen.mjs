@@ -1,6 +1,8 @@
 import {stream, rtcConnection} from '/player/main.mjs';
 import {randomInArray} from '/shared/utils.mjs';
 
+import '/shared/push-button.mjs';
+
 import routes from '/player/routes.mjs';
 
 export let canvas = null;
