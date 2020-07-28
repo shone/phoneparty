@@ -1,4 +1,4 @@
-module github.com/joshua-shone/phone-party
+module github.com/joshua-shone/phoneparty
 
 go 1.14
 

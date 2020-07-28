@@ -117,7 +117,7 @@
   100% { transform: scale(1); }
 }
 
-.phone-party-text {
+.phoneparty-text {
   position: absolute;
   bottom: 100%;
   right: -4%;
@@ -156,7 +156,7 @@
     </svg>\
   ');
 }
-.phone-party-text:after {
+.phoneparty-text:after {
   content: '';
   position: absolute;
   width:  200%;
@@ -164,9 +164,9 @@
   height: 110%;
   background: linear-gradient(to right, rgb(0,0,0,0), rgb(0,0,0,1), rgb(0,0,0,1));
   transform: translateX(-49%);
-  animation: 3.5s 5.5s reveal-phone-party-text forwards;
+  animation: 3.5s 5.5s reveal-phoneparty-text forwards;
 }
-@keyframes reveal-phone-party-text {
+@keyframes reveal-phoneparty-text {
   from { transform: translateX(-50%); }
   to   { transform: translateX(50%); }
 }

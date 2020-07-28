@@ -61,7 +61,7 @@ body.host-dragging:after {
 @keyframes fade-in-status {
   to { opacity: 1; }
 }
-#status-container .phone-party-logo .phone-party-text {
+#status-container .phoneparty-logo .phoneparty-text {
   width: 12rem;
   height: 3rem;
   background: no-repeat center / contain url('data:image/svg+xml,\
@@ -71,16 +71,16 @@ body.host-dragging:after {
     </svg>\
   ');
 }
-#status-container .phone-party-logo .bubbles span {
+#status-container .phoneparty-logo .bubbles span {
   display: inline-block;
   width:  2rem;
   height: 2rem;
   border-radius: 50%;
 }
-#status-container .phone-party-logo .bubbles span:nth-child(1) { background: #f5a500; }
-#status-container .phone-party-logo .bubbles span:nth-child(2) { background: #0cb90c; }
-#status-container .phone-party-logo .bubbles span:nth-child(3) { background: #c900e0; }
-#status-container .phone-party-logo .bubbles span:nth-child(4) { background: #00a7e0; }
+#status-container .phoneparty-logo .bubbles span:nth-child(1) { background: #f5a500; }
+#status-container .phoneparty-logo .bubbles span:nth-child(2) { background: #0cb90c; }
+#status-container .phoneparty-logo .bubbles span:nth-child(3) { background: #c900e0; }
+#status-container .phoneparty-logo .bubbles span:nth-child(4) { background: #00a7e0; }
 #status-container .separator {
   background: white;
   width: 6rem;

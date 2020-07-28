@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"github.com/joshua-shone/phone-party/server"
+	"github.com/joshua-shone/phoneparty/server"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"

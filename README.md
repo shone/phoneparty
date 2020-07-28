@@ -17,7 +17,7 @@ The emphasis is on zero-setup instant fun:
 Phone Party is a [Go Module](https://github.com/golang/go/wiki/Modules). The [go run](https://golang.org/cmd/go/#hdr-Compile_and_run_Go_program) command can install dependencies and run the server locally:
 
 ```bash
-$ cd phone-party/
+$ cd phoneparty/
 $ go run .
 ```
 
