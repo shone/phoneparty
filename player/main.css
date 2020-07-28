@@ -47,7 +47,7 @@ body.host-dragging:after {
   text-align:      center;
   justify-content: center;
   align-items:     center;
-  font-size: 3vmin;
+  font-size: 1.5rem;
   pointer-events: none;
 }
 #status-container.waiting {
@@ -62,8 +62,8 @@ body.host-dragging:after {
   to { opacity: 1; }
 }
 #status-container .phone-party-logo .phone-party-text {
-  width: 25vmin;
-  height: 6vmin;
+  width: 12rem;
+  height: 3rem;
   background: no-repeat center / contain url('data:image/svg+xml,\
     <svg viewBox="0 0 16.9 3.2" xmlns="http://www.w3.org/2000/svg">\
       <path fill="white" stroke-width=".1"\
@@ -73,8 +73,8 @@ body.host-dragging:after {
 }
 #status-container .phone-party-logo .bubbles span {
   display: inline-block;
-  width:  4vmin;
-  height: 4vmin;
+  width:  2rem;
+  height: 2rem;
   border-radius: 50%;
 }
 #status-container .phone-party-logo .bubbles span:nth-child(1) { background: #f5a500; }
@@ -83,13 +83,12 @@ body.host-dragging:after {
 #status-container .phone-party-logo .bubbles span:nth-child(4) { background: #00a7e0; }
 #status-container .separator {
   background: white;
-  width: 15vmin;
-  height: 0.3vmin;
-  border-radius: 0.015vmin;
-  margin: 3vmin;
+  width: 6rem;
+  height: .14rem;
+  border-radius: .07rem;
+  margin: .5rem;
 }
-#status        { animation: 0.8s 1s pulse-status ease-in-out infinite alternate; }
-#status-detail { animation: 0.8s 1s pulse-status ease-in-out infinite alternate; }
+#status-description { animation: 0.8s 1s pulse-status ease-in-out infinite alternate; }
 @keyframes pulse-status {
   from { opacity: 1;   }
   to   { opacity: 0.3; }
@@ -111,11 +110,11 @@ body.host-dragging:after {
   color: #e74949;
 }
 #status-detail {
-  margin-top: 1vmin;
+  margin-top: .5rem;
   font-size: 0.6em;
 }
-#status-container button {
-  font-size: 4vmin;
+#status-container push-button {
+  font-size: 1.5rem;
 }
 
 button {
@@ -191,10 +190,10 @@ button::-moz-focus-inner {
 }
 
 push-button.camera-retry-button {
-  padding: 1vmin;
-  min-width: 20vmin;
-  border-radius: 1vmin;
-  margin-top: 2vmin;
+  padding: .5rem;
+  min-width: 10rem;
+  border-radius: .5rem;
+  margin-top: 1rem;
   color: black;
 }
 

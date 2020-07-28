@@ -122,9 +122,9 @@ async function getCameraStream() {
         return null;
       }
       if (error && error.name === 'NotFoundError') {
-        await showStatus('error', 'no camera found');
+        showStatus('error', 'no camera found');
       } else {
-        await showStatus('error', 'Could not get camera', error);
+        showStatus('error', 'Could not get camera', error);
       }
       const statusDetail = document.getElementById('status-detail');
       statusDetail.insertAdjacentHTML('beforeend', `
