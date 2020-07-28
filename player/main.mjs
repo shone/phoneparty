@@ -1,10 +1,3 @@
-// HTTPS redirect
-if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-  location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
-}
-
-location.hash = '';
-
 import {
   waitForNSeconds,
   waitForPageToBeVisible,
@@ -99,7 +92,7 @@ export let rtcConnection = null;
         }
       }
 
-      await connectRtcAndStartGame(websocket);
+      await connectRtcAndStartRouting(websocket);
       if (websocket.readyState !== websocket.OPEN) {
         break;
       }
@@ -183,7 +176,7 @@ function setupFullscreenButton() {
   fullscreenButton.classList.remove('unimplemented');
 }
 
-async function connectRtcAndStartGame(websocket) {
+async function connectRtcAndStartRouting(websocket) {
   showStatus('waiting', 'Establishing WebRTC connection', 'Setting up connection object');
 
   rtcConnection = new RTCPeerConnection();

@@ -11,7 +11,8 @@ import (
 
 var (
 	serve_address = flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
-	domain        = flag.String("domain", "", "e.g. 'example.com' When specified, will serve HTTPS for the domain using automatically retrieved Let's Encrypt certificates.")
+	domain        = flag.String("domain", "", "e.g. 'example.com' When given, serves HTTPS for the domain using Let's Encrypt.")
+	multihost     = flag.Bool("multihost", false, "Allow multiple hosts (one per IPv4 address).")
 )
 
 func main() {
@@ -25,8 +26,10 @@ func main() {
 		}
 	})
 
-	hostAssets := []string{"host/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
-	playerAssets := []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
+	var (
+		hostAssets   = []string{"host/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
+		playerAssets = []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
+	)
 
 	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
 	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, http.FileServer(http.Dir("./host")))))
@@ -37,8 +40,8 @@ func main() {
 	http.Handle("/games/", http.StripPrefix("/games/", http.FileServer(http.Dir("./games"))))
 	http.Handle("/sandbox/", http.StripPrefix("/sandbox/", http.FileServer(http.Dir("./sandbox"))))
 
-	http.HandleFunc("/host/ws", server.HandleHostWebsocket)
-	http.HandleFunc("/player/ws", server.HandlePlayerWebsocket)
+	http.Handle("/host/ws", server.HandleHostWebsocket(*multihost))
+	http.Handle("/player/ws", server.HandlePlayerWebsocket(*multihost))
 
 	if *domain != "" {
 		certManager := autocert.Manager{

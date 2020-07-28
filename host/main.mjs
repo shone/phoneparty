@@ -1,10 +1,3 @@
-const isServedLocally = location.hostname === 'localhost' || location.hostname.startsWith('192.168.') || location.protocol === 'file:';
-
-// Redirect to HTTPS
-if (location.protocol !== 'https:' && !isServedLocally) {
-  location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
-}
-
 const connectionStatus = document.getElementById('connection-status');
 const warningIndicator = document.getElementById('warning-indicator');
 
