@@ -18,6 +18,7 @@ import './joinGameInstructions.mjs';
 
 import '/games/tunnel-vision/player/tunnel-vision.mjs';
 import '/games/show-and-tell/player/show-and-tell.mjs';
+import '/games/bubbleland/player/bubbleland.mjs';
 
 import './test.mjs';
 
@@ -49,13 +50,8 @@ export let rtcConnection = null;
     await waitForPageToBeVisible();
 
     showStatus('waiting', 'Connecting..', 'Opening websocket');
+
     const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
-    if (await waitForWebsocketOpen(websocket) !== 'websocket-open') {
-      await showStatus('error', 'failed to connect', 'Could not establish websocket, retrying in 2 seconds..');
-      showStatus('waiting', 'Connecting..', 'Opening websocket');
-      await waitForNSeconds(1);
-      continue;
-    }
 
     let hasHost = false;
     let waitingOnHostCallback = null;
@@ -74,6 +70,13 @@ export let rtcConnection = null;
         waitingOnHostCallback('websocket-closed');
       }
     });
+
+    if (await waitForWebsocketOpen(websocket) !== 'websocket-open') {
+      await showStatus('error', 'failed to connect', 'Could not establish websocket, retrying in 2 seconds..');
+      showStatus('waiting', 'Connecting..', 'Opening websocket');
+      await waitForNSeconds(1);
+      continue;
+    }
 
     while (true) {
       await waitForPageToBeVisible();
@@ -198,7 +201,12 @@ async function connectRtcAndStartRouting(websocket) {
   visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 
   const acceptPlayerChannel = rtcConnection.createDataChannel('acceptPlayer', {negotiated: true, id: 8, ordered: true});
-  const routeChannel        = rtcConnection.createDataChannel('route',        {negotiated: true, id: 9, ordered: true});
+  const waitForPlayerAccepted = new Promise(resolve => {
+    acceptPlayerChannel.onmessage = () => resolve('accepted');
+    acceptPlayerChannel.onclose = () => resolve('channel-closed');
+  });
+
+  const routeChannel = rtcConnection.createDataChannel('route',        {negotiated: true, id: 9, ordered: true});
 
   const closeChannel = rtcConnection.createDataChannel('close', {negotiated: true, id: 7, ordered: true});
   function handleUnload() { closeChannel.send('true'); }
@@ -295,10 +303,7 @@ async function connectRtcAndStartRouting(websocket) {
   const waitForRouting = startRouting(rtcConnection, routeChannel);
 
   showStatus('waiting', 'Waiting to be accepted');
-  const acceptResult = await new Promise(resolve => {
-    acceptPlayerChannel.onmessage = () => resolve('accepted');
-    acceptPlayerChannel.onclose = () => resolve('channel-closed');
-  });
+  const acceptResult = await waitForPlayerAccepted;
   if (acceptResult === 'channel-closed') {
     rtcConnection.close();
     await showStatus('error', 'failed to connect', 'The RTC channel was closed before the player was accepted');
