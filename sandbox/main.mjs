@@ -23,9 +23,14 @@ window.onhashchange = () => {
 
 splitter.onpointerdown = event => {
   event.preventDefault();
-  splitter.setPointerCapture(event.pointerId);
+
+  if (splitter.onpointermove) return;
+
+  const pointerId = event.pointerId;
+  splitter.setPointerCapture(pointerId);
 
   splitter.onpointermove = event => {
+    if (event.pointerId !== pointerId) return;
     let panelHeight = (1 - (event.pageY / window.innerHeight)) * 100;
     panelHeight = Math.min(panelHeight, 70);
     panelHeight = Math.max(panelHeight, 20);
@@ -33,9 +38,11 @@ splitter.onpointerdown = event => {
     layoutPlayerIframes();
   }
 
-  splitter.onpointerup = () => {
+  splitter.onpointerup = splitter.onpointercancel = event => {
+    if (event.pointerId !== pointerId) return;
     splitter.onpointermove = null;
     splitter.onpointerup = null;
+    splitter.onpointercancel = null;
   }
 }
 
