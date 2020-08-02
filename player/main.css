@@ -127,53 +127,6 @@ button::-moz-focus-inner {
   border: 0;
 }
 
-#fullscreen-button.unimplemented {
-  visibility: hidden;
-  animation: none;
-}
-#fullscreen-button {
-  background: no-repeat center / 59% white url('data:image/svg+xml,\
-    <svg viewBox="0 0 8.5 8.5" xmlns="http://www.w3.org/2000/svg">\
-      <path stroke="black" stroke-width="1.3" fill="none"\
-        d="M.7 3.5V.7h2.6M7.8 3.5V.7H5.2M.7 5v2.8h2.6M7.8 5v2.8H5.2"/>\
-    </svg>\
-  ');
-  opacity: 1;
-  visibility: visible;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 0 2vmin black;
-  position: fixed;
-  right: 6vmin;
-  top:   6vmin;
-  width:  3rem;
-  height: 3rem;
-  padding: 0;
-  z-index: 3;
-  animation: 0.5s reveal-fullscreen-button;
-}
-@keyframes reveal-fullscreen-button {
-  from { transform: scale(0); }
-  to   { transform: scale(1); }
-}
-@media (display-mode: fullscreen) {
-  #fullscreen-button {
-    background: no-repeat center / 59% white url('data:image/svg+xml,\
-      <svg viewBox="0 0 8.5 8.5" xmlns="http://www.w3.org/2000/svg">\
-        <path stroke="black" stroke-width="1.3" fill="none"\
-          d="m2.868 0.3038v2.8h-2.6m5.364-2.8v2.8h2.6m-5.364 5.164v-2.8h-2.6m5.364 2.8v-2.8h2.6"/>\
-      </svg>\
-    ');
-  }
-}
-#fullscreen-button:hover {
-  transform: scale(1.1);
-}
-#fullscreen-button:active,
-#fullscreen-button.active {
-  transform: scale(0.9);
-}
-
 .hide {
   display: none !important;
 }

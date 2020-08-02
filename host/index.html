@@ -13,6 +13,7 @@
     <link rel="manifest" href="/common/manifest.webmanifest">
 
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="/common/menu.css">
     <link rel="stylesheet" href="player.css">
     <link rel="stylesheet" href="joinGameInstructions.css">
     <link rel="stylesheet" href="messaging.css">
@@ -27,10 +28,20 @@
     <link rel="stylesheet" href="/games/tunnel-vision/host/anotherRoundScreen.css">
     <link rel="stylesheet" href="/games/tunnel-vision/host/phone.css">
   </head>
+
   <body>
     <div id="pause-indicator">⏸</div>
     <div id="connection-status"></div>
     <div id="warning-indicator"></div>
+
+    <div id="menu">
+      <push-button class="toggle"></push-button>
+      <div class="items">
+        <push-button class="fullscreen unimplemented">Full-screen</push-button>
+        <push-button class="player">Be a player</push-button>
+      </div>
+    </div>
   </body>
+
   <script type="module" src="main.mjs"></script>
 </html>

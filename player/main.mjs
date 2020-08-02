@@ -43,7 +43,7 @@ export let rtcConnection = null;
 
   stream = await getCameraStream();
 
-  setupFullscreenButton();
+  setupMenu();
 
   while (true) {
     await waitForPageToBeVisible();
@@ -134,6 +134,19 @@ async function getCameraStream() {
   }
 }
 
+function setupMenu() {
+  const menu = document.getElementById('menu');
+  menu.querySelector('.toggle').onclick = () => {
+    menu.classList.toggle('visible');
+  }
+
+  setupFullscreenButton();
+
+  menu.querySelector('.host').onclick = () => {
+    location.pathname = 'host';
+  }
+}
+
 function setupFullscreenButton() {
   // - Only show the fullscreen button if the fullscreen API is available.
   // - If the app was started in fullscreen mode, assume that it's running as an installed PWA and therefore doesn't
@@ -142,7 +155,7 @@ function setupFullscreenButton() {
     return;
   }
 
-  const fullscreenButton = document.getElementById('fullscreen-button');
+  const fullscreenButton = document.querySelector('#menu .fullscreen');
 
   const clickSound = new Audio('/sounds/click.wav');
   function toggleFullscreen() {
@@ -154,24 +167,6 @@ function setupFullscreenButton() {
     clickSound.play();
   }
   fullscreenButton.onclick = toggleFullscreen;
-
-  const touches = new Set();
-  fullscreenButton.ontouchstart = event => {
-    fullscreenButton.classList.add('active');
-    for (const touch of event.changedTouches) {
-      touches.add(touch.identifier);
-    }
-  }
-  function onTouchEndOrCancel(event) {
-    for (const touch of event.changedTouches) {
-      touches.delete(touch.identifier);
-      if (touches.size === 0) {
-        fullscreenButton.classList.remove('active');
-      }
-    }
-  }
-  window.addEventListener('touchend',    onTouchEndOrCancel);
-  window.addEventListener('touchcancel', onTouchEndOrCancel);
 
   fullscreenButton.classList.remove('unimplemented');
 }

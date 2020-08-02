@@ -20,6 +20,8 @@ import './test.mjs';
 import {startRouting} from './routes.mjs';
 startRouting({defaultRoute: '#splash-screen'});
 
+setupMenu();
+
 // Open websocket and receive players
 (async function() {
   connectionStatus.className = 'connecting';
@@ -43,6 +45,43 @@ startRouting({defaultRoute: '#splash-screen'});
     warningIndicator.textContent = '';
   }
 })();
+
+function setupMenu() {
+  const menu = document.getElementById('menu');
+  menu.querySelector('.toggle').onclick = () => {
+    menu.classList.toggle('visible');
+  }
+
+  setupFullscreenButton();
+
+  menu.querySelector('.player').onclick = () => {
+    location.pathname = 'player';
+  }
+}
+
+function setupFullscreenButton() {
+  // - Only show the fullscreen button if the fullscreen API is available.
+  // - If the app was started in fullscreen mode, assume that it's running as an installed PWA and therefore doesn't
+  // need a fullscreen button.
+  if (!document.documentElement.requestFullscreen || window.matchMedia('(display-mode: fullscreen)').matches) {
+    return;
+  }
+
+  const fullscreenButton = document.querySelector('#menu .fullscreen');
+
+  const clickSound = new Audio('/sounds/click.wav');
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen({navigationUI: "hide"});
+    } else {
+      document.exitFullscreen();
+    }
+    clickSound.play();
+  }
+  fullscreenButton.onclick = toggleFullscreen;
+
+  fullscreenButton.classList.remove('unimplemented');
+}
 
 window.onbeforeunload = () => {
   for (const player of players) {

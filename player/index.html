@@ -14,6 +14,7 @@
     <link rel="manifest" href="/common/manifest.webmanifest">
 
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="/common/menu.css">
     <link rel="stylesheet" href="panels.css">
     <link rel="stylesheet" href="movement.css">
     <link rel="stylesheet" href="messaging.css">
@@ -30,7 +31,13 @@
       <div class="panel" id="panel-B"></div>
     </div>
 
-    <button id="fullscreen-button" class="unimplemented"></button>
+    <div id="menu">
+      <push-button class="toggle"></push-button>
+      <div class="items">
+        <push-button class="fullscreen unimplemented">Full-screen</push-button>
+        <push-button class="host">Be a host</push-button>
+      </div>
+    </div>
 
     <div id="status-container" class="waiting">
       <div class="phoneparty-logo">
