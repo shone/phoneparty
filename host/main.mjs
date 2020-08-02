@@ -57,6 +57,11 @@ function setupMenu() {
   menu.querySelector('.player').onclick = () => {
     location.pathname = 'player';
   }
+
+  menu.querySelector('.games').onclick = () => {
+    location.hash = 'games';
+    menu.classList.remove('visible');
+  }
 }
 
 function setupFullscreenButton() {

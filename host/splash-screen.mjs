@@ -41,5 +41,5 @@ routes['#splash-screen'] = async function splashScreen({waitForEnd, acceptAllPla
 
   splashScreen.remove();
 
-  return '#join-game-instructions';
+  return '#games';
 };
