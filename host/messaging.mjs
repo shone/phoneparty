@@ -90,7 +90,7 @@ function handlePlayer(player) {
       case 'shout-on':  player.classList.add('shout'); break;
       case 'shout-off': player.classList.remove('shout'); break;
       default:
-        clearSpeechBubblesFromPlayer(player);
+        clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
         addSpeechBubbleToPlayer(player, event.data);
     }
   }
