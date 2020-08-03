@@ -14,25 +14,43 @@ panel.innerHTML = `
 
 const emojiButtons = panel.querySelector('.emoji-buttons');
 const clearButton = panel.querySelector('.bottom-row .clear');
+const shoutButton = panel.querySelector('.bottom-row .shout');
 
 export default function handleMessaging(channel) {
   document.getElementById('panel-B').append(panel);
 
-  emojiButtons.onclick = event => {
+  emojiButtons.onpointerdown = event => {
     if (event.target.tagName === 'BUTTON') {
       event.preventDefault();
       channel.send(event.target.textContent);
     }
   }
-  clearButton.onmousedown = clearButton.ontouchstart = event => {
+
+  clearButton.onpointerdown = event => {
     event.preventDefault();
     channel.send('clear');
   }
 
+  shoutButton.onpointerdown = event => {
+    event.preventDefault();
+    const pointerId = event.pointerId;
+    channel.send('shout-on');
+    function onPointerEnd(event) {
+      if (event.pointerId !== pointerId) {
+        return;
+      }
+      window.removeEventListener('pointerup', onPointerEnd);
+      window.removeEventListener('pointercancel', onPointerEnd);
+      channel.send('shout-off');
+    }
+    window.addEventListener('pointerup', onPointerEnd);
+    window.addEventListener('pointercancel', onPointerEnd);
+  }
+
   channel.onclose = () => {
-    emojiButtons.onclick = null;
-    clearButton.onclick = null;
-    clearButton.ontouchstart = null;
+    emojiButtons.onpointerdown = null;
+    clearButton.onpointerdown = null;
+    shoutButton.onpointerdown = null;
     panel.remove();
   }
 }

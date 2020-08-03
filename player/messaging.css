@@ -59,6 +59,7 @@
 #messaging-panel .bottom-row button {
   height: 100%;
   width: 6rem;
+  touch-action: none;
 }
 
 #messaging-panel .bottom-row .clear {

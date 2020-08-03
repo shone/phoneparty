@@ -75,26 +75,23 @@ export function clearSpeechBubblesFromPlayer(player, options={}) {
 
 export function clearAllSpeechBubbles() {
   const speechBubbles = [...document.querySelectorAll('.player .speech-bubble:not(.cleared)')];
-  for (const speechBubble of speechBubbles) {
-    speechBubble.classList.add('cleared');
-    setTimeout(() => speechBubble.remove(), 500);
-  }
+  speechBubbles.forEach(bubble => bubble.classList.add('cleared'));
+  setTimeout(() => {
+    speechBubbles.forEach(bubble => bubble.remove());
+  }, 500);
 }
 
 function handlePlayer(player) {
   const channel = player.rtcConnection.createDataChannel('messaging');
   channels.set(player, channel);
   channel.onmessage = event => {
-    const previousSpeechBubble = player.querySelector('.speech-bubble:not(.cleared)');
-    if (previousSpeechBubble) {
-      if (event.data === 'clear') {
+    switch (event.data) {
+      case 'clear': clearSpeechBubblesFromPlayer(player); break;
+      case 'shout-on':  player.classList.add('shout'); break;
+      case 'shout-off': player.classList.remove('shout'); break;
+      default:
         clearSpeechBubblesFromPlayer(player);
-      } else {
-        previousSpeechBubble.remove();
-      }
-    }
-    if (event.data !== 'clear') {
-      addSpeechBubbleToPlayer(player, event.data);
+        addSpeechBubbleToPlayer(player, event.data);
     }
   }
 }

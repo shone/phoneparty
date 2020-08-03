@@ -37,7 +37,7 @@
 /*   border-radius: 50%; */
   clip-path: circle(50%);
 }
-.player.bubble.pinging {
+.player.bubble.shout {
   width:  30vw;
   height: 30vw;
   margin-left: -15vw;
@@ -45,7 +45,7 @@
   border-radius: 15vw;
   z-index: 2;
 }
-.player.bubble.pinging video {
+.player.bubble.shout video {
   transform: scale(-1.5, 1.5);
 }
 .player.bubble[data-visibility='hidden'] {

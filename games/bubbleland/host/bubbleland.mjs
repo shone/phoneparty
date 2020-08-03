@@ -29,9 +29,6 @@ routes['#games/bubbleland'] = async function bubbleland({waitForEnd, createChann
     createChannel(player).onmessage = event => {
       const [button, state] = event.data.split(' ');
       player.buttonStates[button] = state === 'true';
-      if (button === 'ping') {
-        player.classList.toggle('pinging', state === 'true');
-      }
     }
 
     player.addEventListener('pointerdown', onPlayerPointerdown);
