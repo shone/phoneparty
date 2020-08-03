@@ -37,7 +37,7 @@ func main() {
 	http.Handle("/common/", server.AllowRootServiceWorker(http.StripPrefix("/common/", server.NoCache(http.FileServer(http.Dir("./common"))))))
 	http.Handle("/sounds/", http.StripPrefix("/sounds/", server.NoCache(http.FileServer(http.Dir("./sounds")))))
 	http.Handle("/fonts/", http.StripPrefix("/fonts/", server.NoCache(http.FileServer(http.Dir("./fonts")))))
-	http.Handle("/games/", http.StripPrefix("/games/", server.NoCache(http.FileServer(http.Dir("./games")))))
+	http.Handle("/apps/", http.StripPrefix("/apps/", server.NoCache(http.FileServer(http.Dir("./apps")))))
 	http.Handle("/sandbox/", http.StripPrefix("/sandbox/", server.NoCache(http.FileServer(http.Dir("./sandbox")))))
 
 	http.Handle("/host/ws", server.HandleHostWebsocket(*multihost))

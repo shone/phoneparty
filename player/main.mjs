@@ -15,9 +15,9 @@ import handleMovement from './movement.mjs';
 
 import './splash-screen.mjs';
 
-import '/games/tunnel-vision/player/tunnel-vision.mjs';
-import '/games/show-and-tell/player/show-and-tell.mjs';
-import '/games/bubbleland/player/bubbleland.mjs';
+import '/apps/tunnel-vision/player/tunnel-vision.mjs';
+import '/apps/show-and-tell/player/show-and-tell.mjs';
+import '/apps/bubbleland/player/bubbleland.mjs';
 
 import './test.mjs';
 

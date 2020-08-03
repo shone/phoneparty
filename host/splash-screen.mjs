@@ -41,5 +41,5 @@ routes['#splash-screen'] = async function splashScreen({waitForEnd, createChanne
 
   splashScreen.remove();
 
-  return '#games';
+  return '#apps';
 };

@@ -1,0 +1,9 @@
+#apps-index a[href="#apps/bubbleland"] {
+  background: purple;
+  font-size: 3em;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
