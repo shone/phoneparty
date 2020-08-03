@@ -27,8 +27,8 @@ func main() {
 	})
 
 	var (
-		hostAssets   = []string{"host/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
-		playerAssets = []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css|png)"}
+		hostAssets   = []string{"host/.*.(mjs|css|woff2)", "^common/.*.(mjs|css)"}
+		playerAssets = []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css)"}
 	)
 
 	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
