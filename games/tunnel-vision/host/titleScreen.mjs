@@ -8,40 +8,41 @@ import routes from '/host/routes.mjs';
 
 routes['#games/tunnel-vision'] = async function titleScreen({waitForEnd}) {
   document.body.style.backgroundColor = '#98947f';
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="tunnel-vision title-screen">
-      <h1>
-        <div>Tunnel Vision</div>
-        <span class="closeup-trickery">
-          <div class="text">Closeup trickery</div>
-          <div class="magnifying-glass-container">
-            <div class="zoomed-text">
-              <div>Closeup trickery</div>
-            </div>
-            <div class="magnifying-glass"></div>
+
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/games/tunnel-vision/host/titleScreen.css">
+    <h1>
+      <div>Tunnel Vision</div>
+      <span class="closeup-trickery">
+        <div class="text">Closeup trickery</div>
+        <div class="magnifying-glass-container">
+          <div class="zoomed-text">
+            <div>Closeup trickery</div>
           </div>
-        </span>
-      </h1>
-      <canvas width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
-      <push-button class="continue-button"></push-button>
-    </div>
-  `);
-  const titleScreen = document.body.lastElementChild;
-  const continueButton = titleScreen.querySelector('.continue-button');
+          <div class="magnifying-glass"></div>
+        </div>
+      </span>
+    </h1>
+    <canvas width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
+    <push-button class="continue-button"></push-button>
+  `;
+  document.body.append(container);
 
   audienceMode.start();
   messaging.start();
 
-  const tunnelEffect = createTunnelEffect(titleScreen.querySelector('canvas'));
+  const tunnelEffect = createTunnelEffect(container.shadowRoot.querySelector('canvas'));
 
+  const continueButton = container.shadowRoot.querySelector('.continue-button');
   const waitForContinueButton = new Promise(resolve => continueButton.onclick = resolve);
   await Promise.race([waitForEnd(), waitForContinueButton]);
 
   tunnelEffect.stop();
 
-  titleScreen.classList.add('finished');
+  container.classList.add('finished');
   await waitForNSeconds(2);
-  titleScreen.remove();
+  container.remove();
 
   messaging.stop();
 

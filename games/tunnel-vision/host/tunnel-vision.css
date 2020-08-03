@@ -16,11 +16,12 @@
   text-shadow: black 0 0.1em 0.3em;
 }
 
-h1.tunnel-vision, h2.tunnel-vision {
+.tunnel-vision h1, .tunnel-vision h2 {
+  font-family: Timothy;
   font-weight: normal;
 }
 
-.tunnel-vision {
+:host {
   font-family: Timothy;
 }
 
@@ -42,7 +43,9 @@ h1.tunnel-vision, h2.tunnel-vision {
   height: 100%;
   background: no-repeat center / contain url('data:image/svg+xml,\
     <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
-      <path fill="%23fdfe00" d="M3.7 7.5l-3-3.8L5 6 5.7.5l2.1 4.1L12.3.2l-1.7 5.2 4.3-1.6-3 4.2h4.5l-4.6 2.7 2.4 3.8-4.4-1.2-.2 3L7.8 13l-.4 2-.4-1.6-1.9 3 .3-4.4-3.8 3.6 1.8-4.3-3-.8 3.3-3z"/>\
+      <path fill="%23fdfe00" d="M3.7 7.5l-3-3.8L5 6 5.7.5l2.1 4.1L12.3.2l-1.7 5.2\
+        4.3-1.6-3 4.2h4.5l-4.6 2.7 2.4 3.8-4.4-1.2-.2 3L7.8 13l-.4 2-.4-1.6-1.9 3\
+        .3-4.4-3.8 3.6 1.8-4.3-3-.8 3.3-3z"/>\
     </svg>\
   ');
   transform: scale(1.7);
@@ -70,12 +73,12 @@ h1.tunnel-vision, h2.tunnel-vision {
   font-size: 7vmin;
 }
 
-.tunnel-vision.photo-container {
+.photo-container {
   position: absolute;
   z-index: 4;
   transition: opacity 1s, left 0.8s ease-in-out, top 0.8s ease-in-out, width 0.8s ease-in-out, height 0.8s ease-in-out;
 }
-.tunnel-vision.photo-container .crop-container {
+.photo-container .crop-container {
   position: absolute;
   left:   40%;
   top:    33%;
@@ -88,7 +91,7 @@ h1.tunnel-vision, h2.tunnel-vision {
 @keyframes scale-up-taken-photo {
   to { left: 0; top: 0; right: 0; bottom: 0; }
 }
-.tunnel-vision.photo-container img {
+.photo-container img {
   position: absolute;
   width:  100%;
   height: 100%;

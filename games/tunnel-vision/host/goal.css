@@ -1,4 +1,8 @@
-.goal-screen {
+@import url('tunnel-vision.css');
+@import url('phone.css');
+@import url('/common/base.css');
+
+:host {
   position: fixed;
   left:   0;
   top:    0;
@@ -8,47 +12,47 @@
   flex-direction: column;
   align-items: center;
 }
-.goal-screen h1 {
+h1 {
   opacity: 0;
   font-size: 8vw;
   margin-top: 3vh;
   margin-bottom: 0;
 }
-.goal-screen .goal-text {
+.goal-text {
   opacity: 0;
   margin-right: 4vw;
 }
-.goal-screen .goal-text .find-a-piece-of {
+.goal-text .find-a-piece-of {
   font-size: 6vw;
 }
-.goal-screen .goal-text .thing-text {
+.goal-text .thing-text {
   font-size: 10vw;
   text-align: center;
 }
-.goal-screen .goal-container {
+.goal-container {
   flex-grow: 1;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
 }
-.goal-screen .phone {
+.phone {
   transform: translateY(85vh);
 }
-.goal-screen .phone.reveal {
+.phone.reveal {
   animation: 2s reveal-phone forwards;
 }
 @keyframes reveal-phone {
   from { transform: translateY(85vh); }
   to   { transform: translateY(0); }
 }
-.goal-screen .phone-background .thing {
+.phone-background .thing {
   position: absolute;
   width:  100%;
   height: 100%;
   transform: scale(0.5) translateY(-67vh);
 }
-.goal-screen .phone.reveal .phone-background .thing {
+.phone.reveal .phone-background .thing {
   animation: 2s reveal-phone-background forwards, 1.5s 2s zoom-phone-background forwards;
 }
 @keyframes reveal-phone-background {
@@ -59,7 +63,7 @@
   from { transform: scale(0.5); }
   to   { transform: scale(1.5); }
 }
-.goal-screen .phone-background:after {
+.phone-background:after {
   content: '';
   display: block;
   position: absolute;
@@ -70,14 +74,14 @@
   background-color: #fff;
   opacity: 0;
 }
-.goal-screen .phone.reveal .phone-background:after {
+.phone.reveal .phone-background:after {
   animation: 0.5s 3s flash-cropped-area alternate 3 forwards;
 }
 @keyframes flash-cropped-area {
   from { opacity: 0; }
   to   { opacity: 0.8; }
 }
-.goal-screen h2 {
+h2 {
   font-size: 5vw;
   margin: 0;
   opacity: 0;
@@ -85,7 +89,7 @@
   color: #d03e3e;
   text-shadow: 0 0 3vmin #bfbfbf;
 }
-.goal-screen h2.fade-in-text {
+h2.fade-in-text {
   animation: 0.5s flash-ready-to-start-looking ease-in-out alternate infinite;
 }
 @keyframes flash-ready-to-start-looking {

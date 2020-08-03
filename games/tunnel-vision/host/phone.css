@@ -1,10 +1,10 @@
-.tunnel-vision.phone {
+.phone {
   display: block;
   height: 40vmin;
   width: calc(40vmin * 0.64);
   position: relative;
 }
-.tunnel-vision.phone:before {
+.phone:before {
   content: '';
   position: absolute;
   left:   5%;
@@ -26,7 +26,7 @@
   visibility: hidden;
   background: black;
 }
-.tunnel-vision .phone-foreground {
+.phone-foreground {
   position: absolute;
   left: 0;
   top:  0;

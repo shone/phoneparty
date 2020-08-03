@@ -41,10 +41,6 @@ body {
   color: red;
 }
 
-.hide {
-  display: none !important;
-}
-
 #pause-indicator {
   display: none;
 }

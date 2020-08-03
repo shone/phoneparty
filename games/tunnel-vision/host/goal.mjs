@@ -23,24 +23,26 @@ routes['#games/tunnel-vision/goal'] = async function goal({waitForEnd, params, c
   audienceMode.start();
 
   document.body.style.backgroundColor = '#98947f';
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="tunnel-vision goal-screen">
-      <h1>THE GOAL:</h1>
-      <div class="goal-container">
-        <span class="goal-text">
-          <div class="find-a-piece-of">Find a piece of</div>
-          <div class="thing-text">${chosenThingElement.dataset.name}</div>
-        </span>
-        <span class="tunnel-vision phone">
-          <div class="phone-background"></div>
-          <div class="phone-foreground"></div>
-        </span>
-      </div>
-      <h2>Ready to start looking?</h2>
+
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/games/tunnel-vision/host/goal.css">
+    <h1>THE GOAL:</h1>
+    <div class="goal-container">
+      <span class="goal-text">
+        <div class="find-a-piece-of">Find a piece of</div>
+        <div class="thing-text">${chosenThingElement.dataset.name}</div>
+      </span>
+      <span class="phone">
+        <div class="phone-background"></div>
+        <div class="phone-foreground"></div>
+      </span>
     </div>
-  `);
-  const goalScreen = document.body.lastElementChild;
-  const phoneBackground = goalScreen.querySelector('.phone-background');
+    <h2>Ready to start looking?</h2>
+  `;
+  document.body.append(container);
+
+  const phoneBackground = container.shadowRoot.querySelector('.phone-background');
   const phoneBackgroundContent = document.createElement('img');
   phoneBackgroundContent.src = chosenThingElement.querySelector('img').src;
   phoneBackgroundContent.dataset.name = chosenThingElement.dataset.name;
@@ -48,19 +50,19 @@ routes['#games/tunnel-vision/goal'] = async function goal({waitForEnd, params, c
   phoneBackground.appendChild(phoneBackgroundContent);
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
-  goalScreen.querySelector('h1').classList.add('fade-in-text');
+  container.shadowRoot.querySelector('h1').classList.add('fade-in-text');
 
   await Promise.race([waitForNSeconds(1.2), waitForKeypress(' ')]);
-  goalScreen.querySelector('.goal-text').classList.add('fade-in-text');
+  container.shadowRoot.querySelector('.goal-text').classList.add('fade-in-text');
 
   await Promise.race([waitForNSeconds(0.5), waitForKeypress(' ')]);
-  goalScreen.querySelector('.phone').classList.add('reveal');
+  container.shadowRoot.querySelector('.phone').classList.add('reveal');
 
   await Promise.race([waitForNSeconds(4.5), waitForKeypress(' ')]);
 
   clearAllSpeechBubbles();
 
-  goalScreen.querySelector('h2').classList.add('fade-in-text');
+  container.shadowRoot.querySelector('h2').classList.add('fade-in-text');
 
   audienceMode.setMinPlayers(2);
 
@@ -103,7 +105,7 @@ routes['#games/tunnel-vision/goal'] = async function goal({waitForEnd, params, c
   clearAllSpeechBubbles();
   await waitForNSeconds(0.5);
 
-  goalScreen.remove();
+  container.remove();
 
   currentThingIndicatorRouteEnd();
 

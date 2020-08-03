@@ -13,23 +13,24 @@ import * as messaging    from '/host/messaging.mjs';
 
 routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosing({createChannel, listenForPlayers}) {
   document.body.style.backgroundColor = '#98947f';
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="tunnel-vision thing-choosing-screen">
-      <h1>Choosing thing...</h1>
-      <div class="timer">
-        <div class="pie-slice pie-slice1 hide"></div>
-        <div class="pie-slice pie-slice2 hide"></div>
-        <div class="pie-slice pie-slice3 hide"></div>
-        <div class="pie-slice pie-slice4 hide"></div>
-        <div class="pie-slice pie-slice5 hide"></div>
-        <div class="pie-slice pie-slice6 hide"></div>
-        <div class="pie-slice pie-slice7 hide"></div>
-        <div class="pie-slice pie-slice8 hide"></div>
-        <div class="thinking-emoji"></div>
-      </div>
+
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/games/tunnel-vision/host/thingChoosing.css">
+    <h1>Choosing thing...</h1>
+    <div class="timer">
+      <div class="pie-slice pie-slice1 hide"></div>
+      <div class="pie-slice pie-slice2 hide"></div>
+      <div class="pie-slice pie-slice3 hide"></div>
+      <div class="pie-slice pie-slice4 hide"></div>
+      <div class="pie-slice pie-slice5 hide"></div>
+      <div class="pie-slice pie-slice6 hide"></div>
+      <div class="pie-slice pie-slice7 hide"></div>
+      <div class="pie-slice pie-slice8 hide"></div>
+      <div class="thinking-emoji"></div>
     </div>
-  `);
-  const thingChoosingScreen = document.body.lastElementChild;
+  `;
+  document.body.append(container);
 
   const existingThingIndicator = document.querySelector('.tunnel-vision.thing.show-in-top-right');
   if (existingThingIndicator) {
@@ -41,7 +42,7 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosing({cr
 
   await waitForNSeconds(0.5);
 
-  const thinkingEmoji = thingChoosingScreen.querySelector('.thinking-emoji');
+  const thinkingEmoji = container.shadowRoot.querySelector('.thinking-emoji');
   thinkingEmoji.classList.add('appear');
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
@@ -60,7 +61,7 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosing({cr
 
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
 
-  await countdownPieTimer(thingChoosingScreen.querySelector('.timer'), 5);
+  await countdownPieTimer(container.shadowRoot.querySelector('.timer'), 5);
   // TODO: cleanup and return if route changes during countdown
 
   stopJuggling();
@@ -75,8 +76,8 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosing({cr
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
-  thingChoosingScreen.classList.add('fade-out');
-  setTimeout(() => thingChoosingScreen.remove(), 1000);
+  container.classList.add('fade-out');
+  setTimeout(() => container.remove(), 1000);
 
   for (const thingElement of thingElements) {
     if (thingElement !== chosenThingElement) {

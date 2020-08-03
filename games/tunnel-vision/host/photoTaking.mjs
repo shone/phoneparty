@@ -102,11 +102,11 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTaking({params
 
   // Highlight all photos
   const highlightDurationSecs = 0.4;
-  for (const [index, player] of players.entries()) {
+  players.forEach((player, index) => {
     const photo = playerPhotos.find(photo => photo.player === player);
-    photo.photoContainer.style.animationDelay = (highlightDurationSecs * (index / (players.length-1))) + 's';
+    photo.photoContainer.style.animationDelay = `${highlightDurationSecs * (index / (players.length-1))}s`;
     photo.photoContainer.classList.add('all-photos-taken-highlight');
-  }
+  });
   await waitForNSeconds(1);
   for (const photo of playerPhotos) {
     photo.photoContainer.style.animationDelay = '';
