@@ -2,7 +2,7 @@ import routes from '/player/routes.mjs';
 
 import '/common/push-button.mjs';
 
-import * as photoTakingScreen from './photoTakingScreen.mjs';
+import * as photoTaking from './photoTaking.mjs';
 
 routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({params, waitForEnd, listenForChannel}) {
   const thing = params.get('thing');
@@ -32,8 +32,8 @@ routes['#games/tunnel-vision/photo-judgement'] = async function photoJudgement({
     if (channelName === 'self-judgement') {
       panelB.classList.add('self-judgement');
       panelB.querySelector('label').insertAdjacentHTML('afterend', '<div class="be-honest">be honest</div>');
-      photoTakingScreen.canvas.classList.add('photo-judgement-image');
-      panelA.append(photoTakingScreen.canvas);
+      photoTaking.canvas.classList.add('photo-judgement-image');
+      panelA.append(photoTaking.canvas);
     } else {
       panelA.innerHTML = '<img class="photo-judgement-image"></img>';
       const img = panelA.lastElementChild;

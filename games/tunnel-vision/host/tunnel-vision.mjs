@@ -1,9 +1,9 @@
 import './titleScreen.mjs';
-import './thingChoosingScreen.mjs';
-import './goalScreen.mjs';
-import './photoTakingScreen.mjs';
-import './presentingPhotosScreen.mjs';
-import './anotherRoundScreen.mjs';
+import './thingChoosing.mjs';
+import './goal.mjs';
+import './photoTaking.mjs';
+import './presentingPhotos.mjs';
+import './anotherRound.mjs';
 
 export const playerPhotos = [];
 

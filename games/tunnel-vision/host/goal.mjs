@@ -16,7 +16,7 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/goal'] = async function goalScreen({waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/goal'] = async function goal({waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers}) {
 
   const chosenThingElement = setupCurrentThingIndicator(params);
 

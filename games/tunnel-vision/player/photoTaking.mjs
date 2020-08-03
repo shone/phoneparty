@@ -7,7 +7,7 @@ import routes from '/player/routes.mjs';
 
 export let canvas = null;
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params, waitForEnd, listenForChannel}) {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTaking({params, waitForEnd, listenForChannel}) {
   const thing = params.get('thing');
 
   document.body.style.backgroundColor = '#98947f';

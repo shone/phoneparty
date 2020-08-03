@@ -18,7 +18,7 @@ import {playerPhotos} from './tunnel-vision.mjs';
 import * as playerGrid from './playerGrid.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosScreen({params}) {
+routes['#games/tunnel-vision/present-photos'] = async function presentingPhotos({params}) {
   const thingName = params.get('thing');
 
   audienceMode.start();

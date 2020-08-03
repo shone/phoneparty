@@ -20,7 +20,7 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params, acceptAllPlayers, createChannel, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTaking({params, acceptAllPlayers, createChannel, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
 
   const chosenThingElement = setupCurrentThingIndicator(params);

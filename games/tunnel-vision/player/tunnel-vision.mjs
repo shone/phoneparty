@@ -1,7 +1,7 @@
 import './titleScreen.mjs';
-import './thingChoosingScreen.mjs';
-import './photoTakingScreen.mjs';
-import './photoJudgementScreen.mjs';
+import './thingChoosing.mjs';
+import './photoTaking.mjs';
+import './photoJudgement.mjs';
 
 import routes from '/player/routes.mjs';
 
@@ -9,12 +9,12 @@ import '/common/push-button.mjs';
 
 import {waitForNSeconds} from '/common/utils.mjs';
 
-routes['#games/tunnel-vision/goal'] = async function goalScreen(routeContext) {
+routes['#games/tunnel-vision/goal'] = async function goal(routeContext) {
   document.body.style.backgroundColor = '#98947f';
   await confirmation('Ready to start looking?', routeContext);
 }
 
-routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen(routeContext) {
+routes['#games/tunnel-vision/another-round'] = async function anotherRound(routeContext) {
   document.body.style.backgroundColor = '#98947f';
   await confirmation('Play another round?', routeContext);
 }

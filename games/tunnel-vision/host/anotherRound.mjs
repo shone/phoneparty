@@ -8,14 +8,14 @@ import routes from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen({waitForEnd, createChannel, listenForPlayers, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/another-round'] = async function anotherRound({waitForEnd, createChannel, listenForPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision another-round-screen">
       <h1>Play another round?</h1>
     </div>
   `);
-  const anotherRoundScreen = document.body.lastElementChild;
+  const container = document.body.lastElementChild;
 
   audienceMode.start();
 
@@ -38,7 +38,7 @@ routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen
 
   const result = await Promise.race([waitForAllPlayers, waitForEnd()]);
   if (result === 'route-ended') {
-    anotherRoundScreen.remove();
+    container.remove();
     return;
   }
 
@@ -62,7 +62,7 @@ routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen
   }
   await waitForNSeconds(0.5);
 
-  anotherRoundScreen.remove();
+  container.remove();
 
   return '#games/tunnel-vision/thing-choosing';
 }

@@ -11,7 +11,7 @@ import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging    from '/host/messaging.mjs';
 
-routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({createChannel, listenForPlayers}) {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosing({createChannel, listenForPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision thing-choosing-screen">
