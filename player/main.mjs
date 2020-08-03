@@ -42,9 +42,9 @@ export let rtcConnection = null;
 
 (async function main() {
 
-  stream = await getCameraStream();
-
   setupMenu();
+
+  stream = await getCameraStream();
 
   while (true) {
     await waitForPageToBeVisible();
