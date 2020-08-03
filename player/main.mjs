@@ -206,7 +206,7 @@ async function connectRtcAndStartRouting(websocket) {
     acceptPlayerChannel.onclose = () => resolve('channel-closed');
   });
 
-  const routeChannel = rtcConnection.createDataChannel('route',        {negotiated: true, id: 9, ordered: true});
+  const routeChannel = rtcConnection.createDataChannel('route', {negotiated: true, id: 9, ordered: true});
 
   const closeChannel = rtcConnection.createDataChannel('close', {negotiated: true, id: 7, ordered: true});
   function handleUnload() { closeChannel.send('true'); }

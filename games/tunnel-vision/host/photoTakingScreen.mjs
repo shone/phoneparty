@@ -20,10 +20,10 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({acceptAllPlayers, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({params, acceptAllPlayers, createChannel, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
 
-  const chosenThingElement = setupCurrentThingIndicator();
+  const chosenThingElement = setupCurrentThingIndicator(params);
 
   const shutterSound        = new Audio('/games/tunnel-vision/sounds/camera-shutter.wav');
   const allPhotosTakenSound = new Audio('/games/tunnel-vision/sounds/all-photos-taken.mp3');
@@ -84,7 +84,7 @@ routes['#games/tunnel-vision/photo-taking'] = async function photoTakingScreen({
         document.body.appendChild(player);
       }
       timers.push(setTimeout(() => player.classList.add('video-not-visible'), 15000));
-      player.createChannelOnCurrentRoute().onmessage = async function(event) {
+      createChannel(player).onmessage = async function(event) {
         shutterSound.play().catch(() => {});
         acceptPhotoFromPlayer(player, event.data);
         checkIfAllPhotosTaken();

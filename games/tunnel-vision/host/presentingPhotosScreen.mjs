@@ -11,7 +11,7 @@ import {
 
 import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messaging.mjs';
 
-import routes, {currentRoute} from '/host/routes.mjs';
+import routes from '/host/routes.mjs';
 
 import {playerPhotos} from './tunnel-vision.mjs';
 
@@ -40,7 +40,7 @@ routes['#games/tunnel-vision/present-photos'] = async function presentingPhotosS
 const fooledSound    = new Audio('/games/tunnel-vision/sounds/fooled.mp3');
 const notFooledSound = new Audio('/games/tunnel-vision/sounds/not-fooled.mp3');
 
-routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({params}) {
+routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({route, params, createChannel}) {
 
   const index = parseInt(params.get('index'));
   const thing = params.get('thing');
@@ -60,7 +60,7 @@ routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({pa
   audienceMode.start();
 
   function finish() {
-    if ((index < playerPhotos.length - 1) && (location.hash.split('?')[0] === currentRoute.split('?')[0])) {
+    if ((index < playerPhotos.length - 1) && (location.hash.split('?')[0] === route.split('?')[0])) {
       return `#games/tunnel-vision/photo-judgement?thing=${thing}&index=${index+1}`;
     } else {
       playerGrid.stop();
@@ -86,7 +86,7 @@ routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({pa
     return finish();
   }
 
-  result = await judgePhoto(playerPresentingPhoto, photo);
+  result = await judgePhoto(playerPresentingPhoto, photo, createChannel);
 
   if (result === 'player_left') {
     players.forEach(player => clearSpeechBubblesFromPlayer(player));
@@ -164,10 +164,10 @@ routes['#games/tunnel-vision/photo-judgement'] = async function presentPhoto({pa
   return finish();
 }
 
-async function judgePhoto(playerPresentingPhoto, photo) {
+async function judgePhoto(playerPresentingPhoto, photo, createChannel) {
   const croppedPhotoArrayBuffer = await makeCroppedImageArrayBuffer(photo.querySelector('img'));
 
-  const selfJudgementChannel = playerPresentingPhoto.createChannelOnCurrentRoute('self-judgement');
+  const selfJudgementChannel = createChannel(playerPresentingPhoto, 'self-judgement');
   const otherPlayerChannels = [];
 
   const getAllPlayerResponses = new Promise(resolve => {
@@ -192,7 +192,7 @@ async function judgePhoto(playerPresentingPhoto, photo) {
       if (player === playerPresentingPhoto) {
         return;
       }
-      const channel = player.createChannelOnCurrentRoute('judgement');
+      const channel = createChannel(player, 'judgement');
       channel.onopen = () => channel.send(croppedPhotoArrayBuffer);
       channel.onmessage = event => {
         otherPlayerResponses.set(player, event.data);

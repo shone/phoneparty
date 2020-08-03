@@ -8,7 +8,7 @@ import routes from '/host/routes.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 
-routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen({waitForEnd, createChannel, listenForPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision another-round-screen">
@@ -27,7 +27,7 @@ routes['#games/tunnel-vision/another-round'] = async function anotherRoundScreen
       }
     }
     listenForPlayers(player => {
-      player.createChannelOnCurrentRoute().onmessage = () => {
+      createChannel(player).onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
         checkIfAllPlayersConfirmed();

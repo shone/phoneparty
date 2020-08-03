@@ -5,7 +5,7 @@ import routes from '/host/routes.mjs';
 
 import '/common/splash-screen.mjs';
 
-routes['#splash-screen'] = async function splashScreen({waitForEnd, acceptAllPlayers}) {
+routes['#splash-screen'] = async function splashScreen({waitForEnd, createChannel, acceptAllPlayers}) {
   document.body.style.backgroundColor = 'black';
 
   const splashScreen = document.createElement('splash-screen');
@@ -20,7 +20,7 @@ routes['#splash-screen'] = async function splashScreen({waitForEnd, acceptAllPla
   const channels = [];
   acceptAllPlayers(player => {
     player.remove();
-    channels.push(player.createChannelOnCurrentRoute());
+    channels.push(createChannel(player));
   });
 
   const timeAtSplashStart = performance.now();

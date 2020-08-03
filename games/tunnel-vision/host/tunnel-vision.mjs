@@ -5,8 +5,6 @@ import './photoTakingScreen.mjs';
 import './presentingPhotosScreen.mjs';
 import './anotherRoundScreen.mjs';
 
-import {currentRoute} from '/host/routes.mjs';
-
 export const playerPhotos = [];
 
 let nextPhotoId = 1;
@@ -18,10 +16,9 @@ export const routesWithPlayerGrid = new Set([
   '#games/tunnel-vision/photo-judgement',
 ]);
 
-export function setupCurrentThingIndicator() {
+export function setupCurrentThingIndicator(routeParams) {
   let chosenThingElement = document.querySelector('.tunnel-vision.thing.show-in-top-right');
   if (!chosenThingElement) {
-    const routeParams = new URLSearchParams(currentRoute.split('?')[1]);
     const thingName = routeParams.get('thing');
     document.body.insertAdjacentHTML('beforeend', `
       <div class="tunnel-vision thing show-in-top-right">

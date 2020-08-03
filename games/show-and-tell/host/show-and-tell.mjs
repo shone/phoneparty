@@ -9,7 +9,7 @@ document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/show-and-tell/host/show-and-tell.css">
 `);
 
-routes['#games/show-and-tell'] = async function showAndTell({waitForEnd, listenForPlayers}) {
+routes['#games/show-and-tell'] = async function showAndTell({waitForEnd, listenForPlayers, createChannel}) {
   document.body.style.backgroundColor = '#fff';
 
   document.body.insertAdjacentHTML('beforeend', `
@@ -27,7 +27,7 @@ routes['#games/show-and-tell'] = async function showAndTell({waitForEnd, listenF
   messaging.start();
 
   listenForPlayers(async player => {
-    const channel = player.createChannelOnCurrentRoute('upload');
+    const channel = createChannel(player, 'upload');
     while (channel.readyState !== 'closed') {
       const blob = await receiveLargeBlobOnChannel(channel);
       if (blob) {
@@ -37,7 +37,7 @@ routes['#games/show-and-tell'] = async function showAndTell({waitForEnd, listenF
   });
 
   listenForPlayers(async player => {
-    const channel = player.createChannelOnCurrentRoute('youtube');
+    const channel = createChannel(player, 'youtube');
     channel.onmessage = ({data}) => {
       const message = JSON.parse(data);
       switch (message.command) {

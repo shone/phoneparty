@@ -16,9 +16,9 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#games/tunnel-vision/goal'] = async function goalScreen({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
+routes['#games/tunnel-vision/goal'] = async function goalScreen({waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers}) {
 
-  const chosenThingElement = setupCurrentThingIndicator();
+  const chosenThingElement = setupCurrentThingIndicator(params);
 
   audienceMode.start();
 
@@ -70,7 +70,7 @@ routes['#games/tunnel-vision/goal'] = async function goalScreen({waitForEnd, lis
     listenForPlayers(handlePlayer);
     listenForLeavingPlayers(checkIfPlayersReady);
     function handlePlayer(player) {
-      player.createChannelOnCurrentRoute().onmessage = () => {
+      createChannel(player).onmessage = () => {
         confirmedPlayers.add(player);
         addSpeechBubbleToPlayer(player, '👍');
         checkIfPlayersReady();

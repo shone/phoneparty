@@ -1,18 +1,17 @@
 const routes = {};
 export default routes;
 
-let currentRoute = null;
-let currentRouteCounter = -1;
-
-const routeEndListeners = [];
-
-let routeChannels = [];
-let routeChannelListeners = [];
-
 export async function startRouting(rtcConnection, routeChannel) {
+  let currentRouteCounter = -1;
+
   let nextRoute = null;
   let nextRouteCounter = null;
   let waitOnNextRouteCallback = null;
+
+  const routeEndListeners = [];
+
+  let routeChannels = [];
+  let routeChannelListeners = [];
 
   // Routes received from routeChannel tells us what the current route on the host is
   routeChannel.onmessage = ({data}) => {
@@ -79,7 +78,6 @@ export async function startRouting(rtcConnection, routeChannel) {
     const routeCounter = nextRouteCounter;
     location.hash = route;
 
-    currentRoute = route;
     currentRouteCounter = routeCounter;
 
     nextRoute = null;
@@ -98,6 +96,7 @@ export async function startRouting(rtcConnection, routeChannel) {
     });
 
     const routeContext = {
+      route: route,
       params: new URLSearchParams(route.split('?')[1]),
 
       waitForEnd: async () => {
@@ -145,7 +144,7 @@ export async function startRouting(rtcConnection, routeChannel) {
   }
 }
 
-async function routeNotFoundScreen({waitForEnd}) {
+async function routeNotFoundScreen({route, waitForEnd}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
@@ -154,7 +153,7 @@ async function routeNotFoundScreen({waitForEnd}) {
     </div>
   `);
   const div = document.body.lastElementChild;
-  div.querySelector('.route').textContent = currentRoute;
+  div.querySelector('.route').textContent = route;
 
   await waitForEnd();
   div.remove();

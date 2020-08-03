@@ -8,7 +8,7 @@ document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/games/bubbleland/host/bubbleland.css">
 `);
 
-routes['#games/bubbleland'] = async function bubbleland({waitForEnd, acceptAllPlayers}) {
+routes['#games/bubbleland'] = async function bubbleland({waitForEnd, createChannel, acceptAllPlayers}) {
   document.body.style.backgroundColor = 'purple';
 
   audienceMode.stop(); // TODO: wait for audience mode to stop
@@ -26,7 +26,7 @@ routes['#games/bubbleland'] = async function bubbleland({waitForEnd, acceptAllPl
     document.body.appendChild(player);
 
     player.buttonStates = {};
-    player.createChannelOnCurrentRoute().onmessage = event => {
+    createChannel(player).onmessage = event => {
       const [button, state] = event.data.split(' ');
       player.buttonStates[button] = state === 'true';
       if (button === 'ping') {

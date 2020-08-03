@@ -11,7 +11,7 @@ import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging    from '/host/messaging.mjs';
 
-routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({listenForPlayers}) {
+routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScreen({createChannel, listenForPlayers}) {
   document.body.style.backgroundColor = '#98947f';
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision thing-choosing-screen">
@@ -70,7 +70,7 @@ routes['#games/tunnel-vision/thing-choosing'] = async function thingChoosingScre
 
   // Send thing name to all players
   listenForPlayers(player => {
-    player.createChannelOnCurrentRoute().onopen = event => event.target.send(chosenThingElement.dataset.name);
+    createChannel(player).onopen = event => event.target.send(chosenThingElement.dataset.name);
   });
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);

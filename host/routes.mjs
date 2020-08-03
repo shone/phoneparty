@@ -8,21 +8,18 @@ import {
 const routes = {};
 export default routes;
 
-export let currentRoute = null;
-export let currentRouteCounter = null;
-
 export async function startRouting({defaultRoute}) {
 
-  currentRoute = location.hash || defaultRoute;
-  currentRouteCounter = 0;
+  let counter = 0;
 
   while (true) {
 
-    location.hash = currentRoute;
+    const route = location.hash || defaultRoute;
+    const routeCounter = counter++;
 
     // Send current route to all players
     function handlePlayer(player) {
-      const message = currentRoute + '@' + currentRouteCounter;
+      const message = route + '@' + routeCounter;
       if (player.routeChannel.readyState === 'open') {
         player.routeChannel.send(message);
       } else {
@@ -37,7 +34,7 @@ export async function startRouting({defaultRoute}) {
     const routeEndListeners = new Set();
 
     function onHashChange() {
-      if (location.hash !== currentRoute) {
+      if (location.hash !== route) {
         hasRouteEnded = true;
         routeEndListeners.forEach(callback => callback());
         routeEndListeners.clear();
@@ -47,7 +44,8 @@ export async function startRouting({defaultRoute}) {
     window.addEventListener('hashchange', onHashChange);
 
     const routeContext = {
-      params: new URLSearchParams(currentRoute.split('?')[1]),
+      route: route,
+      params: new URLSearchParams(route.split('?')[1]),
 
       waitForEnd: async () => {
         // Wait for the browser to be navigated to a different URL hash, or for the
@@ -73,10 +71,18 @@ export async function startRouting({defaultRoute}) {
         listenForLeavingPlayers(callback);
         routeEndListeners.add(() => stopListeningForLeavingPlayers(callback));
       },
+
+      createChannel: (player, label) => {
+        let channelLabel = route + '@' + routeCounter;
+        if (label) {
+          channelLabel += '%' + label;
+        }
+        return player.rtcConnection.createDataChannel(channelLabel);
+      },
     };
 
     // Call route handler
-    const routeHandler = routes[currentRoute.split('?')[0]] || routeNotFoundScreen;
+    const routeHandler = routes[route.split('?')[0]] || routeNotFoundScreen;
     const nextRouteFromHandler = await routeHandler(routeContext);
 
     window.removeEventListener('hashchange', onHashChange);
@@ -89,25 +95,20 @@ export async function startRouting({defaultRoute}) {
     stopListeningForAllPlayers(handlePlayer);
     players.forEach(player => player.routeChannel.onopen = null);
 
-    // Set the new current route
-    if (location.hash !== currentRoute) {
-      // If another route (hash) has been typed into the browser URL bar, use
-      // that as the next route
-      currentRoute = location.hash;
-    } else if (nextRouteFromHandler) {
-      // If the route handler has returned a new route (hash), go to that
-      currentRoute = nextRouteFromHandler;
-    } else {
-      // Otherwise, wait for the browser to be navigated to a new hash (route)
-      await new Promise(resolve => window.addEventListener('hashchange', resolve, {once: true}));
-      currentRoute = location.hash;
+    // Find the next route
+    if ((location.hash || defaultRoute) === route) { // If the hash hasn't changed..
+      if (nextRouteFromHandler) {
+        // If the route handler has returned a new route (hash), go to that
+        location.hash = nextRouteFromHandler;
+      } else {
+        // Otherwise, wait for the browser to be navigated to a new hash (route)
+        await new Promise(resolve => window.addEventListener('hashchange', resolve, {once: true}));
+      }
     }
-
-    currentRouteCounter++;
   }
 }
 
-async function routeNotFoundScreen() {
+async function routeNotFoundScreen({route}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
@@ -116,7 +117,7 @@ async function routeNotFoundScreen() {
     </div>
   `);
   const div = document.body.lastElementChild;
-  div.querySelector('.route').textContent = currentRoute;
+  div.querySelector('.route').textContent = route;
 
   await waitForRouteToEnd();
   div.remove();

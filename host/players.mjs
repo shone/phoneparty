@@ -1,8 +1,3 @@
-import {
-  currentRoute,
-  currentRouteCounter,
-} from './routes.mjs';
-
 import {waitForRtcClose} from '/common/utils.mjs';
 
 export const players = [];
@@ -183,14 +178,6 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   }
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
-
-  player.createChannelOnCurrentRoute = name => {
-    let channelLabel = currentRoute + '@' + currentRouteCounter;
-    if (name) {
-      channelLabel += '%' + name;
-    }
-    return rtcConnection.createDataChannel(channelLabel);
-  }
 
   if (!acceptedPlayerHandler) {
     const waitToBeAccepted = new Promise(resolve => playersWaitingToBeAccepted.push(() => resolve('accepted')));

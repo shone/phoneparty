@@ -5,7 +5,7 @@ import {sendOnChannelWhenOpen} from '/common/utils.mjs';
 import * as messaging from './messaging.mjs';
 import * as audienceMode from './audienceMode.mjs';
 
-routes['#test'] = async function test({waitForEnd, listenForPlayers, listenForLeavingPlayers}) {
+routes['#test'] = async function test({waitForEnd, listenForPlayers, createChannel, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div>
@@ -39,7 +39,7 @@ routes['#test'] = async function test({waitForEnd, listenForPlayers, listenForLe
   const element = document.body.lastElementChild;
 
   const channels = new Map();
-  listenForPlayers(player => channels.set(player, player.createChannelOnCurrentRoute()));
+  listenForPlayers(player => channels.set(player, createChannel(player)));
   listenForLeavingPlayers(player => channels.delete(player));
 
   element.onclick = event => {
