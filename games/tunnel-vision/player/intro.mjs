@@ -1,5 +1,5 @@
 import routes from '/player/routes.mjs';
 
-routes['#games/tunnel-vision'] = async function titleScreen() {
+routes['#games/tunnel-vision'] = async function intro() {
   document.body.style.backgroundColor = '#98947f';
 }

@@ -1,4 +1,4 @@
-import './titleScreen.mjs';
+import './intro.mjs';
 import './thingChoosing.mjs';
 import './photoTaking.mjs';
 import './photoJudgement.mjs';

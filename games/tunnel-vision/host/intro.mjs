@@ -6,12 +6,12 @@ import * as messaging from '/host/messaging.mjs';
 
 import routes from '/host/routes.mjs';
 
-routes['#games/tunnel-vision'] = async function titleScreen({waitForEnd}) {
+routes['#games/tunnel-vision'] = async function intro({waitForEnd}) {
   document.body.style.backgroundColor = '#98947f';
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
-    <link rel="stylesheet" href="/games/tunnel-vision/host/titleScreen.css">
+    <link rel="stylesheet" href="/games/tunnel-vision/host/intro.css">
     <h1>
       <div>Tunnel Vision</div>
       <span class="closeup-trickery">
