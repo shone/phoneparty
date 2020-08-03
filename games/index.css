@@ -1,10 +1,14 @@
 #games-index {
   height: 100%;
   overflow-y: auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, var(--tile-size));
+  grid-template-rows: repeat(auto-fit, var(--tile-size));
+  grid-gap: 3rem;
+  padding: 3rem;
+  box-sizing: border-box;
   justify-content: center;
-  align-items: center;
-  --tile-size: 20rem;
+  --tile-size: 15rem;
   font-size: calc(var(--tile-size) / 20);
 }
 
@@ -12,7 +16,6 @@
   width:  var(--tile-size);
   height: var(--tile-size);
   background: white;
-  margin: calc(var(--tile-size) / 8);
   text-decoration: none;
 }
 
