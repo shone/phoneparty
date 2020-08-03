@@ -221,7 +221,9 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel, waitForPlayerKicked]);
 
   if (player.closeChannel.readyState === 'open') {
-    player.closeChannel.send('true');
+    try {
+      player.closeChannel.send('true');
+    } catch (e) { }
   }
   rtcConnection.close();
 
