@@ -31,14 +31,14 @@ func main() {
 		playerAssets = []string{"player/.*.(mjs|css|woff2)", "^common/.*.(mjs|css)"}
 	)
 
-	http.Handle("/player/", http.StripPrefix("/player/", server.PushFiles(playerAssets, http.FileServer(http.Dir("./player")))))
-	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, http.FileServer(http.Dir("./host")))))
+	http.Handle("/host/", http.StripPrefix("/host", server.PushFiles(hostAssets, server.NoCache(http.FileServer(http.Dir("./host"))))))
+	http.Handle("/player/", http.StripPrefix("/player", server.PushFiles(playerAssets, server.NoCache(http.FileServer(http.Dir("./player"))))))
 
-	http.Handle("/common/", server.AllowRootServiceWorker(http.StripPrefix("/common/", http.FileServer(http.Dir("./common")))))
-	http.Handle("/sounds/", http.StripPrefix("/sounds/", http.FileServer(http.Dir("./sounds"))))
-	http.Handle("/fonts/", http.StripPrefix("/fonts/", http.FileServer(http.Dir("./fonts"))))
-	http.Handle("/games/", http.StripPrefix("/games/", http.FileServer(http.Dir("./games"))))
-	http.Handle("/sandbox/", http.StripPrefix("/sandbox/", http.FileServer(http.Dir("./sandbox"))))
+	http.Handle("/common/", server.AllowRootServiceWorker(http.StripPrefix("/common/", server.NoCache(http.FileServer(http.Dir("./common"))))))
+	http.Handle("/sounds/", http.StripPrefix("/sounds/", server.NoCache(http.FileServer(http.Dir("./sounds")))))
+	http.Handle("/fonts/", http.StripPrefix("/fonts/", server.NoCache(http.FileServer(http.Dir("./fonts")))))
+	http.Handle("/games/", http.StripPrefix("/games/", server.NoCache(http.FileServer(http.Dir("./games")))))
+	http.Handle("/sandbox/", http.StripPrefix("/sandbox/", server.NoCache(http.FileServer(http.Dir("./sandbox")))))
 
 	http.Handle("/host/ws", server.HandleHostWebsocket(*multihost))
 	http.Handle("/player/ws", server.HandlePlayerWebsocket(*multihost))
