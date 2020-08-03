@@ -1,17 +1,6 @@
-html {
-  font-size: calc((2vw + 2vh) / 2);
-}
-@media (max-width: 600px), (max-height: 600px) {
-  html {
-    font-size: 16px;
-  }
-}
-
 body {
-  margin: 0;
   background: black;
   transition: background-color 1s;
-  font-family: "Roboto", sans-serif;
   user-select: none;
 }
 
@@ -117,29 +106,8 @@ body.host-dragging:after {
   font-size: 1.5rem;
 }
 
-button {
-  outline: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  border: none;
-}
-button::-moz-focus-inner {
-  border: 0;
-}
-
 .hide {
   display: none !important;
-}
-
-@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-
-@keyframes pop-in {
-    0% { transform: scale(0.0); }
-   30% { transform: scale(1.2); }
-   55% { transform: scale(0.9); }
-   75% { transform: scale(1.1); }
-  100% { transform: scale(1.0); }
 }
 
 push-button.camera-retry-button {

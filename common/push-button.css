@@ -13,7 +13,9 @@ push-button {
   box-shadow: inset -1vmin -1vmin 1vmin #888, inset 1vmin 1vmin 1vmin white;
 
   cursor: pointer;
+
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 push-button:hover {
