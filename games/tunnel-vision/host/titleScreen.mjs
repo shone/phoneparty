@@ -1,5 +1,5 @@
 import {acceptAllPlayers} from '/host/players.mjs';
-import {waitForNSeconds, waitForKeypress} from '/common/utils.mjs';
+import {waitForNSeconds} from '/common/utils.mjs';
 
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging from '/host/messaging.mjs';
@@ -23,16 +23,19 @@ routes['#games/tunnel-vision'] = async function titleScreen({waitForEnd}) {
         </span>
       </h1>
       <canvas width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
+      <push-button class="continue-button"></push-button>
     </div>
   `);
   const titleScreen = document.body.lastElementChild;
+  const continueButton = titleScreen.querySelector('.continue-button');
 
   audienceMode.start();
   messaging.start();
 
   const tunnelEffect = createTunnelEffect(titleScreen.querySelector('canvas'));
 
-  await Promise.race([waitForEnd(), waitForKeypress(' ')]);
+  const waitForContinueButton = new Promise(resolve => continueButton.onclick = resolve);
+  await Promise.race([waitForEnd(), waitForContinueButton]);
 
   tunnelEffect.stop();
 

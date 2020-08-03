@@ -7,6 +7,7 @@
   background: linear-gradient(to top, black, rgb(0,0,0,.58), transparent);
   z-index: 2;
   animation: 0.2s reveal-audience-mode-background ease-out forwards;
+  pointer-events: none;
 }
 @keyframes reveal-audience-mode-background {
   from { bottom: -20vh; }

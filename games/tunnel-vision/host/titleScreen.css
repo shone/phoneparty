@@ -42,6 +42,21 @@
   object-fit: cover;
 }
 
+.tunnel-vision .continue-button {
+  width:  4rem;
+  height: 4rem;
+  position: absolute;
+  bottom: 7rem;
+  right: 1rem;
+  border-radius: 1rem;
+  background-size: 70%;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="black" d="M0.1,0 v1 L0.9,0.5"/>\
+    </svg>\
+  ');
+}
+
 .tunnel-vision.title-screen h1 .closeup-trickery {
   display: inline-block;
   font-size: 11vmin;
