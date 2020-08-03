@@ -14,7 +14,6 @@ import handleMessaging from './messaging.mjs';
 import handleMovement from './movement.mjs';
 
 import './splash-screen.mjs';
-import './joinGameInstructions.mjs';
 
 import '/games/tunnel-vision/player/tunnel-vision.mjs';
 import '/games/show-and-tell/player/show-and-tell.mjs';

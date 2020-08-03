@@ -11,10 +11,7 @@ if (location.protocol === 'file:') {
 import {players, handleNewPlayer} from './players.mjs';
 
 import './splash-screen.mjs';
-import './joinGameInstructions.mjs';
-
 import '/games/index.mjs';
-
 import './test.mjs';
 
 import {startRouting} from './routes.mjs';
