@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	serve_address = flag.String("serve_address", ":8080", "The host/port to serve on, e.g. localhost:8080")
+	serve_address = flag.String("serve_address", ":http", "The host/port to serve on, e.g. localhost:8080")
 	domain        = flag.String("domain", "", "e.g. 'example.com' When given, serves HTTPS for the domain using Let's Encrypt.")
 	multihost     = flag.Bool("multihost", false, "Allow multiple hosts (one per IPv4 address).")
 )

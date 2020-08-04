@@ -18,7 +18,7 @@ Phone Party is a [Go Module](https://github.com/golang/go/wiki/Modules). The [go
 
 ```bash
 $ cd phoneparty/
-$ go run .
+$ go run . --serve_address :8080
 ```
 
 - Try the sandbox at http://localhost:8080/sandbox
