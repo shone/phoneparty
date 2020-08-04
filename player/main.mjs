@@ -168,7 +168,10 @@ function setupFullscreenButton() {
     }
     clickSound.play();
   }
-  fullscreenButton.onclick = toggleFullscreen;
+  fullscreenButton.onclick = () => {
+    toggleFullscreen();
+    document.getElementById('menu').classList.remove('visible');
+  }
 
   fullscreenButton.classList.remove('unimplemented');
 }
