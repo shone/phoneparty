@@ -59,6 +59,24 @@ function setupMenu() {
     location.hash = 'apps';
     menu.classList.remove('visible');
   }
+
+  let installButton = null;
+  window.onbeforeinstallprompt = event => {
+    event.preventDefault();
+    if (!installButton) {
+      installButton = document.createElement('push-button');
+      installButton.textContent = 'Install';
+      menu.querySelector('.items').append(installButton);
+    }
+    installButton.onclick = () => {
+      event.prompt();
+    }
+    event.userChoice.then(result => {
+      if (result.outcome === 'accepted') {
+        installButton.remove();
+      }
+    });
+  }
 }
 
 function setupFullscreenButton() {
