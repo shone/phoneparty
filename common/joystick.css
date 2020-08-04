@@ -1,0 +1,33 @@
+:host {
+  width:  5rem;
+  height: 5rem;
+
+  position: relative;
+
+  background: black;
+  border-radius: 50%;
+  border: .3rem solid #ddd;
+}
+
+#thumb {
+  background: no-repeat center / contain #ddd url('data:image/svg+xml,\
+    <svg viewBox="0 0 32 32" fill="black" xmlns="http://www.w3.org/2000/svg">\
+      <circle r="1.5" cx="16" cy="4"/>\
+      <circle r="1.5" cx="4"  cy="16"/>\
+      <circle r="1.5" cx="28" cy="16"/>\
+      <circle r="1.5" cx="16" cy="28"/>\
+    </svg>\
+  ');
+  border-radius: 50%;
+
+  --thumb-size: 4rem;
+  width:  var(--thumb-size);
+  height: var(--thumb-size);
+
+  position: absolute;
+  top:  calc(50% - (var(--thumb-size) / 2));
+  left: calc(50% - (var(--thumb-size) / 2));
+
+  cursor: grab;
+  touch-action: none;
+}

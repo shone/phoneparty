@@ -11,7 +11,6 @@ import {playTone} from './audio.mjs';
 import {startRouting} from './routes.mjs';
 
 import handleMessaging from './messaging.mjs';
-import handleMovement from './movement.mjs';
 
 import './splash-screen.mjs';
 
@@ -187,7 +186,6 @@ async function connectRtcAndStartRouting(websocket) {
 
   rtcConnection.ondatachannel = event => {
     switch (event.channel.label) {
-      case 'movement':  handleMovement(event.channel);  break;
       case 'messaging': handleMessaging(event.channel); break;
     }
   }

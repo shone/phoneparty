@@ -15,20 +15,21 @@ routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChanne
 
   messaging.start();
 
+  const playerJoysticks = new Map();
+  const playerMomentum = new Map();
+
   acceptAllPlayers(player => {
     player.classList.add('bubble', 'wiggleable');
 
     player.style.left = `${Math.random() * 100}vw`;
     player.style.top  = `${30 + (Math.random() * 70)}vh`;
 
-    player.momentum = {x: 0, y: 0};
+    playerMomentum.set(player, {x: 0, y: 0});
 
     document.body.appendChild(player);
 
-    player.buttonStates = {};
-    createChannel(player).onmessage = event => {
-      const [button, state] = event.data.split(' ');
-      player.buttonStates[button] = state === 'true';
+    createChannel(player).onmessage = ({data}) => {
+      playerJoysticks.set(player, JSON.parse(data));
     }
 
     player.addEventListener('pointerdown', onPlayerPointerdown);
@@ -40,26 +41,29 @@ routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChanne
     const playerRadius = 6;
     for (const player of players) {
 
+      const momentum = playerMomentum.get(player);
+
       // Bounce back from edges of screen
       const bounceBack = 0.015;
-      if (parseFloat(player.style.left) < playerRadius)       player.momentum.x += bounceBack * delta;
-      if (parseFloat(player.style.top)  < playerRadius)       player.momentum.y -= bounceBack * delta;
-      if (parseFloat(player.style.left) > 100 - playerRadius) player.momentum.x -= bounceBack * delta;
-      if (parseFloat(player.style.top)  > 100 - playerRadius) player.momentum.y += bounceBack * delta;
+      if (parseFloat(player.style.left) < playerRadius)       momentum.x += bounceBack * delta;
+      if (parseFloat(player.style.top)  < playerRadius)       momentum.y -= bounceBack * delta;
+      if (parseFloat(player.style.left) > 100 - playerRadius) momentum.x -= bounceBack * delta;
+      if (parseFloat(player.style.top)  > 100 - playerRadius) momentum.y += bounceBack * delta;
 
       const playerMovementSpeed = 0.012;
-      if (player.buttonStates.left)  player.momentum.x -= playerMovementSpeed * delta;
-      if (player.buttonStates.right) player.momentum.x += playerMovementSpeed * delta;
-      if (player.buttonStates.down)  player.momentum.y -= playerMovementSpeed * delta;
-      if (player.buttonStates.up)    player.momentum.y += playerMovementSpeed * delta;
+      const joystickPosition = playerJoysticks.get(player);
+      if (joystickPosition) {
+        momentum.x += joystickPosition.x * playerMovementSpeed * delta;
+        momentum.y += joystickPosition.y * playerMovementSpeed * delta;
+      }
 
-      player.style.left = `${(parseFloat(player.style.left) || 0) + player.momentum.x}vw`;
-      player.style.top  = `${(parseFloat(player.style.top)  || 0) - player.momentum.y}vh`;
+      player.style.left = `${(parseFloat(player.style.left) || 0) + momentum.x}vw`;
+      player.style.top  = `${(parseFloat(player.style.top)  || 0) - momentum.y}vh`;
 
       // Apply friction
       const friction = 0.005;
-      player.momentum.x *= Math.max(0, 1 - (delta * friction));
-      player.momentum.y *= Math.max(0, 1 - (delta * friction));
+      momentum.x *= Math.max(0, 1 - (delta * friction));
+      momentum.y *= Math.max(0, 1 - (delta * friction));
     }
     lastTimestamp = timestamp;
     frameRequestId = window.requestAnimationFrame(onFrame);
