@@ -122,11 +122,20 @@ export async function sendLargeBlobOnChannel(channel, blob) {
 }
 
 export async function receiveLargeBlobOnChannel(channel) {
-  const {size, type} = await new Promise(resolve => {
-    channel.addEventListener('message', ({data}) => resolve(JSON.parse(data)), {once: true})
+  const {size, type} = await new Promise((resolve, reject) => {
+    channel.addEventListener('message', ({data}) => {
+      try {
+        resolve(JSON.parse(data));
+      } catch (e) {
+        reject(`Could not parse blob size and type message from channel: ${e}`);
+      }
+    }, {once: true});
+    channel.addEventListener('close', () => {
+      reject('Channel closed before blob size and type could be read.')
+    }, {once: true});
   });
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const parts = [];
     let partsSize = 0;
 
@@ -142,7 +151,7 @@ export async function receiveLargeBlobOnChannel(channel) {
     channel.addEventListener('message', onMessage);
     channel.addEventListener('close', () => {
       channel.removeEventListener('message', onMessage);
-      resolve(null);
+      reject('Channel was closed before the entire blob could be received.');
     }, {once: true});
   });
 }
