@@ -6,22 +6,22 @@ import * as messaging from '/host/messaging.mjs';
 import {receiveLargeBlobOnChannel} from '/common/utils.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `
-  <link rel="stylesheet" href="/apps/show-and-tell/host/show-and-tell.css">
+  <link rel="stylesheet" href="/apps/show-and-tell/host/app-index.css">
 `);
 
 routes['#apps/show-and-tell'] = async function showAndTell({waitForEnd, listenForPlayers, createChannel}) {
   document.body.style.backgroundColor = '#fff';
 
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="show-and-tell">
-      <img>
-      <iframe class="youtube-iframe" allow="autoplay">
-    </div>
-  `);
-  const element = document.body.lastElementChild;
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/apps/show-and-tell/host/show-and-tell.css">
+    <img>
+    <iframe class="youtube-iframe" allow="autoplay">
+  `;
+  document.body.append(container);
 
-  const image = element.querySelector('img');
-  const youtubeIframe = element.querySelector('.youtube-iframe');
+  const image = container.shadowRoot.querySelector('img');
+  const youtubeIframe = container.shadowRoot.querySelector('.youtube-iframe');
 
   audienceMode.start();
   messaging.start();
@@ -56,5 +56,5 @@ routes['#apps/show-and-tell'] = async function showAndTell({waitForEnd, listenFo
 
   audienceMode.stop();
   messaging.stop();
-  element.remove();
+  container.remove();
 }

@@ -1,0 +1,14 @@
+#apps-index a[href="#apps/show-and-tell"] {
+  background: white;
+  font-size: 3em;
+  color: black;
+  font-weight: bold;
+}
+#apps-index a[href="#apps/show-and-tell"] > span {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateY(10%) rotate(-30deg);
+}

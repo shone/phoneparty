@@ -1,29 +1,14 @@
-#apps-index a[href="#apps/show-and-tell"] {
-  background: white;
-  font-size: 3em;
-  color: black;
-  font-weight: bold;
-}
-#apps-index a[href="#apps/show-and-tell"] > span {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: translateY(10%) rotate(-30deg);
-}
-
-.show-and-tell {
+:host {
   height: 100vh;
 }
 
-.show-and-tell img {
+img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.show-and-tell .youtube-iframe {
+.youtube-iframe {
   position: absolute;
   top: 0;
   left: 0;
