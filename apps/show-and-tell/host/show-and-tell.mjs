@@ -16,12 +16,16 @@ routes['#apps/show-and-tell'] = async function showAndTell({waitForEnd, listenFo
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/common/base.css">
     <link rel="stylesheet" href="/apps/show-and-tell/host/show-and-tell.css">
+    <button id="close-button" class="hide"></button>
   `;
   document.body.append(container);
 
   audienceMode.start();
   messaging.start();
+
+  const closeButton = container.shadowRoot.getElementById('close-button');
 
   let subject = null;
   let subjectOwner = null;
@@ -34,6 +38,11 @@ routes['#apps/show-and-tell'] = async function showAndTell({waitForEnd, listenFo
     }
     subject = element;
     subjectOwner = owner;
+    closeButton.classList.toggle('hide', element === null);
+  }
+
+  closeButton.onclick = () => {
+    setSubject(null, null);
   }
 
   listenForPlayers(async player => {
