@@ -107,35 +107,63 @@ export function sendOnChannelWhenOpen(channel, message) {
   }
 }
 
-export async function sendLargeBlobOnChannel(channel, blob) {
-  channel.send(JSON.stringify({size: blob.size, type: blob.type}));
+export function getMessageFromChannel(channel) {
+  return new Promise(resolve => {
+    function onmessage({data}) {
+      channel.removeEventListener('close', onclose);
+      resolve([data, null]);
+    }
+    channel.addEventListener('message', onmessage, {once: true});
+    channel.addEventListener('close', () => {
+      channel.removeEventListener('message', onmessage);
+      resolve([null, new Error('Channel closed before message received.')]);
+    }, {once: true});
+  });
+}
+
+export async function sendBlobOnChannel(channel, blob) {
+  try {
+    channel.send(JSON.stringify({size: blob.size, type: blob.type}));
+  } catch (e) {
+    return new Error(`Could not send blob on channel: ${e.message}`);
+  }
 
   const fileReader = new FileReader();
   fileReader.readAsArrayBuffer(blob); // Can't use blob.arrayBuffer() because it's not supported on Safari
-  const arrayBuffer = await new Promise(resolve => fileReader.onloadend = () => resolve(fileReader.result));
+  const [arrayBuffer, error] = await new Promise(resolve => {
+    fileReader.onloadend = () => resolve([fileReader.result, null]);
+    fileReader.onerror = error => resolve([null, error]);
+  });
+  if (error !== null) {
+    return new Error(`Unable to send blob on channel because the blob couldn't be converted to an array buffer: ${error}`);
+  }
 
   const messageSize = 1024 * 64;
   for (let i=0; i < arrayBuffer.byteLength; i += messageSize) {
     const slice = arrayBuffer.slice(i, Math.min(i + messageSize, arrayBuffer.byteLength));
-    channel.send(slice);
+    try {
+      channel.send(slice);
+    } catch (e) {
+      return new Error(`Could not send blob on channel: ${e.message}`);
+    }
   }
+
+  return null;
 }
 
-export async function receiveLargeBlobOnChannel(channel) {
-  const {size, type} = await new Promise((resolve, reject) => {
-    channel.addEventListener('message', ({data}) => {
-      try {
-        resolve(JSON.parse(data));
-      } catch (e) {
-        reject(`Could not parse blob size and type message from channel: ${e}`);
-      }
-    }, {once: true});
-    channel.addEventListener('close', () => {
-      reject('Channel closed before blob size and type could be read.')
-    }, {once: true});
-  });
+export async function getBlobOnChannel(channel) {
+  const [message, error] = await getMessageFromChannel(channel);
+  if (error !== null) {
+    return [null, error];
+  }
 
-  return new Promise((resolve, reject) => {
+  try {
+    var {size, type} = JSON.parse(message);
+  } catch (e) {
+    return [null, new Error(`Unable to receive blob on channel because the initial size/type JSON could not be parsed: ${e.message}`)];
+  }
+
+  return new Promise(resolve => {
     const parts = [];
     let partsSize = 0;
 
@@ -144,14 +172,14 @@ export async function receiveLargeBlobOnChannel(channel) {
       partsSize += data.byteLength;
       if (partsSize >= size) {
         channel.removeEventListener('message', onMessage);
-        resolve(new Blob(parts, {type}));
+        resolve([new Blob(parts, {type}), null]);
       }
     }
 
     channel.addEventListener('message', onMessage);
     channel.addEventListener('close', () => {
       channel.removeEventListener('message', onMessage);
-      reject('Channel was closed before the entire blob could be received.');
+      resolve([null, new Error('Channel was closed before the entire blob could be received.')]);
     }, {once: true});
   });
 }

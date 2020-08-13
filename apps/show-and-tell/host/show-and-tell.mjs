@@ -1,9 +1,11 @@
 import routes from '/host/routes.mjs';
 
+import {getMessageFromChannel} from '/common/utils.mjs';
+
 import * as audienceMode from '/host/audienceMode.mjs';
 import * as messaging from '/host/messaging.mjs';
 
-import {receiveLargeBlobOnChannel} from '/common/utils.mjs';
+import {getBlobOnChannel} from '/common/utils.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/apps/show-and-tell/host/app-index.css">
@@ -15,40 +17,73 @@ routes['#apps/show-and-tell'] = async function showAndTell({waitForEnd, listenFo
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/show-and-tell/host/show-and-tell.css">
-    <img>
-    <iframe class="youtube-iframe" allow="autoplay">
   `;
   document.body.append(container);
-
-  const image = container.shadowRoot.querySelector('img');
-  const youtubeIframe = container.shadowRoot.querySelector('.youtube-iframe');
 
   audienceMode.start();
   messaging.start();
 
+  let subject = null;
+  let subjectOwner = null;
+  function setSubject(element, owner) {
+    if (subject !== null) {
+      subject.remove();
+    }
+    if (element !== null) {
+      container.shadowRoot.append(element);
+    }
+    subject = element;
+    subjectOwner = owner;
+  }
+
   listenForPlayers(async player => {
     const channel = createChannel(player, 'upload');
     while (channel.readyState !== 'closed') {
-      const blob = await receiveLargeBlobOnChannel(channel);
-      if (blob) {
-        image.src = URL.createObjectURL(blob);
+      const [message, error] = await getMessageFromChannel(channel);
+      if (error !== null) {
+        console.error(error);
+        // TODO: Recreate channel or kick player
+        break;
       }
-    }
-  });
-
-  listenForPlayers(async player => {
-    const channel = createChannel(player, 'youtube');
-    channel.onmessage = ({data}) => {
-      const message = JSON.parse(data);
-      switch (message.command) {
-        case 'load':  youtubeIframe.src = `https://www.youtube.com/embed/${message.videoId}?enablejsapi=1&autoplay=1`; break;
-        case 'close': youtubeIframe.src = ''; break;
-        case 'play':  youtubeIframe.contentWindow.postMessage('{"event":"command","func":"playVideo"}', '*'); break;
-        case 'pause': youtubeIframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo"}', '*'); break;
+      try {
+        var command = JSON.parse(message);
+      } catch (e) {
+        console.error(e);
+        // TODO: recreate channel
+        break;
       }
-    }
-    channel.onclose = () => {
-      youtubeIframe.src = '';
+      if (command.command === 'load') {
+        if (command.type === 'upload') {
+          const [blob, error] = await getBlobOnChannel(channel);
+          if (error !== null) {
+            console.error(error);
+            // TODO: Recreate channel or kick player
+            break;
+          }
+          const image = new Image();
+          image.src = URL.createObjectURL(blob);
+          setSubject(image, player);
+        } else if (command.type === 'youtube') {
+          const iframe = document.createElement('iframe');
+          iframe.setAttribute('allow', 'autoplay');
+          iframe.src = `https://www.youtube.com/embed/${command.videoId}?enablejsapi=1&autoplay=1`;
+          setSubject(iframe, player);
+        }
+      } else if (subjectOwner === player) {
+        switch (command.command) {
+          case 'close': setSubject(null, null); break;
+          case 'play':
+            if (subject.tagName === 'IFRAME') {
+              subject.contentWindow.postMessage('{"event":"command","func":"playVideo"}', '*');
+            }
+            break;
+          case 'pause':
+            if (subject.tagName === 'IFRAME') {
+              subject.contentWindow.postMessage('{"event":"command","func":"pauseVideo"}', '*');
+            }
+            break;
+        }
+      }
     }
   });
 

@@ -8,7 +8,7 @@ img {
   object-fit: contain;
 }
 
-.youtube-iframe {
+iframe {
   position: absolute;
   top: 0;
   left: 0;
