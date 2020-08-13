@@ -118,6 +118,7 @@ button:focus {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-color: var(--base01) transparent;
+  user-select: none;
 }
 #players::-webkit-scrollbar {
   width: 16px;
@@ -135,11 +136,13 @@ button:focus {
 #add-player-panel {
   margin-left: auto;
   width: 150px;
+  flex-shrink: 0;
   padding-left:  10px;
   padding-right: 10px;
   border-left: 1px solid var(--base0);
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
 #add-player-panel h2 {
   font-size: 18px;

@@ -68,6 +68,7 @@ function addPlayer(deviceName) {
     </span>
   `);
   layoutPlayerIframes();
+  playersContainer.scrollTo({left: playersContainer.scrollWidth, behavior: 'smooth'});
 }
 
 addPlayer('Pixel 4');
@@ -92,6 +93,7 @@ playersContainer.onclick = event => {
     const playerContainer = event.target.closest('.player-container');
     playerContainer.dataset.orientation = playerContainer.dataset.orientation === 'portrait' ? 'landscape' : 'portrait';
     layoutPlayerIframes();
+    playerContainer.scrollIntoView({behavior: 'smooth'});
   } else if (event.target.classList.contains('remove-button')) {
     event.target.closest('.player-container').remove();
   }

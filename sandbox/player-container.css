@@ -1,10 +1,11 @@
 .player-container {
   height: var(--player-container-height);
   width: var(--container-width);
-  margin-right: 4vmin;
+  margin-right: calc(var(--container-width) / 5);
   position: relative;
   display: grid;
   place-items: center;
+  user-select: none;
 }
 .player-container[data-orientation="portrait"] {
   --container-width: calc(var(--player-container-height) * var(--aspect-ratio));
@@ -15,28 +16,37 @@
 
 .player-container > .phone {
   content: '';
-  position: relative;
+
+  width:  var(--phone-width);
+  height: var(--phone-height);
+
   display: flex;
   justify-content: center;
   align-items: center;
+
+  border-radius: calc(var(--phone-width) / 6);
+
+  --shadow-color: rgba(0, 0, 0, .6);
+  box-shadow: 0 0 calc(var(--phone-width) / 35) var(--shadow-color);
+  background: var(--shadow-color);
+
+  position: relative;
 }
 .player-container[data-orientation="portrait"] > .phone {
-  width: var(--container-width);
-  height: var(--player-container-height);
+  --phone-width: var(--container-width);
+  --phone-height: var(--player-container-height);
 }
 .player-container[data-orientation="landscape"] > .phone {
-  width: var(--container-width);
-  height: calc(var(--container-width) * var(--aspect-ratio));
+  --phone-width: var(--container-width);
+  --phone-height: calc(var(--container-width) * var(--aspect-ratio));
 }
 
+/* Device image */
 .player-container > .phone::after {
   content: '';
-  width: var(--player-container-height);
+  width:  var(--player-container-height);
   height: var(--player-container-height);
-  background-image: var(--device-image);
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
+  background: no-repeat center / contain var(--device-image);
   pointer-events: none;
 }
 .player-container[data-orientation="portrait"]  > .phone::after { transform: rotate(0); }
@@ -97,13 +107,13 @@
   background-image: url('data:image/svg+xml,\
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">\
       <defs>\
-        <marker id="a" overflow="visible" orient="auto">\
+        <marker id="arrow-head" overflow="visible" orient="auto">\
           <path d="M1.2 0L-.6 1v-2l1.8 1z" fill="%23002b36" stroke="%23002b36" stroke-width=".2"/>\
         </marker>\
       </defs>\
       <g fill="none" stroke="%23002b36" stroke-linecap="round" stroke-width="7.6">\
-        <path marker-end="url(%23a)" d="M10.4 39.5a22.9 22.9 0 016.4-24.8 22.9 22.9 0 0125.4-3.3"/>\
-        <path marker-end="url(%23a)" d="M54 25.3a22.9 22.9 0 01-7.1 24A22.9 22.9 0 0122 52.5"/>\
+        <path marker-end="url(%23arrow-head)" d="M10.4 39.5a22.9 22.9 0 016.4-24.8 22.9 22.9 0 0125.4-3.3"/>\
+        <path marker-end="url(%23arrow-head)" d="M54 25.3a22.9 22.9 0 01-7.1 24A22.9 22.9 0 0122 52.5"/>\
       </g>\
     </svg>\
   ');
