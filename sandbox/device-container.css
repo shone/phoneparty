@@ -1,5 +1,5 @@
-.player-container {
-  height: var(--player-container-height);
+.device-container {
+  height: var(--device-container-height);
   width: var(--container-width);
   margin-right: calc(var(--container-width) / 5);
   position: relative;
@@ -7,14 +7,14 @@
   place-items: center;
   user-select: none;
 }
-.player-container[data-orientation="portrait"] {
-  --container-width: calc(var(--player-container-height) * var(--aspect-ratio));
+.device-container[data-orientation="portrait"] {
+  --container-width: calc(var(--device-container-height) * var(--aspect-ratio));
 }
-.player-container[data-orientation="landscape"] {
-  --container-width: var(--player-container-height);
+.device-container[data-orientation="landscape"] {
+  --container-width: var(--device-container-height);
 }
 
-.player-container > .phone {
+.device-container > .device {
   content: '';
 
   width:  var(--phone-width);
@@ -32,57 +32,57 @@
 
   position: relative;
 }
-.player-container[data-orientation="portrait"] > .phone {
+.device-container[data-orientation="portrait"] > .device {
   --phone-width: var(--container-width);
-  --phone-height: var(--player-container-height);
+  --phone-height: var(--device-container-height);
 }
-.player-container[data-orientation="landscape"] > .phone {
+.device-container[data-orientation="landscape"] > .device {
   --phone-width: var(--container-width);
   --phone-height: calc(var(--container-width) * var(--aspect-ratio));
 }
 
 /* Device image */
-.player-container > .phone::after {
+.device-container > .device::after {
   content: '';
-  width:  var(--player-container-height);
-  height: var(--player-container-height);
+  width:  var(--device-container-height);
+  height: var(--device-container-height);
   background: no-repeat center / contain var(--device-image);
   pointer-events: none;
 }
-.player-container[data-orientation="portrait"]  > .phone::after { transform: rotate(0); }
-.player-container[data-orientation="landscape"] > .phone::after { transform: rotate(90deg); }
+.device-container[data-orientation="portrait"]  > .device::after { transform: rotate(0); }
+.device-container[data-orientation="landscape"] > .device::after { transform: rotate(90deg); }
 
-.player-container .screen-content {
+.device-container .screen-content {
   position: absolute;
   overflow: hidden;
   background: black;
 }
-.player-container[data-orientation="portrait"] .screen-content {
+.device-container[data-orientation="portrait"] .screen-content {
   top:    var(--top);
   left:   var(--left);
   right:  var(--right);
   bottom: var(--bottom);
 }
-.player-container[data-orientation="landscape"] .screen-content {
+.device-container[data-orientation="landscape"] .screen-content {
   top:    var(--left);
   left:   var(--bottom);
   right:  var(--top);
   bottom: var(--right);
 }
 
-.player-container iframe {
+.device-container iframe {
   transform-origin: top left;
 }
-.player-container[data-orientation="portrait"] iframe {
+.device-container[data-orientation="portrait"] iframe {
   width: var(--screen-resolution-x);
   height: var(--screen-resolution-y);
 }
-.player-container[data-orientation="landscape"] iframe {
+.device-container[data-orientation="landscape"] iframe {
   width: var(--screen-resolution-y);
   height: var(--screen-resolution-x);
 }
 
-.player-container .controls {
+.device-container .controls {
   position: absolute;
   top: 100%;
   height: 37px;
@@ -93,7 +93,7 @@
   align-items: center;
 }
 
-.player-container .controls button {
+.device-container .controls button {
   width:  30px;
   height: 30px;
   border-radius: 50%;
@@ -101,7 +101,7 @@
   background-position: center;
 }
 
-.player-container .controls .rotate-button {
+.device-container .controls .rotate-button {
   margin-right: 15px;
   background-size: 80%;
   background-image: url('data:image/svg+xml,\
@@ -119,7 +119,7 @@
   ');
 }
 
-.player-container .controls .remove-button {
+.device-container .controls .remove-button {
   background-size: 55%;
   background-image: url('data:image/svg+xml,\
     <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\

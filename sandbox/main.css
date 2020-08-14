@@ -103,15 +103,15 @@ button:focus {
   top: calc(50% - 1px);
 }
 
-#players-panel {
+#devices-panel {
   display: flex;
   --panel-height: 45vh;
   height: var(--panel-height);
 }
 
-#players {
+#devices {
   flex-grow: 1;
-  --player-container-height: calc(var(--panel-height) - 2vmin - 40px);
+  --device-container-height: calc(var(--panel-height) - 2vmin - 40px);
   flex-grow: 0;
   padding: 1vmin;
   display: flex;
@@ -120,20 +120,20 @@ button:focus {
   scrollbar-color: var(--base01) transparent;
   user-select: none;
 }
-#players::-webkit-scrollbar {
+#devices::-webkit-scrollbar {
   width: 16px;
   background: transparent;
 }
-#players::-webkit-scrollbar-thumb {
+#devices::-webkit-scrollbar-thumb {
   background: var(--base01);
   border: 4px solid var(--base03);
   border-radius: 8px;
 }
-#players::-webkit-scrollbar-thumb:hover {
+#devices::-webkit-scrollbar-thumb:hover {
   background: var(--base00);
 }
 
-#add-player-panel {
+#add-device-panel {
   margin-left: auto;
   width: 150px;
   flex-shrink: 0;
@@ -144,18 +144,18 @@ button:focus {
   flex-direction: column;
   user-select: none;
 }
-#add-player-panel h2 {
+#add-device-panel h2 {
   font-size: 18px;
   margin-top: 0;
   text-align: center;
 }
-#add-player-panel ul {
+#add-device-panel ul {
   display: flex;
   flex-direction: column;
   padding: 0;
   margin: 0;
 }
-#add-player-panel ul button {
+#add-device-panel ul button {
   text-align: left;
   margin-bottom: 10px;
 }

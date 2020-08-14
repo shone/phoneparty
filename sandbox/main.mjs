@@ -1,8 +1,8 @@
 const host = document.getElementById('host');
 const splitter = document.getElementById('splitter');
-const playersPanel = document.getElementById('players-panel');
-const playersContainer = document.getElementById('players');
-const addPlayerPanel = document.getElementById('add-player-panel');
+const devicesPanel = document.getElementById('devices-panel');
+const devicesContainer = document.getElementById('devices');
+const addDevicePanel = document.getElementById('add-device-panel');
 const routeInput = document.getElementById('route');
 
 host.src = "/host" + location.hash;
@@ -34,8 +34,8 @@ splitter.onpointerdown = event => {
     let panelHeight = (1 - (event.pageY / window.innerHeight)) * 100;
     panelHeight = Math.min(panelHeight, 70);
     panelHeight = Math.max(panelHeight, 20);
-    playersPanel.style.setProperty('--panel-height', `${panelHeight}vh`);
-    layoutPlayerIframes();
+    devicesPanel.style.setProperty('--panel-height', `${panelHeight}vh`);
+    layoutDeviceIframes();
   }
 
   splitter.onpointerup = splitter.onpointercancel = event => {
@@ -46,17 +46,36 @@ splitter.onpointerdown = event => {
   }
 }
 
-addPlayerPanel.onclick = ({target}) => {
+let devices = [];
+
+const localStorageDevices = localStorage.getItem('sandbox_devices');
+if (localStorageDevices) {
+  devices = JSON.parse(localStorageDevices);
+} else {
+  devices = [
+    {name: 'Pixel 4',           orientation: 'portrait'},
+    {name: 'iPhone 11',         orientation: 'portrait'},
+    {name: 'iPad Pro 2020 11"', orientation: 'portrait'},
+  ];
+}
+
+for (const device of devices) {
+  addDevice(device);
+}
+
+addDevicePanel.onclick = ({target}) => {
   if (target.tagName === 'BUTTON') {
-    const deviceName = target.textContent.trim();
-    addPlayer(deviceName);
+    const device = {name: target.textContent.trim(), orientation: 'portrait'};
+    addDevice(device);
+    devices.push(device);
+    localStorage.setItem('sandbox_devices', JSON.stringify(devices));
   }
 }
 
-function addPlayer(deviceName) {
-  playersContainer.insertAdjacentHTML('beforeend', `
-    <span class="player-container" data-device='${deviceName}' data-orientation="portrait">
-      <div class="phone">
+function addDevice(device) {
+  devicesContainer.insertAdjacentHTML('beforeend', `
+    <span class="device-container" data-device='${device.name}' data-orientation="${device.orientation}">
+      <div class="device">
         <div class="screen-content">
           <iframe src="/player"></iframe>
         </div>
@@ -67,34 +86,39 @@ function addPlayer(deviceName) {
       </div>
     </span>
   `);
-  layoutPlayerIframes();
-  playersContainer.scrollTo({left: playersContainer.scrollWidth, behavior: 'smooth'});
+  layoutDeviceIframes();
+  devicesContainer.scrollTo({left: devicesContainer.scrollWidth, behavior: 'smooth'});
 }
 
-addPlayer('Pixel 4');
-addPlayer('iPhone 11');
-addPlayer('iPad Pro 2020 11"');
-
-function layoutPlayerIframes() {
-  for (const playerContainer of playersContainer.querySelectorAll('.player-container')) {
-    const screenContent = playerContainer.querySelector('.screen-content');
-    const iframe = playerContainer.querySelector('iframe');
+function layoutDeviceIframes() {
+  for (const deviceContainer of devicesContainer.querySelectorAll('.device-container')) {
+    const screenContent = deviceContainer.querySelector('.screen-content');
+    const iframe = deviceContainer.querySelector('iframe');
     const screenContentHeight = screenContent.getBoundingClientRect().height;
     const scale = screenContentHeight / iframe.contentWindow.innerHeight;
     iframe.style.transform = `scale(${scale})`;
   }
 }
 
-layoutPlayerIframes();
-window.addEventListener('resize', layoutPlayerIframes);
+layoutDeviceIframes();
+window.addEventListener('resize', layoutDeviceIframes);
 
-playersContainer.onclick = event => {
+devicesContainer.onclick = event => {
+  const deviceContainer = event.target.closest('.device-container');
+  if (!deviceContainer) return;
+
+  const index = [...devicesContainer.querySelectorAll('.device-container')].indexOf(deviceContainer);
+
   if (event.target.classList.contains('rotate-button')) {
-    const playerContainer = event.target.closest('.player-container');
-    playerContainer.dataset.orientation = playerContainer.dataset.orientation === 'portrait' ? 'landscape' : 'portrait';
-    layoutPlayerIframes();
-    playerContainer.scrollIntoView({behavior: 'smooth'});
+    const orientation = deviceContainer.dataset.orientation === 'portrait' ? 'landscape' : 'portrait';
+    deviceContainer.dataset.orientation = orientation;
+    layoutDeviceIframes();
+    deviceContainer.scrollIntoView({behavior: 'smooth'});
+    devices[index].orientation = orientation;
+    localStorage.setItem('sandbox_devices', JSON.stringify(devices));
   } else if (event.target.classList.contains('remove-button')) {
-    event.target.closest('.player-container').remove();
+    event.target.closest('.device-container').remove();
+    devices.splice(index, 1);
+    localStorage.setItem('sandbox_devices', JSON.stringify(devices));
   }
 }
