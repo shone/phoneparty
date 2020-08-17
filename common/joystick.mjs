@@ -16,6 +16,8 @@ export default class Joystick extends HTMLElement {
       event.preventDefault();
       if (thumb.onpointermove) return;
 
+      if (event.button && event.button > 0) return;
+
       const pointerId = event.pointerId;
       thumb.setPointerCapture(pointerId);
       thumb.style.cursor = 'grabbing';
@@ -23,8 +25,8 @@ export default class Joystick extends HTMLElement {
       const boundingBox = this.getBoundingClientRect();
 
       const initialOffset = {
-        x: event.pageX - (boundingBox.left + (boundingBox.width  / 2)),
-        y: event.pageY - (boundingBox.top  + (boundingBox.height / 2)),
+        x: event.clientX - (boundingBox.x + (boundingBox.width  / 2)),
+        y: event.clientY - (boundingBox.y + (boundingBox.height / 2)),
       }
 
       thumb.onpointermove = event => {
@@ -35,8 +37,8 @@ export default class Joystick extends HTMLElement {
           y: event.pageY - (boundingBox.top  + (boundingBox.height / 2)),
         }
 
-        this.position.x =  (offset.x - initialOffset.x) / boundingBox.width;
-        this.position.y = -(offset.y - initialOffset.y) / boundingBox.height;
+        this.position.x =  (offset.x - initialOffset.x) / (boundingBox.width / 2);
+        this.position.y = -(offset.y - initialOffset.y) / (boundingBox.height / 2);
 
         const length = vectorLength(this.position);
         if (length > 1) {
@@ -48,7 +50,7 @@ export default class Joystick extends HTMLElement {
           this.onthumbmove(this.position);
         }
 
-        thumb.style.transform = `translate(${this.position.x * 100}%, ${-this.position.y * 100}%)`;
+        thumb.style.transform = `translate(${this.position.x * 50}%, ${-this.position.y * 50}%)`;
       }
 
       thumb.onpointerup = thumb.onpointercancel = event => {

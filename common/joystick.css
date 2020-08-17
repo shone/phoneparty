@@ -1,12 +1,15 @@
 :host {
-  width:  5rem;
-  height: 5rem;
+  --size: 8rem;
+  width:  var(--size);
+  height: var(--size);
 
   position: relative;
 
   background: black;
   border-radius: 50%;
   border: .3rem solid #ddd;
+
+  touch-action: none;
 }
 
 #thumb {
@@ -19,8 +22,9 @@
     </svg>\
   ');
   border-radius: 50%;
+  box-shadow: 0 0 1.5rem black;
 
-  --thumb-size: 4rem;
+  --thumb-size: calc(var(--size) * .8);
   width:  var(--thumb-size);
   height: var(--thumb-size);
 
@@ -30,4 +34,8 @@
 
   cursor: grab;
   touch-action: none;
+}
+
+#thumb:hover {
+  background-color: #fff;
 }
