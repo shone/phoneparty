@@ -24,6 +24,7 @@ window.onhashchange = () => {
 splitter.onpointerdown = event => {
   event.preventDefault();
 
+  if (event.button && event.button > 0) return;
   if (splitter.onpointermove) return;
 
   const pointerId = event.pointerId;
@@ -40,6 +41,7 @@ splitter.onpointerdown = event => {
 
   splitter.onpointerup = splitter.onpointercancel = event => {
     if (event.pointerId !== pointerId) return;
+    splitter.releasePointerCapture(pointerId);
     splitter.onpointermove = null;
     splitter.onpointerup = null;
     splitter.onpointercancel = null;
@@ -94,8 +96,7 @@ function layoutDeviceIframes() {
   for (const deviceContainer of devicesContainer.querySelectorAll('.device-container')) {
     const screenContent = deviceContainer.querySelector('.screen-content');
     const iframe = deviceContainer.querySelector('iframe');
-    const screenContentHeight = screenContent.getBoundingClientRect().height;
-    const scale = screenContentHeight / iframe.contentWindow.innerHeight;
+    const scale = screenContent.offsetHeight / iframe.contentWindow.innerHeight;
     iframe.style.transform = `scale(${scale})`;
   }
 }
