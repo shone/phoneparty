@@ -1,0 +1,39 @@
+player-bubble {
+  display: block;
+
+  --size: 7rem;
+  width:  var(--size);
+  height: var(--size);
+/*   transition: .07s width, .07s height, .07s margin-left, .07s margin-top; */
+
+  background-color: grey;
+
+  border-radius: 50%;
+  box-shadow: 0 0 1.2rem rgba(0, 0, 0, .5);
+  box-sizing: border-box;
+
+  will-change: transform;
+  touch-action: none;
+}
+
+player-bubble.shout {
+  --size: 15rem;
+}
+
+player-bubble speech-bubble {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  right: 0;
+}
+
+player-bubble video {
+  object-fit: cover;
+  clip-path: circle(50%);
+  transform: scale(-1, 1);
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  pointer-events: none;
+}

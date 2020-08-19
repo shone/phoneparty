@@ -76,6 +76,8 @@ const playerLeftSound = new Audio('/sounds/player_left.mp3');
 export async function handleNewPlayer(playerId, sdp, websocket) {
   const player = document.createElement('div');
 
+  player.playerId = playerId;
+
   const rtcConnection = new RTCPeerConnection();
   let hasSentSdp = false;
   const iceCandidatesToSend = [];
@@ -92,11 +94,13 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   player.video = video;
   video.autoplay = true;
   video.muted = true;
+  player.stream = null;
   rtcConnection.ontrack = event => {
-    if (video.srcObject !== event.streams[0]) {
-      video.srcObject = event.streams[0];
-      player.appendChild(video);
-    }
+    player.stream = event.streams[0];
+//     if (video.srcObject !== event.streams[0]) {
+//       video.srcObject = event.streams[0];
+//       player.appendChild(video);
+//     }
   }
 
   function onWebsocketMessage({data}) {
@@ -115,7 +119,6 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   const accelerometerChannel    = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
   const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
-  player.hostInteractionChannel = rtcConnection.createDataChannel('hostInteraction', {negotiated: true, id: 6, ordered: true});
   player.closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
   const acceptPlayerChannel     = rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true});
   player.routeChannel           = rtcConnection.createDataChannel('route',           {negotiated: true, id: 9, ordered: true});

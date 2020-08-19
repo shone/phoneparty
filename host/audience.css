@@ -1,0 +1,43 @@
+audience-el {
+  --slot-size: min((100vw / var(--player-count)) - (var(--slot-margin) * 2), 5rem);
+  --slot-margin: .3rem;
+
+  position: fixed;
+  bottom: 0;
+  left:   0;
+  right:  0;
+  height: var(--slot-size);
+
+  background: linear-gradient(to top, black, rgb(0,0,0,.58), transparent);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+audience-el .slot {
+  font-size: var(--slot-size);
+  margin-left:  .1em;
+  margin-right: .1em;
+
+/*   outline: 1px solid red; */
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes audience-slot-open {
+  from { font-size: 0; }
+  to   { font-size: var(--slot-size); }
+}
+@keyframes audience-slot-close {
+  from { font-size: var(--slot-size); }
+  to   { font-size: 0; }
+}
+
+audience-el player-bubble {
+  --size: 1em;
+  pointer-events: auto;
+}

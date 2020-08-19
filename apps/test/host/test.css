@@ -1,0 +1,17 @@
+:host {
+  height: 100%;
+  overflow: auto;
+}
+
+#players-table td {
+  padding: 1rem;
+}
+#players-table player-bubble {
+  display: block;
+  --size: 5rem;
+}
+#players-table input[type='checkbox'] {
+  width:  1.8rem;
+  height: 1.8rem;
+  cursor: pointer;
+}

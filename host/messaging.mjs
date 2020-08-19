@@ -1,39 +1,48 @@
-import {
-  players,
-  listenForAllPlayers,
-  stopListeningForAllPlayers,
-  listenForLeavingPlayers,
-  stopListeningForLeavingPlayers
-} from './players.mjs';
+import SpeechBubble from '/host/speech-bubble.mjs';
 
-let started = false;
-const channels = new Map();
+export default function startMessaging(channel, container) {
+  let speechBubbles = [];
 
-export function start() {
-  if (!started) {
-    listenForAllPlayers(handlePlayer);
-    listenForLeavingPlayers(handleLeavingPlayer);
-    started = true;
-  }
-}
-
-export function stop() {
-  if (started) {
-    stopListeningForAllPlayers(handlePlayer);
-    stopListeningForLeavingPlayers(handleLeavingPlayer);
-
-    for (const channel of channels.values()) {
-      channel.onmessage = null;
-      channel.close();
+  function clearSpeechBubbles() {
+    if (speechBubbles.length > 0) {
+      const bubblesToClear = speechBubbles;
+      speechBubbles = [];
+      bubblesToClear.forEach(speechBubble => speechBubble.classList.add('cleared'));
+      setTimeout(() => {
+        bubblesToClear.forEach(speechBubble => speechBubble.remove());
+      }, 1000);
     }
-    channels.clear();
-
-    for (const player of players) {
-      clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
-    }
-
-    started = false;
   }
+
+  function addSpeechBubble(text) {
+    const speechBubble = new SpeechBubble(text);
+    container.append(speechBubble);
+    speechBubbles.push(speechBubble);
+  }
+
+  function onmessage({data}) {
+    const command = JSON.parse(data);
+    switch (command.type) {
+      case 'message':
+        while (speechBubbles.length > 0) speechBubbles.pop().remove();
+        addSpeechBubble(command.message);
+        playPopSound();
+        break;
+      case 'clear':
+        if (speechBubbles.length > 0) {
+          clearSpeechBubbles();
+          swooshSound.play().catch(() => {});
+        }
+        break;
+      case 'shout': container.classList.toggle('shout', command.shout); break;
+    }
+  }
+
+  channel.addEventListener('message', onmessage);
+  channel.addEventListener('close', () => {
+    channel.removeEventListener('message', onmessage);
+    while (speechBubbles.length > 0) speechBubbles.pop().remove();
+  }, {once: true});
 }
 
 const popSoundInstances = [new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3'), new Audio('/sounds/pop.mp3')];
@@ -43,64 +52,3 @@ function playPopSound() {
   popSoundInstances.push(popSound);
 }
 const swooshSound = new Audio('/sounds/swoosh.mp3');
-
-export function addSpeechBubbleToPlayer(player, text) {
-  clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
-
-  const speechBubble = document.createElement('div');
-  speechBubble.classList.add('speech-bubble');
-  speechBubble.textContent = text;
-  player.appendChild(speechBubble);
-  playPopSound();
-}
-
-export function clearSpeechBubblesFromPlayer(player, options={}) {
-  if (options.playSwooshSound === undefined) options.playSwooshSound = true;
-
-  const speechBubbles = [...player.querySelectorAll('.speech-bubble:not(.cleared)')];
-  if (speechBubbles.length > 0) {
-    for (const speechBubble of speechBubbles) {
-      speechBubble.classList.add('cleared');
-    }
-    if (options.playSwooshSound) {
-      swooshSound.play().catch(() => {});
-    }
-    setTimeout(() => {
-      for (const speechBubble of speechBubbles) {
-        speechBubble.remove();
-      }
-    }, 1000);
-  }
-}
-
-export function clearAllSpeechBubbles() {
-  const speechBubbles = [...document.querySelectorAll('.player .speech-bubble:not(.cleared)')];
-  speechBubbles.forEach(bubble => bubble.classList.add('cleared'));
-  setTimeout(() => {
-    speechBubbles.forEach(bubble => bubble.remove());
-  }, 500);
-}
-
-function handlePlayer(player) {
-  const channel = player.rtcConnection.createDataChannel('messaging');
-  channels.set(player, channel);
-  channel.onmessage = event => {
-    switch (event.data) {
-      case 'clear': clearSpeechBubblesFromPlayer(player); break;
-      case 'shout-on':  player.classList.add('shout'); break;
-      case 'shout-off': player.classList.remove('shout'); break;
-      default:
-        clearSpeechBubblesFromPlayer(player, {playSwooshSound: false});
-        addSpeechBubbleToPlayer(player, event.data);
-    }
-  }
-}
-
-function handleLeavingPlayer(player) {
-  const channel = channels.get(player);
-  if (channel) {
-    channel.onmessage = null;
-    channel.close();
-    channels.delete(player);
-  }
-}

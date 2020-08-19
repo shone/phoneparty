@@ -17,6 +17,10 @@
   }
 }
 
+#messaging-panel button:hover {
+  transform: scale(1.2);
+}
+
 #messaging-panel .emoji-buttons {
   flex-grow: 1;
   padding: .5rem;
@@ -42,9 +46,6 @@
   font-size: 3rem;
   background: transparent;
 }
-#messaging-panel .emoji-buttons button:hover {
-  transform: scale(1.2);
-}
 
 #messaging-panel .bottom-row {
   flex-shrink: 0;
@@ -59,7 +60,6 @@
 #messaging-panel .bottom-row button {
   height: 100%;
   width: 6rem;
-  touch-action: none;
 }
 
 #messaging-panel .bottom-row .clear {

@@ -2,6 +2,8 @@ import routes from '/player/routes.mjs';
 
 import '/common/joystick.mjs';
 
+import startMessaging from '/player/messaging.mjs';
+
 routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#000';
 
@@ -20,8 +22,15 @@ routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, listenForCha
   const joystick = panel.shadowRoot.querySelector('pp-joystick');
 
   listenForChannel((channel, channelName) => {
-    joystick.onthumbmove = position => {
-      channel.send(JSON.stringify(position));
+    switch (channelName) {
+      case 'joystick':
+        joystick.onthumbmove = position => {
+          channel.send(JSON.stringify(position));
+        }
+        break;
+      case 'messaging':
+        startMessaging(channel);
+        break;
     }
   });
 

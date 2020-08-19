@@ -14,11 +14,10 @@ import handleMessaging from './messaging.mjs';
 
 import './splash-screen.mjs';
 
-import '/apps/tunnel-vision/player/tunnel-vision.mjs';
+// import '/apps/tunnel-vision/player/tunnel-vision.mjs';
 import '/apps/show-and-tell/player/show-and-tell.mjs';
 import '/apps/bubbleland/player/bubbleland.mjs';
-
-import './test.mjs';
+import '/apps/test/player/test.mjs';
 
 async function showStatus(status, description='', detail='') {
   document.getElementById('status-container').className = status;

@@ -7,12 +7,6 @@ body {
   transition: background-color 1s;
 }
 
-@font-face {
-  font-family: "NotoColorEmoji_subset";
-  src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
-  font-display: block;
-}
-
 #connection-status {
   position: fixed;
   width:  100%;

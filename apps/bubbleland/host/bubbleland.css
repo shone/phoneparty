@@ -1,11 +1,8 @@
-#apps-index a[href="#apps/bubbleland"] {
-  background: purple;
+player-bubble {
+  position: absolute;
 
-  font-size: 3em;
-  font-weight: bold;
-  color: white;
+  margin-left: calc(var(--size) / -2);
+  margin-top:  calc(var(--size) / -2);
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  cursor: grab;
 }

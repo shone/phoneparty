@@ -12,7 +12,6 @@ import {players, handleNewPlayer} from './players.mjs';
 
 import './splash-screen.mjs';
 import '/apps/index.mjs';
-import './test.mjs';
 
 import {startRouting} from './routes.mjs';
 startRouting({defaultRoute: '#splash-screen'});

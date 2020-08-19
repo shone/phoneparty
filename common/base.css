@@ -13,11 +13,18 @@ body {
   font-family: "Roboto", sans-serif;
 }
 
+@font-face {
+  font-family: "NotoColorEmoji_subset";
+  src: url("/fonts/NotoColorEmoji.subset.woff2") format("woff2");
+  font-display: block;
+}
+
 button {
   outline: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   border: none;
+  touch-action: none;
 }
 button::-moz-focus-inner {
   border: 0;

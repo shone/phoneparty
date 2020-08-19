@@ -1,4 +1,9 @@
-const emojis = ['👍','👎','👌','😄','😆','😅','🤣','😂','🙂','😉','😇','☺️','😛','🥰','🤔','🤫','🤨','😬','😏','😌','😴','😟','🙁','😯','😥','👋','✌️','🤞'];
+const emojis = [
+  '👍','👎','👌','😄','😆','😅','🤣'
+  ,'😂','🙂','😉','😇','☺️','😛','🥰',
+  '🤔','🤫','🤨','😬','😏','😌','😴',
+  '😟','🙁','😯','😥','👋','✌️','🤞'
+];
 
 const panel = document.createElement('div');
 panel.id = 'messaging-panel';
@@ -16,41 +21,41 @@ const emojiButtons = panel.querySelector('.emoji-buttons');
 const clearButton = panel.querySelector('.bottom-row .clear');
 const shoutButton = panel.querySelector('.bottom-row .shout');
 
-export default function handleMessaging(channel) {
+export default function startMessaging(channel) {
   document.getElementById('panel-B').append(panel);
 
   emojiButtons.onpointerdown = event => {
     if (event.target.tagName === 'BUTTON') {
       event.preventDefault();
-      channel.send(event.target.textContent);
+      channel.send(JSON.stringify({type: 'message', message: event.target.textContent}));
     }
   }
 
   clearButton.onpointerdown = event => {
     event.preventDefault();
-    channel.send('clear');
+    channel.send(JSON.stringify({type: 'clear'}));
   }
 
   shoutButton.onpointerdown = event => {
     event.preventDefault();
     const pointerId = event.pointerId;
-    channel.send('shout-on');
+    channel.send(JSON.stringify({type: 'shout', shout: true}));
     function onPointerEnd(event) {
       if (event.pointerId !== pointerId) {
         return;
       }
       window.removeEventListener('pointerup', onPointerEnd);
       window.removeEventListener('pointercancel', onPointerEnd);
-      channel.send('shout-off');
+      channel.send(JSON.stringify({type: 'shout', shout: false}));
     }
     window.addEventListener('pointerup', onPointerEnd);
     window.addEventListener('pointercancel', onPointerEnd);
   }
 
-  channel.onclose = () => {
+  channel.addEventListener('close', () => {
     emojiButtons.onpointerdown = null;
     clearButton.onpointerdown = null;
     shoutButton.onpointerdown = null;
     panel.remove();
-  }
+  }, {once: true});
 }
