@@ -160,7 +160,11 @@ export async function getBlobOnChannel(channel) {
   try {
     var {size, type} = JSON.parse(message);
   } catch (e) {
-    return [null, new Error(`Unable to receive blob on channel because the initial size/type JSON could not be parsed: ${e.message}`)];
+    return [null, new Error(`Unable to get blob on channel '${channel.label}' because the initial message '${message}' could not be parsed as JSON: ${e.message}`)];
+  }
+
+  if (typeof size !== 'number' || size <= 0) {
+    return [null, new Error(`Unable to get blob on channel '${channel.label}' because the declared size (${size}) is invalid.`)];
   }
 
   return new Promise(resolve => {
