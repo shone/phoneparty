@@ -18,8 +18,10 @@ audience-el {
 
 audience-el .slot {
   font-size: var(--slot-size);
-  margin-left:  .1em;
-  margin-right: .1em;
+
+  margin-left:  var(--slot-margin);
+  margin-right: var(--slot-margin);
+  transition: .2s margin;
 
 /*   outline: 1px solid red; */
 
@@ -27,17 +29,13 @@ audience-el .slot {
   justify-content: center;
   align-items: center;
 }
-
-@keyframes audience-slot-open {
-  from { font-size: 0; }
-  to   { font-size: var(--slot-size); }
-}
-@keyframes audience-slot-close {
-  from { font-size: var(--slot-size); }
-  to   { font-size: 0; }
+audience-el .slot:not(.open) {
+  font-size: 0;
+  margin: 0;
 }
 
 audience-el player-bubble {
   --size: 1em;
+  transition: .2s width, .2s height;
   pointer-events: auto;
 }

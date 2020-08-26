@@ -8,25 +8,28 @@ import {
   stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
-import {addSpeechBubbleToPlayer, clearAllSpeechBubbles} from '/host/messaging.mjs';
-import * as audienceMode from '/host/audienceMode.mjs';
+import startMessaging from '/host/messaging.mjs';
+import SpeechBubble from '/host/speech-bubble.mjs';
+import Audience from '/host/audience.mjs';
 
 import {
   setupCurrentThingIndicator,
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#apps/tunnel-vision/goal'] = async function goal({waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers}) {
+routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
+  const {waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers} = routeContext;
 
   const chosenThingElement = setupCurrentThingIndicator(params);
-
-  audienceMode.start();
 
   document.body.style.backgroundColor = '#98947f';
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/tunnel-vision/host/goal.css">
+    <link rel="stylesheet" href="/host/audience.css">
+    <link rel="stylesheet" href="/host/player-bubble.css">
+    <link rel="stylesheet" href="/host/speech-bubble.css">
     <h1>THE GOAL:</h1>
     <div class="goal-container">
       <span class="goal-text">
@@ -41,6 +44,17 @@ routes['#apps/tunnel-vision/goal'] = async function goal({waitForEnd, params, cr
     <h2>Ready to start looking?</h2>
   `;
   document.body.append(container);
+
+  const audience = new Audience(routeContext);
+  container.shadowRoot.append(audience);
+
+  const messagingChannels = new Set();
+  function onPlayer(player) {
+    const channel = createChannel(player, 'messaging');
+    startMessaging(channel, audience.getPlayerBubble(player));
+    messagingChannels.add(channel);
+  }
+  listenForPlayers(onPlayer);
 
   const phoneBackground = container.shadowRoot.querySelector('.phone-background');
   const phoneBackgroundContent = document.createElement('img');
@@ -60,11 +74,14 @@ routes['#apps/tunnel-vision/goal'] = async function goal({waitForEnd, params, cr
 
   await Promise.race([waitForNSeconds(4.5), waitForKeypress(' ')]);
 
-  clearAllSpeechBubbles();
-
   container.shadowRoot.querySelector('h2').classList.add('fade-in-text');
 
-  audienceMode.setMinPlayers(2);
+  [...messagingChannels].forEach(channel => channel.close());
+  stopListeningForAllPlayers(onPlayer);
+
+//   audience.setMinPlayers(2);
+
+  const speechBubbles = new Set();
 
   // Wait for players to be ready
   const waitForPlayersResult = await new Promise(resolve => {
@@ -72,9 +89,11 @@ routes['#apps/tunnel-vision/goal'] = async function goal({waitForEnd, params, cr
     listenForPlayers(handlePlayer);
     listenForLeavingPlayers(checkIfPlayersReady);
     function handlePlayer(player) {
-      createChannel(player).onmessage = () => {
+      createChannel(player, 'confirm').onmessage = () => {
         confirmedPlayers.add(player);
-        addSpeechBubbleToPlayer(player, '👍');
+        const speechBubble = new SpeechBubble('👍');
+        audience.getPlayerBubble(player).append(speechBubble);
+        speechBubbles.add(speechBubble);
         checkIfPlayersReady();
       }
     }
@@ -95,14 +114,11 @@ routes['#apps/tunnel-vision/goal'] = async function goal({waitForEnd, params, cr
 
   if (waitForPlayersResult === 'got-players') {
     // Highlight all the 'thumbs up' speech bubbles
-    const speechBubbles = [...document.querySelectorAll('.player .speech-bubble:not(.cleared)')];
-    for (const speechBubble of speechBubbles) {
-      speechBubble.classList.add('highlight');
-    }
+    [...speechBubbles].forEach(speechBubble => speechBubble.classList.add('highlight'));
     await waitForNSeconds(1.5);
   }
 
-  clearAllSpeechBubbles();
+  [...speechBubbles].forEach(speechBubble => speechBubble.remove());
   await waitForNSeconds(0.5);
 
   container.remove();

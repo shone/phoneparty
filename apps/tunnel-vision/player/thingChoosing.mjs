@@ -1,5 +1,7 @@
 import routes from '/player/routes.mjs';
 
+import startMessaging from '/player/messaging.mjs';
+
 routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({waitForEnd, listenForChannel}) {
   document.body.style.backgroundColor = '#98947f';
 
@@ -12,17 +14,21 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({wai
   `);
   const thingChoosingScreen = panelA.lastElementChild;
 
-  listenForChannel(channel => {
-    channel.onmessage = () => {
-      thingChoosingScreen.querySelector('h1').remove();
-      thingChoosingScreen.querySelector('.thinking-emoji').remove();
-      const thingName = event.data;
-      thingChoosingScreen.insertAdjacentHTML('beforeend', `
-        <div class="thing">
-          <img src="/apps/tunnel-vision/things/${thingName}.svg">
-          <label>${thingName}</label>
-        </div>
-      `);
+  listenForChannel((channel, channelName) => {
+    if (channelName === 'thing') {
+      channel.onmessage = () => {
+        thingChoosingScreen.querySelector('h1').remove();
+        thingChoosingScreen.querySelector('.thinking-emoji').remove();
+        const thingName = event.data;
+        thingChoosingScreen.insertAdjacentHTML('beforeend', `
+          <div class="thing">
+            <img src="/apps/tunnel-vision/things/${thingName}.svg">
+            <label>${thingName}</label>
+          </div>
+        `);
+      }
+    } else if (channelName === 'messaging') {
+      startMessaging(channel);
     }
   });
 

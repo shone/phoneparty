@@ -1,7 +1,7 @@
 import './intro.mjs';
 import './thingChoosing.mjs';
-import './photoTaking.mjs';
-import './photoJudgement.mjs';
+// import './photoTaking.mjs';
+// import './photoJudgement.mjs';
 
 import routes from '/player/routes.mjs';
 
@@ -9,8 +9,13 @@ import '/common/push-button.mjs';
 
 import {waitForNSeconds} from '/common/utils.mjs';
 
+import startMessaging from '/player/messaging.mjs';
+
 routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
   document.body.style.backgroundColor = '#98947f';
+  routeContext.listenForChannel((channel, channelName) => {
+    startMessaging(channel);
+  });
   await confirmation('Ready to start looking?', routeContext);
 }
 
@@ -33,13 +38,15 @@ async function confirmation(text, routeContext) {
     <push-button class="tunnel-vision"></push-button>
   `;
 
-  routeContext.listenForChannel(channel => {
-    document.getElementById('panel-A').append(panelA);
-    document.getElementById('panel-B').append(panelB);
-    panelB.querySelector('push-button').onclick = () => {
-      channel.send(true);
-      panelA.classList.remove('flash');
-      panelB.classList.add('selected');
+  routeContext.listenForChannel((channel, channelName) => {
+    if (channelName === 'confirm') {
+      document.getElementById('panel-A').append(panelA);
+      document.getElementById('panel-B').append(panelB);
+      panelB.querySelector('push-button').onclick = () => {
+        channel.send(true);
+        panelA.classList.remove('flash');
+        panelB.classList.add('selected');
+      }
     }
   });
 

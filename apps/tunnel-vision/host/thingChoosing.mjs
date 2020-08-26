@@ -8,15 +8,20 @@ import routes from '/host/routes.mjs';
 
 import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
 
-import * as audienceMode from '/host/audienceMode.mjs';
-import * as messaging    from '/host/messaging.mjs';
+import Audience from '/host/audience.mjs';
+import startMessaging from '/host/messaging.mjs';
 
-routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({createChannel, listenForPlayers}) {
+routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing(routeContext) {
+  const {createChannel, listenForPlayers} = routeContext;
+
   document.body.style.backgroundColor = '#98947f';
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/tunnel-vision/host/thingChoosing.css">
+    <link rel="stylesheet" href="/host/audience.css">
+    <link rel="stylesheet" href="/host/player-bubble.css">
+    <link rel="stylesheet" href="/host/speech-bubble.css">
     <h1>Choosing thing...</h1>
     <div class="timer">
       <div class="pie-slice pie-slice1 hide"></div>
@@ -37,8 +42,13 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({cre
     existingThingIndicator.remove();
   }
 
-  audienceMode.start();
-  messaging.start();
+  const audience = new Audience(routeContext);
+  container.shadowRoot.append(audience);
+
+  listenForPlayers(player => {
+    const channel = createChannel(player, 'messaging');
+    startMessaging(channel, audience.getPlayerBubble(player));
+  });
 
   await waitForNSeconds(0.5);
 
@@ -71,7 +81,7 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({cre
 
   // Send thing name to all players
   listenForPlayers(player => {
-    createChannel(player).onopen = event => event.target.send(chosenThingElement.dataset.name);
+    createChannel(player, 'thing').onopen = event => event.target.send(chosenThingElement.dataset.name);
   });
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
@@ -99,8 +109,6 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing({cre
   chosenThingElement.classList.remove('present-in-center');
 
   currentThingIndicatorRouteEnd();
-
-  messaging.stop();
 
   return `#apps/tunnel-vision/goal?thing=${chosenThingElement.dataset.name}`;
 }

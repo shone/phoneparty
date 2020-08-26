@@ -108,7 +108,7 @@ export async function startRouting({defaultRoute}) {
   }
 }
 
-async function routeNotFoundScreen({route}) {
+async function routeNotFoundScreen({route, waitForEnd}) {
   document.body.style.backgroundColor = '#fff';
   document.body.insertAdjacentHTML('beforeend', `
     <div id="route-not-found">
@@ -119,6 +119,6 @@ async function routeNotFoundScreen({route}) {
   const div = document.body.lastElementChild;
   div.querySelector('.route').textContent = route;
 
-  await waitForRouteToEnd();
+  await waitForEnd();
   div.remove();
 }

@@ -1,12 +1,10 @@
 import {players} from './players.mjs';
 
-import PlayerBubble from './player-bubble.mjs';
-
 document.head.insertAdjacentHTML('beforeend', `
-  <link rel="stylesheet" href="/host/audience.css">
+  <link rel="stylesheet" href="/host/player-grid.css">
 `);
 
-export default class Audience extends HTMLElement {
+export default class PlayerGrid extends HTMLElement {
   constructor(routeContext) {
     super();
 
@@ -19,13 +17,10 @@ export default class Audience extends HTMLElement {
       slot.classList.add('slot');
       setTimeout(() => slot.classList.add('open'), 100);
 
-      const playerBubble = new PlayerBubble(player);
-      slot.append(playerBubble);
-      slot.playerBubble = playerBubble;
-
       this.append(slot);
       this.playerSlotMap.set(player, slot);
       this.style.setProperty('--player-count', players.length);
+      this.style.setProperty('--player-sqrt', Math.floor(Math.sqrt(players.length)));
     });
 
     listenForLeavingPlayers(player => {
@@ -36,13 +31,9 @@ export default class Audience extends HTMLElement {
         this.playerSlotMap.delete(player);
       }
       this.style.setProperty('--player-count', players.length);
+      this.style.setProperty('--player-sqrt', Math.floor(Math.sqrt(players.length)));
     });
-  }
-
-  getPlayerBubble(player) {
-    const slot = this.playerSlotMap.get(player);
-    return slot && slot.playerBubble;
   }
 }
 
-customElements.define('audience-el', Audience);
+customElements.define('player-grid', PlayerGrid);

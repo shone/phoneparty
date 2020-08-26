@@ -3,9 +3,7 @@ import routes from '/host/routes.mjs';
 import {sendOnChannelWhenOpen} from '/common/utils.mjs';
 
 import startMessaging from '/host/messaging.mjs';
-import * as audienceMode from '/host/audienceMode.mjs';
 import PlayerBubble from '/host/player-bubble.mjs';
-
 import Audience from '/host/audience.mjs';
 
 routes['#apps/test'] = async function test(routeContext) {

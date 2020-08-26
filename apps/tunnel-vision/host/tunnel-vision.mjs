@@ -2,8 +2,8 @@ import './intro.mjs';
 import './thingChoosing.mjs';
 import './goal.mjs';
 import './photoTaking.mjs';
-import './presentingPhotos.mjs';
-import './anotherRound.mjs';
+// import './presentingPhotos.mjs';
+// import './anotherRound.mjs';
 
 export const playerPhotos = [];
 

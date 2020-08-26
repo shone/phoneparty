@@ -1,6 +1,6 @@
 import routes from '/host/routes.mjs';
 
-// import '/apps/tunnel-vision/host/tunnel-vision.mjs';
+import '/apps/tunnel-vision/host/tunnel-vision.mjs';
 import '/apps/show-and-tell/host/show-and-tell.mjs';
 import '/apps/bubbleland/host/bubbleland.mjs';
 import '/apps/test/host/test.mjs';

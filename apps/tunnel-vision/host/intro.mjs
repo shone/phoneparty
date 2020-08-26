@@ -1,17 +1,22 @@
 import {acceptAllPlayers} from '/host/players.mjs';
 import {waitForNSeconds} from '/common/utils.mjs';
 
-import * as audienceMode from '/host/audienceMode.mjs';
-import * as messaging from '/host/messaging.mjs';
+import Audience from '/host/audience.mjs';
+import startMessaging from '/host/messaging.mjs';
 
 import routes from '/host/routes.mjs';
 
-routes['#apps/tunnel-vision'] = async function intro({waitForEnd}) {
+routes['#apps/tunnel-vision'] = async function intro(routeContext) {
+  const {waitForEnd, listenForPlayers, createChannel} = routeContext;
+
   document.body.style.backgroundColor = '#98947f';
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/tunnel-vision/host/intro.css">
+    <link rel="stylesheet" href="/host/audience.css">
+    <link rel="stylesheet" href="/host/player-bubble.css">
+    <link rel="stylesheet" href="/host/speech-bubble.css">
     <h1>
       <div>Tunnel Vision</div>
       <span class="closeup-trickery">
@@ -29,8 +34,13 @@ routes['#apps/tunnel-vision'] = async function intro({waitForEnd}) {
   `;
   document.body.append(container);
 
-  audienceMode.start();
-  messaging.start();
+  const audience = new Audience(routeContext);
+  container.shadowRoot.append(audience);
+
+  listenForPlayers(player => {
+    const channel = createChannel(player, 'messaging');
+    startMessaging(channel, audience.getPlayerBubble(player));
+  });
 
   const tunnelEffect = createTunnelEffect(container.shadowRoot.querySelector('canvas'));
 
@@ -43,8 +53,6 @@ routes['#apps/tunnel-vision'] = async function intro({waitForEnd}) {
   container.classList.add('finished');
   await waitForNSeconds(2);
   container.remove();
-
-  messaging.stop();
 
   if (!location.hash.startsWith('#apps/tunnel-vision')) {
     audienceMode.stop();

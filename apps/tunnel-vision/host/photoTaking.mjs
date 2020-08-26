@@ -7,8 +7,7 @@ import {
   stopListeningForLeavingPlayers
 } from '/host/players.mjs';
 
-import * as playerGrid from './playerGrid.mjs';
-import * as audienceMode from '/host/audienceMode.mjs';
+import PlayerGrid from '/host/player-grid.mjs';
 
 import routes from '/host/routes.mjs';
 
@@ -20,38 +19,50 @@ import {
   currentThingIndicatorRouteEnd
 } from './tunnel-vision.mjs';
 
-routes['#apps/tunnel-vision/photo-taking'] = async function photoTaking({params, acceptAllPlayers, createChannel, listenForLeavingPlayers}) {
+routes['#apps/tunnel-vision/photo-taking'] = async function photoTaking(routeContext) {
+
+  const {params, acceptAllPlayers, createChannel, listenForLeavingPlayers} = routeContext;
+
   document.body.style.backgroundColor = '#98947f';
+
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/apps/tunnel-vision/host/photoTaking.css">
+    <link rel="stylesheet" href="/host/player-grid.css">
+    <h1>Take your photos!</h1>
+  `;
+  document.body.append(container);
 
   const chosenThingElement = setupCurrentThingIndicator(params);
 
   const shutterSound        = new Audio('/apps/tunnel-vision/sounds/camera-shutter.wav');
   const allPhotosTakenSound = new Audio('/apps/tunnel-vision/sounds/all-photos-taken.mp3');
 
-  audienceMode.stop();
-
   await waitForNSeconds(1);
+
+  const playerGrid = new PlayerGrid(routeContext);
+  container.shadowRoot.append(playerGrid);
 
   // Clear any photos from previous rounds of the game
   while (playerPhotos.length > 0) {
     playerPhotos.pop();
   }
 
-  // Layout players as a grid of bubbles
-  acceptAllPlayers(player => {
-    player.classList.add('bubble', 'moving-to-grid');
-    if (!player.parentElement) {
-      document.body.appendChild(player);
-    }
-  });
-  playerGrid.start();
-  await waitForNSeconds(2.5);
-  stopAcceptingPlayers();
+//   // Layout players as a grid of bubbles
+//   acceptAllPlayers(player => {
+//     player.classList.add('bubble', 'moving-to-grid');
+//     if (!player.parentElement) {
+//       document.body.appendChild(player);
+//     }
+//   });
+//   playerGrid.start();
+//   await waitForNSeconds(2.5);
+//   stopAcceptingPlayers();
 
   // Hide players, as they will transition into phones next
-  players.forEach(player => player.classList.add('scale-down'));
-  await waitForNSeconds(0.5);
-  players.forEach(player => player.classList.remove('scale-down', 'bubble'));
+//   players.forEach(player => player.classList.add('scale-down'));
+//   await waitForNSeconds(0.5);
+//   players.forEach(player => player.classList.remove('scale-down', 'bubble'));
 
   document.body.insertAdjacentHTML('beforeend', `
     <div class="tunnel-vision photo-taking-screen">

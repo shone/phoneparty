@@ -4,7 +4,6 @@ player-bubble {
   --size: 7rem;
   width:  var(--size);
   height: var(--size);
-/*   transition: .07s width, .07s height, .07s margin-left, .07s margin-top; */
 
   background-color: grey;
 
