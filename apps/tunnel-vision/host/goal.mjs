@@ -12,36 +12,31 @@ import startMessaging from '/host/messaging.mjs';
 import SpeechBubble from '/host/speech-bubble.mjs';
 import Audience from '/host/audience.mjs';
 
-import {
-  setupCurrentThingIndicator,
-  currentThingIndicatorRouteEnd
-} from './tunnel-vision.mjs';
-
 routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
   const {waitForEnd, params, createChannel, listenForPlayers, listenForLeavingPlayers} = routeContext;
 
-  const chosenThingElement = setupCurrentThingIndicator(params);
-
-  document.body.style.backgroundColor = '#98947f';
+  const thingName = params.get('thing');
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/tunnel-vision/host/goal.css">
-    <link rel="stylesheet" href="/host/audience.css">
-    <link rel="stylesheet" href="/host/player-bubble.css">
-    <link rel="stylesheet" href="/host/speech-bubble.css">
-    <h1>THE GOAL:</h1>
-    <div class="goal-container">
-      <span class="goal-text">
-        <div class="find-a-piece-of">Find a piece of</div>
-        <div class="thing-text">${chosenThingElement.dataset.name}</div>
-      </span>
-      <span class="phone">
-        <div class="phone-background"></div>
-        <div class="phone-foreground"></div>
-      </span>
+
+    <div id="centered-content">
+      <h1>THE GOAL:</h1>
+
+      <div id="goal-container">
+        <span class="text">
+          <div class="find-a-piece-of">Find a piece of</div>
+          <div class="thing-text">${thingName}</div>
+        </span>
+        <span class="phone">
+          <div class="background"></div>
+          <div class="foreground"></div>
+        </span>
+      </div>
+
+      <div id="start-looking">Ready to start looking?</div>
     </div>
-    <h2>Ready to start looking?</h2>
   `;
   document.body.append(container);
 
@@ -56,25 +51,25 @@ routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
   }
   listenForPlayers(onPlayer);
 
-  const phoneBackground = container.shadowRoot.querySelector('.phone-background');
+  const phoneBackground = container.shadowRoot.querySelector('.phone .background');
   const phoneBackgroundContent = document.createElement('img');
-  phoneBackgroundContent.src = chosenThingElement.querySelector('img').src;
-  phoneBackgroundContent.dataset.name = chosenThingElement.dataset.name;
+  phoneBackgroundContent.src = `/apps/tunnel-vision/things/${thingName}.svg`;
+  phoneBackgroundContent.dataset.name = thingName;
   phoneBackgroundContent.classList.add('thing');
-  phoneBackground.appendChild(phoneBackgroundContent);
+  phoneBackground.append(phoneBackgroundContent);
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
   container.shadowRoot.querySelector('h1').classList.add('fade-in-text');
 
   await Promise.race([waitForNSeconds(1.2), waitForKeypress(' ')]);
-  container.shadowRoot.querySelector('.goal-text').classList.add('fade-in-text');
+  container.shadowRoot.querySelector('#goal-container .text').classList.add('fade-in-text');
 
   await Promise.race([waitForNSeconds(0.5), waitForKeypress(' ')]);
   container.shadowRoot.querySelector('.phone').classList.add('reveal');
 
   await Promise.race([waitForNSeconds(4.5), waitForKeypress(' ')]);
 
-  container.shadowRoot.querySelector('h2').classList.add('fade-in-text');
+  container.shadowRoot.getElementById('start-looking').classList.add('fade-in-text');
 
   [...messagingChannels].forEach(channel => channel.close());
   stopListeningForAllPlayers(onPlayer);
@@ -118,12 +113,10 @@ routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
     await waitForNSeconds(1.5);
   }
 
-  [...speechBubbles].forEach(speechBubble => speechBubble.remove());
+  [...speechBubbles].forEach(speechBubble => speechBubble.classList.add('cleared'));
   await waitForNSeconds(0.5);
 
   container.remove();
 
-  currentThingIndicatorRouteEnd();
-
-  return `#apps/tunnel-vision/photo-taking?thing=${chosenThingElement.dataset.name}`;
+  return `#apps/tunnel-vision/shoot?thing=${thingName}`;
 }

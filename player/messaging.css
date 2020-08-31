@@ -1,44 +1,44 @@
-#messaging-panel {
+:host {
   background: #ddd;
   display: flex;
   flex-direction: column;
 }
 
 @media (orientation: portrait) {
-  #messaging-panel {
+  :host {
     border-top-left-radius:  1rem;
     border-top-right-radius: 1rem;
   }
 }
 @media (orientation: landscape) {
-  #messaging-panel {
+  :host {
     border-top-left-radius:    1rem;
     border-bottom-left-radius: 1rem;
   }
 }
 
-#messaging-panel button:hover {
+button:hover {
   transform: scale(1.2);
 }
 
-#messaging-panel .emoji-buttons {
+#emoji-buttons {
   flex-grow: 1;
   padding: .5rem;
   overflow-y: auto;
   scrollbar-color: #888 transparent;
 }
-#messaging-panel .emoji-buttons::-webkit-scrollbar {
+#emoji-buttons::-webkit-scrollbar {
   width: 8px;
   background: transparent;
 }
-#messaging-panel .emoji-buttons::-webkit-scrollbar-thumb {
+#emoji-buttons::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 4px;
 }
-#messaging-panel .emoji-buttons::-webkit-scrollbar-thumb:hover {
+#emoji-buttons::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
-#messaging-panel .emoji-buttons button {
+#emoji-buttons button {
   width:  4rem;
   height: 4rem;
   font-family: NotoColorEmoji_subset;
@@ -47,7 +47,7 @@
   background: transparent;
 }
 
-#messaging-panel .bottom-row {
+#bottom-row {
   flex-shrink: 0;
   height: 2.5rem;
   text-align: right;
@@ -57,12 +57,12 @@
   padding: .3rem;
 }
 
-#messaging-panel .bottom-row button {
+#bottom-row button {
   height: 100%;
   width: 6rem;
 }
 
-#messaging-panel .bottom-row .clear {
+#clear-button {
   background: no-repeat center / contain url('data:image/svg+xml,\
     <svg viewBox="-5 -5 74 43" xmlns="http://www.w3.org/2000/svg">\
       <g fill="none" stroke="black">\
@@ -73,7 +73,7 @@
   ');
 }
 
-#messaging-panel .bottom-row .shout {
+#shout-button {
   background: no-repeat center / contain url('data:image/svg+xml,\
     <svg viewBox="0 0 64 50" xmlns="http://www.w3.org/2000/svg">\
       <g fill="none" stroke="black" stroke-linecap="round" stroke-width="3">\
@@ -87,12 +87,4 @@
       <rect fill="black" transform="rotate(-30)" x="-14.7" y="40" width="5" height="9" ry="2.1"/>\
     </svg>\
   ');
-}
-
-#messaging-panel .clear-button {
-  height: 16vmin;
-  border-radius: 3vmin;
-  font-size: 7vmin;
-  flex-shrink: 0;
-  margin-bottom: 2vmin;
 }

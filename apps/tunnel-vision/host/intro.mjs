@@ -9,17 +9,13 @@ import routes from '/host/routes.mjs';
 routes['#apps/tunnel-vision'] = async function intro(routeContext) {
   const {waitForEnd, listenForPlayers, createChannel} = routeContext;
 
-  document.body.style.backgroundColor = '#98947f';
-
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/tunnel-vision/host/intro.css">
-    <link rel="stylesheet" href="/host/audience.css">
-    <link rel="stylesheet" href="/host/player-bubble.css">
-    <link rel="stylesheet" href="/host/speech-bubble.css">
+
     <h1>
       <div>Tunnel Vision</div>
-      <span class="closeup-trickery">
+      <div class="closeup-trickery">
         <div class="text">Closeup trickery</div>
         <div class="magnifying-glass-container">
           <div class="zoomed-text">
@@ -27,10 +23,12 @@ routes['#apps/tunnel-vision'] = async function intro(routeContext) {
           </div>
           <div class="magnifying-glass"></div>
         </div>
-      </span>
+      </div>
     </h1>
+
     <canvas width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
-    <push-button class="continue-button"></push-button>
+
+    <push-button id="continue-button"></push-button>
   `;
   document.body.append(container);
 
@@ -42,25 +40,23 @@ routes['#apps/tunnel-vision'] = async function intro(routeContext) {
     startMessaging(channel, audience.getPlayerBubble(player));
   });
 
-  const tunnelEffect = createTunnelEffect(container.shadowRoot.querySelector('canvas'));
+  const waitForTunnelEffect = tunnelEffect(container.shadowRoot.querySelector('canvas'), routeContext);
 
-  const continueButton = container.shadowRoot.querySelector('.continue-button');
+  const continueButton = container.shadowRoot.getElementById('continue-button');
+  container.addEventListener('click', () => continueButton.classList.add('reveal'));
+  waitForTunnelEffect.then(() => setTimeout(() => continueButton.classList.add('reveal'), 2300));
   const waitForContinueButton = new Promise(resolve => continueButton.onclick = resolve);
-  await Promise.race([waitForEnd(), waitForContinueButton]);
 
-  tunnelEffect.stop();
+  await Promise.race([waitForEnd(), waitForContinueButton]);
 
   container.classList.add('finished');
   await waitForNSeconds(2);
   container.remove();
 
-  if (!location.hash.startsWith('#apps/tunnel-vision')) {
-    audienceMode.stop();
-  }
-  return '#apps/tunnel-vision/thing-choosing';
+  return '#apps/tunnel-vision/choose';
 }
 
-function createTunnelEffect(canvas) {
+async function tunnelEffect(canvas, routeContext) {
   const tunnelJourneyDurationMs = 5000;
   const fieldOfViewYrad = 45 * Math.PI / 180;
 
@@ -222,14 +218,17 @@ function createTunnelEffect(canvas) {
     }
   });
 
-  return {
-    stop() {
+  return new Promise(resolve => {
+    function stop() {
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
       }
       window.removeEventListener('resize', onWindowResize);
+      resolve();
     }
-  }
+    setTimeout(stop, tunnelJourneyDurationMs);
+    routeContext.waitForEnd().then(stop);
+  });
 }
 
 function createGlProgram(gl, {vertexShaderSource, fragmentShaderSource}) {

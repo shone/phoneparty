@@ -1,9 +1,9 @@
-const host = document.getElementById('host');
-const splitter = document.getElementById('splitter');
-const devicesPanel = document.getElementById('devices-panel');
+const host             = document.getElementById('host');
+const splitter         = document.getElementById('splitter');
+const devicesPanel     = document.getElementById('devices-panel');
 const devicesContainer = document.getElementById('devices');
-const addDevicePanel = document.getElementById('add-device-panel');
-const routeInput = document.getElementById('route');
+const addDevicePanel   = document.getElementById('add-device-panel');
+const routeInput       = document.getElementById('route');
 
 host.src = "/host" + location.hash;
 

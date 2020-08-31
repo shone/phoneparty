@@ -5,24 +5,26 @@ const emojis = [
   '😟','🙁','😯','😥','👋','✌️','🤞'
 ];
 
-const panel = document.createElement('div');
-panel.id = 'messaging-panel';
-panel.innerHTML = `
-  <div class="emoji-buttons">
-    ${emojis.map(emoji => `<button>${emoji}</button>`).join('')}
-  </div>
-  <div class="bottom-row">
-    <button class="shout"></button>
-    <button class="clear"></button>
-  </div>
-`;
-
-const emojiButtons = panel.querySelector('.emoji-buttons');
-const clearButton = panel.querySelector('.bottom-row .clear');
-const shoutButton = panel.querySelector('.bottom-row .shout');
-
 export default function startMessaging(channel) {
+  const panel = document.createElement('div');
+  panel.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/player/messaging.css">
+    <link rel="stylesheet" href="/common/base.css">
+
+    <div id="emoji-buttons">
+      ${emojis.map(emoji => `<button>${emoji}</button>`).join('')}
+    </div>
+
+    <div id="bottom-row">
+      <button id="shout-button"></button>
+      <button id="clear-button"></button>
+    </div>
+  `;
   document.getElementById('panel-B').append(panel);
+
+  const emojiButtons = panel.shadowRoot.getElementById('emoji-buttons');
+  const clearButton  = panel.shadowRoot.getElementById('clear-button');
+  const shoutButton  = panel.shadowRoot.getElementById('shout-button');
 
   emojiButtons.onpointerdown = event => {
     if (event.target.tagName === 'BUTTON') {
@@ -38,24 +40,22 @@ export default function startMessaging(channel) {
 
   shoutButton.onpointerdown = event => {
     event.preventDefault();
+
+    if (shoutButton.onpointerup) return;
+    if (event.button && event.button > 0) return;
+
     const pointerId = event.pointerId;
+    shoutButton.setPointerCapture(pointerId);
+
     channel.send(JSON.stringify({type: 'shout', shout: true}));
-    function onPointerEnd(event) {
-      if (event.pointerId !== pointerId) {
-        return;
-      }
-      window.removeEventListener('pointerup', onPointerEnd);
-      window.removeEventListener('pointercancel', onPointerEnd);
+
+    shoutButton.onpointerup = shoutButton.onpointercancel = event => {
+      if (event.pointerId !== pointerId) return;
+      shoutButton.onpointerup = null;
+      shoutButton.onpointercancel = null;
       channel.send(JSON.stringify({type: 'shout', shout: false}));
     }
-    window.addEventListener('pointerup', onPointerEnd);
-    window.addEventListener('pointercancel', onPointerEnd);
   }
 
-  channel.addEventListener('close', () => {
-    emojiButtons.onpointerdown = null;
-    clearButton.onpointerdown = null;
-    shoutButton.onpointerdown = null;
-    panel.remove();
-  }, {once: true});
+  channel.addEventListener('close', () => panel.remove(), {once: true});
 }

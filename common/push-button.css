@@ -25,4 +25,5 @@ push-button:hover {
 push-button.pressed {
   background-color: #a0a0a0;
   box-shadow: inset -1vmin -1vmin 1vmin white, inset 1vmin 1vmin 1vmin black;
+  background-position: calc(50% + .15rem) calc(50% + .15rem);
 }

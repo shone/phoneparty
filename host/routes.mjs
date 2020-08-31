@@ -49,7 +49,7 @@ export async function startRouting({defaultRoute}) {
 
       waitForEnd: async () => {
         // Wait for the browser to be navigated to a different URL hash, or for the
-        // the current route to be skipped by pressing spacebar.
+        // the current route to return.
         if (hasRouteEnded) return 'route-ended';
         return new Promise(resolve => routeEndListeners.add(() => resolve('route-ended')));
       },

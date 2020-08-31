@@ -16,7 +16,7 @@ export default class PlayerBubble extends HTMLElement {
     } else {
       player.rtcConnection.addEventListener('track', ({streams}) => {
         video.srcObject = streams[0];
-      });
+      }); // TODO: clean up listener with disconnectedCallback
     }
     this.append(video);
   }

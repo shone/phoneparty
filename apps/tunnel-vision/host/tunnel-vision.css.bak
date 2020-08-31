@@ -1,0 +1,31 @@
+.photo-container {
+  position: absolute;
+  z-index: 4;
+  transition: opacity 1s, left 0.8s ease-in-out, top 0.8s ease-in-out, width 0.8s ease-in-out, height 0.8s ease-in-out;
+}
+.photo-container .crop-container {
+  position: absolute;
+  left:   40%;
+  top:    33%;
+  right:  40%;
+  bottom: 48%;
+  overflow: hidden;
+  animation: 0.5s 0.5s scale-up-taken-photo forwards;
+  box-shadow: 0 0 2vmin black;
+}
+@keyframes scale-up-taken-photo {
+  to { left: 0; top: 0; right: 0; bottom: 0; }
+}
+.photo-container img {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  transform: scale(3.2);
+  object-fit: cover;
+}
+/*.grid-debug-block {
+  position: fixed;
+  border: 1px solid red;
+  box-sizing: border-box;
+  pointer-events: none;
+}*/

@@ -1,0 +1,146 @@
+@import url('/common/base.css');
+@import url('/apps/tunnel-vision/base.css');
+@import url('/common/push-button.css');
+
+:host {
+  position: fixed;
+  left:   0;
+  top:    0;
+  bottom: 0;
+  right:  0;
+  background: black;
+  --camera-button-thickness: 9rem;
+}
+
+video {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+}
+video.flip {
+  transform: scaleX(-1);
+}
+
+canvas {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+/*   mix-blend-mode: overlay; */
+  transform: scale(1);
+  transition: 1s transform;
+}
+canvas.scale-up {
+  transform: scale(3);
+}
+
+#crop-guide {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  border-style: solid;
+  border-color: rgb(100,100,100,.8);
+  pointer-events: none;
+}
+
+#goal {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+@media (orientation: portrait) {
+  #goal {
+    top:   0;
+    left:  0;
+    right: 0;
+  }
+}
+@media (orientation: landscape) {
+  #goal {
+    left:   0;
+    top:    0;
+    bottom: 0;
+  }
+}
+#goal img {
+  width:  10rem;
+  height: 10rem;
+  margin: 2rem;
+}
+#goal .label {
+  font-size: 8rem;
+  font-weight: bold;
+}
+
+#take-photo-button {
+  position: absolute;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
+      <path d="M5.9.3c-1.3 0-2.3 1-2.3 2.2H2.3C1 2.6 0 3.6 0 4.9v8.7c0 1.3 1 2.3 2.3 2.3h12.4c1.2 0 2.2-1 2.2-2.3V4.8c0-1.2-1-2.2-2.2-2.2H13c0-1.3-1-2.3-2.2-2.3zM13.4 4h1.2a.7.7 0 1 1 0 1.5h-1.2a.7.7 0 1 1 0-1.5zM8.2 5.6a3.6 3.6 0 0 1 3.6 3.6 3.6 3.6 0 0 1-3.6 3.5 3.6 3.6 0 0 1-3.5-3.5 3.6 3.6 0 0 1 3.5-3.6z"/>\
+    </svg>\
+  ');
+  background-size: 50%;
+  border-radius: 2rem;
+  padding: 0;
+}
+
+#switch-cameras-button {
+  position: absolute;
+  width:  5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="-35 0 137 128" xmlns="http://www.w3.org/2000/svg">\
+      <path d="M56 87v-2c9.9-3.5 25.8-11.2 25.8-23.4 0-4.9-15.1-7.8-33.6-7.8v13L24.9 43.5l23.3-20.7v13s44-.7 44 23.2c0 19.9-21.8 26.4-36.3 28zM9.3 40.7c-10 3.6-26 11.3-26 23.5 0 4.9 15.2 7.8 33.7 7.8V59l23.3 23.3L17.1 103V90s-44 .7-44-23.2c0-19.9 21.8-26.4 36.3-28z"/>\
+    </svg>\
+  ');
+}
+
+@media (orientation: portrait) {
+  #take-photo-button {
+    bottom: 2rem;
+    width: var(--camera-button-thickness);
+    height: 8rem;
+    left: calc(50vw - (var(--camera-button-thickness) / 2));
+  }
+  #switch-cameras-button {
+    left: calc(50% + (var(--camera-button-thickness) / 2) + 1rem);
+    bottom: 3rem;
+  }
+}
+@media (orientation: landscape) {
+  #take-photo-button {
+    right: 2rem;
+    width: 7rem;
+    height: var(--camera-button-thickness);
+    top: calc(50vh - (var(--camera-button-thickness) / 2));
+  }
+  #switch-cameras-button {
+    right: 3rem;
+    top: calc(50% + (var(--camera-button-thickness) / 2) + 1rem);
+  }
+}
+
+:host(.photo-taken) video {
+  display: none;
+}
+:host(.photo-taken)::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  background: #fff;
+  animation: 0.5s camera-flash forwards;
+}
+@keyframes camera-flash {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

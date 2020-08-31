@@ -1,0 +1,17 @@
+#apps-index a[href="#apps/tunnel-vision"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #98947f;
+  font-size: 4em;
+  font-family: Timothy;
+  color: white;
+  -webkit-text-stroke: 0.01em black;
+  text-shadow: black 0 0.1em 0.3em;
+}
+
+@font-face {
+  font-family: "Timothy";
+  src: url("/apps/tunnel-vision/timothy.woff2") format("woff2");
+  font-display: block;
+}

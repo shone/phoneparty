@@ -1,0 +1,147 @@
+@import url('/common/base.css');
+@import url('/apps/tunnel-vision/base.css');
+@import url('/host/audience.css');
+@import url('/host/player-bubble.css');
+@import url('/host/speech-bubble.css');
+
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:host(.fade-out) > * {
+  animation: fade-out 1s forwards;
+}
+
+#centered-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+  font-size: 6rem;
+  text-align: center;
+  margin: 2rem;
+  animation: reveal-heading 0.8s 1.5s both;
+}
+@keyframes reveal-heading {
+  0%   { margin: 0;     font-size: 0;   opacity: 0; }
+  40%  { margin: 2rem; font-size: 6rem; opacity: 0; }
+  100% { margin: 2rem; font-size: 6rem; opacity: 1; }
+}
+
+audience-el {
+  width: 100%;
+}
+
+#timer {
+  width:  9rem;
+  height: 9rem;
+  position: relative;
+}
+#timer .pie-slice {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="%23005cea" d="M8.47 0a8.47 8.47 0 0 1 5.98 2.48L8.47 8.47z"/>\
+    </svg>\
+  ');
+}
+#timer .pie-slice:nth-child(1) { transform: rotate(0);  }
+#timer .pie-slice:nth-child(2) { transform: rotate(45deg);  }
+#timer .pie-slice:nth-child(3) { transform: rotate(90deg);  }
+#timer .pie-slice:nth-child(4) { transform: rotate(135deg); }
+#timer .pie-slice:nth-child(5) { transform: rotate(180deg); }
+#timer .pie-slice:nth-child(6) { transform: rotate(225deg); }
+#timer .pie-slice:nth-child(7) { transform: rotate(270deg); }
+#timer .pie-slice:nth-child(8) { transform: rotate(315deg); }
+
+.thinking-emoji {
+  position: absolute;
+  left: 10%;
+  top:  10%;
+  width:  80%;
+  height: 80%;
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
+      <circle fill="%23ffcc4d" r="6.64" cy="8.5" cx="8.32"/>\
+      <path fill="%23f4900c" d="M5.7 12.49s-.5-.18-.36-.71c.14-.54.66-.4.66-.4l4.4\
+      1.02s.1.03.15-.02c.05-.06.02-.14-.06-.22-.08-.07-.6-.6-.32-1.68.27-1.08.96-1.24\
+      1.21-1.17.25.07.36.33.25.72-.1.38-.18.69-.03 1.17.14.47.55.7.77.92.21.22 1.04\
+      1.03.87 2.13-.17 1.1-.86 2.13-1.9 2.42-.82.22-1.11.17-1.84.04a4.74 4.74 0 0\
+      1-1.03-.27c-.24-.1-.53-.24-.52-.6 0-.36.27-.41.27-.41s-.51-.16-.49-.62c.03-.46.36-.52.36-.52s-.45-.17-.43-.7c.02-.46.4-.52.4-.52z"/>\
+      <path fill="none" stroke="%23664500" stroke-width=".71" stroke-linecap="round"\
+        d="M6.53 10.53c.8-.64 1.63-.9 2.85-.76M4.15 5.99a3.83 3.83 0 0 1 2.92-.2M8.61 4.24c1-.48 2.14-.36 2.94 0" />\
+      <ellipse fill="%23664500" cx="10.17" cy="6.27" rx=".84" ry="1.04"/>\
+      <ellipse fill="%23664500" cx="5.78"  cy="6.68" rx=".84" ry="1.04"/>\
+    </svg>\
+  ');
+  transform: scale(0);
+}
+.thinking-emoji.appear {
+  animation: 0.5s ease-out forwards pop-in;
+}
+
+#juggle-field {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+}
+
+.thing {
+  position: absolute;
+  --size: 5rem;
+  width:  var(--size);
+  height: var(--size);
+}
+.thing img {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+}
+.thing label {
+  position: absolute;
+  top: calc(100% + 2rem);
+  left: -50%;
+  right: -50%;
+  font-size: 7rem;
+  font-weight: bold;
+  text-align: center;
+  animation: 1s 1s fade-in both;
+}
+.thing.chosen::before {
+  content: '';
+  position: absolute;
+  left: -20%;
+  top:  -20%;
+  width:  140%;
+  height: 140%;
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="%23fdfe00" d="M3.7 7.5l-3-3.8L5 6 5.7.5l2.1 4.1L12.3.2l-1.7 5.2\
+        4.3-1.6-3 4.2h4.5l-4.6 2.7 2.4 3.8-4.4-1.2-.2 3L7.8 13l-.4 2-.4-1.6-1.9 3\
+        .3-4.4-3.8 3.6 1.8-4.3-3-.8 3.3-3z"/>\
+    </svg>\
+  ');
+  animation: .4s pop-in both;
+}
+.thing.present-in-center {
+  --size: 12rem;
+  left:   calc(50% - (var(--size) / 2));
+  bottom: calc(50% - (var(--size) / 2));
+  transition:
+    1s ease-in-out left,
+    1s ease-in-out bottom,
+    1s ease-in-out width,
+    1s ease-in-out height;
+}

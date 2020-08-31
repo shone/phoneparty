@@ -1,23 +1,28 @@
-.thing-choosing-screen {
-  position: absolute;
-  left:   0;
-  top:    0;
-  right:  0;
-  bottom: 0;
-  padding: 2vmin;
+@import url('/common/base.css');
+@import url('/apps/tunnel-vision/base.css');
+
+:host {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
-.thing-choosing-screen h1 {
-  font-size: 9vmin;
+
+h1 {
+  font-size: 5rem;
   text-align: center;
-  animation: 0.5s fade-in forwards;
+  margin: 2rem;
+  animation: reveal-heading 0.8s 1.5s both;
 }
-.thing-choosing-screen .thinking-emoji {
-  width:  25vmin;
-  height: 25vmin;
+@keyframes reveal-heading {
+  0%   { margin: 0; font-size: 0;   opacity: 0; }
+  40%  { margin: 2rem; font-size: 5rem; opacity: 0; }
+  100% { margin: 2rem; font-size: 5rem; opacity: 1; }
+}
+
+#thinking-emoji {
+  width:  12rem;
+  height: 12rem;
   background: no-repeat center / contain url('data:image/svg+xml,\
     <svg viewBox="0 0 17 17" xmlns="http://www.w3.org/2000/svg">\
       <circle r="6.64" cy="8.5" cx="8.32" fill="%23ffcc4d"/>\
@@ -31,23 +36,16 @@
   animation: 0.5s 1s ease-out forwards pop-in;
 }
 
-.thing-choosing-screen .thing {
-  width:  30vmin;
-  height: 30vmin;
-  position: relative;
+img {
+  width:  15rem;
+  height: 15rem;
+  animation: 0.5s ease-out forwards pop-in;
 }
-.thing-choosing-screen .thing img {
-  position: absolute;
-  left: 0;
-  top:  0;
-  width:  100%;
-  height: 100%;
-}
-.thing-choosing-screen .thing label {
-  position: absolute;
-  left: -50%;
-  right: -50%;
-  top: 103%;
+
+label {
   text-align: center;
-  font-size: 13vmin;
+  font-size: 8rem;
+  margin-top: 3rem;
+  font-weight: bold;
+  animation: 0.5s ease-out forwards fade-in;
 }

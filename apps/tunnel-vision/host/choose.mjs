@@ -6,33 +6,32 @@ import {
 
 import routes from '/host/routes.mjs';
 
-import {currentThingIndicatorRouteEnd} from './tunnel-vision.mjs';
-
 import Audience from '/host/audience.mjs';
 import startMessaging from '/host/messaging.mjs';
 
-routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing(routeContext) {
-  const {createChannel, listenForPlayers} = routeContext;
-
-  document.body.style.backgroundColor = '#98947f';
+routes['#apps/tunnel-vision/choose'] = async function choose(routeContext) {
+  const {waitForEnd, createChannel, listenForPlayers} = routeContext;
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `
-    <link rel="stylesheet" href="/apps/tunnel-vision/host/thingChoosing.css">
-    <link rel="stylesheet" href="/host/audience.css">
-    <link rel="stylesheet" href="/host/player-bubble.css">
-    <link rel="stylesheet" href="/host/speech-bubble.css">
-    <h1>Choosing thing...</h1>
-    <div class="timer">
-      <div class="pie-slice pie-slice1 hide"></div>
-      <div class="pie-slice pie-slice2 hide"></div>
-      <div class="pie-slice pie-slice3 hide"></div>
-      <div class="pie-slice pie-slice4 hide"></div>
-      <div class="pie-slice pie-slice5 hide"></div>
-      <div class="pie-slice pie-slice6 hide"></div>
-      <div class="pie-slice pie-slice7 hide"></div>
-      <div class="pie-slice pie-slice8 hide"></div>
-      <div class="thinking-emoji"></div>
+    <link rel="stylesheet" href="/apps/tunnel-vision/host/choose.css">
+
+    <div id="centered-content">
+      <h1>Choosing thing...</h1>
+
+      <div id="timer">
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="pie-slice hide"></div>
+        <div class="thinking-emoji"></div>
+      </div>
+
+      <div id="juggle-field"></div>
     </div>
   `;
   document.body.append(container);
@@ -57,37 +56,40 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing(rout
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
 
+  const juggleField = container.shadowRoot.getElementById('juggle-field');
+
   const thingNames = ['bag', 'wallet', 'nose', 'toe', 'sock', 'food']; // 'person', 'underwear', 'key', 'shirt', 'pants'
-  const thingElements = thingNames.map(thingName => {
-    document.body.insertAdjacentHTML('beforeend', `
-      <div class="tunnel-vision thing" data-name="${thingName}">
-        <img src="/apps/tunnel-vision/things/${thingName}.svg">
-      </div>
-    `);
-    return document.body.lastElementChild;
-  });
+  juggleField.innerHTML = thingNames.map(thingName => `
+    <div class="thing" data-name="${thingName}">
+      <img src="/apps/tunnel-vision/things/${thingName}.svg">
+    </div>
+  `).join('');
+  const thingElements = [...juggleField.children];
 
   const stopJuggling = juggleElements(thingElements);
 
   await Promise.race([waitForNSeconds(3), waitForKeypress(' ')]);
 
-  await countdownPieTimer(container.shadowRoot.querySelector('.timer'), 5);
-  // TODO: cleanup and return if route changes during countdown
+  const waitForCountdown = countdownPieTimer(container.shadowRoot.getElementById('timer'), 5);
+
+  const result = await Promise.race([waitForCountdown, waitForEnd()]);
 
   stopJuggling();
+
+  if (result === 'route-ended') {
+    container.remove();
+    return;
+  }
 
   const chosenThingElement = getClosestThingToCenterOfScreen(thingElements);
   chosenThingElement.classList.add('chosen');
 
   // Send thing name to all players
   listenForPlayers(player => {
-    createChannel(player, 'thing').onopen = event => event.target.send(chosenThingElement.dataset.name);
+    createChannel(player, 'thing').onopen = ({target}) => target.send(chosenThingElement.dataset.name);
   });
 
   await Promise.race([waitForNSeconds(1), waitForKeypress(' ')]);
-
-  container.classList.add('fade-out');
-  setTimeout(() => container.remove(), 1000);
 
   for (const thingElement of thingElements) {
     if (thingElement !== chosenThingElement) {
@@ -95,7 +97,12 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing(rout
     }
   }
 
+  container.shadowRoot.querySelector('h1').style.animation = '1s fade-out forwards';
+  container.shadowRoot.getElementById('timer').style.animation = '1s fade-out forwards';
+
   chosenThingElement.classList.add('present-in-center');
+  chosenThingElement.style.left = null;
+  chosenThingElement.style.bottom = null;
 
   const thingLabel = document.createElement('label');
   thingLabel.classList.add('thing-label');
@@ -104,40 +111,24 @@ routes['#apps/tunnel-vision/thing-choosing'] = async function thingChoosing(rout
 
   await Promise.race([waitForNSeconds(2), waitForKeypress(' ')]);
 
-  chosenThingElement.classList.remove('chosen');
-  chosenThingElement.classList.add('show-in-top-right');
-  chosenThingElement.classList.remove('present-in-center');
-
-  currentThingIndicatorRouteEnd();
+  container.classList.add('fade-out');
+  await waitForNSeconds(1);
 
   return `#apps/tunnel-vision/goal?thing=${chosenThingElement.dataset.name}`;
 }
 
-export function chooseThing(thingName) {
-  const element = document.createElement('div');
-  element.classList.add('thing');
-  element.dataset.name = thingName;
-  const img = document.createElement('img');
-  img.src = `/apps/tunnel-vision/things/${thingName}.svg`;
-  element.appendChild(img);
-  element.classList.add('show-in-top-right');
-  document.body.appendChild(element);
-  return element;
-}
-
 function juggleElements(elements) {
+  const gravity = 0.00012;
+  const floorY = -20;
+
   for (const element of elements) {
     element.momentum = {x: 0, y: 0};
-    element.position = {x: Math.random() * 100, y: -15};
-    element.style.transform = `translate(${element.position.x}vw, ${element.position.y}vh)`;
+    element.position = {x: Math.random() * 100, y: floorY};
   }
   let lastTimestamp = performance.now();
   let frameId = window.requestAnimationFrame(function callback(timestamp) {
     const delta = timestamp - lastTimestamp;
     lastTimestamp = timestamp;
-
-    const gravity = 0.00012;
-    const floorY = -15;
 
     for (const element of elements) {
       element.momentum.y -= gravity * delta;
@@ -154,12 +145,14 @@ function juggleElements(elements) {
         element.position.x = 95;
         element.momentum.x = -element.momentum.x;
       }
-      element.style.transform = `translate(${element.position.x}vw, ${100 - element.position.y}vh)`;
+      element.style.left   = `${element.position.x}%`;
+      element.style.bottom = `${element.position.y}%`;
     }
 
     frameId = window.requestAnimationFrame(callback);
   });
 
+  // Every second, throw a random element on the floor into the air
   const throwInterval = setInterval(() => {
     const element = randomInArray(elements.filter(element => element.position.y < 0));
     if (element) {
@@ -175,19 +168,17 @@ function juggleElements(elements) {
 }
 
 async function countdownPieTimer(timerElement, seconds) {
-  let currentPieSlice = 1;
-  while (currentPieSlice <= 8) {
-    const result = await Promise.race([waitForNSeconds(seconds / 8), waitForKeypress(' ')]);
+  const slices = [...timerElement.getElementsByClassName('pie-slice')];
+
+  for (let i=0; i < slices.length; i++) {
+    const result = await Promise.race([waitForNSeconds(seconds / slices.length), waitForKeypress(' ')]);
     if (result && result.type === 'keypress') {
       break;
     }
-    timerElement.querySelector(`.pie-slice${currentPieSlice}`).classList.remove('hide');
-    currentPieSlice++;
+    slices[i].classList.remove('hide');
   }
 
-  for (const slice of timerElement.getElementsByClassName('pie-slice')) {
-    slice.classList.remove('hide');
-  }
+  slices.forEach(slice => slice.classList.remove('hide'));
 }
 
 function getClosestThingToCenterOfScreen(thingElements) {

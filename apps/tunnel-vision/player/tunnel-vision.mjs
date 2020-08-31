@@ -1,6 +1,6 @@
 import './intro.mjs';
-import './thingChoosing.mjs';
-// import './photoTaking.mjs';
+import './choose.mjs';
+import './shoot.mjs';
 // import './photoJudgement.mjs';
 
 import routes from '/player/routes.mjs';
@@ -11,41 +11,47 @@ import {waitForNSeconds} from '/common/utils.mjs';
 
 import startMessaging from '/player/messaging.mjs';
 
+document.head.insertAdjacentHTML('beforeend', `
+  <link rel="stylesheet" href="/apps/tunnel-vision/timothy.css">
+`);
+
 routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
-  document.body.style.backgroundColor = '#98947f';
   routeContext.listenForChannel((channel, channelName) => {
-    startMessaging(channel);
+    if (channelName === 'messaging') {
+      startMessaging(channel);
+    }
   });
   await confirmation('Ready to start looking?', routeContext);
 }
 
-routes['#apps/tunnel-vision/another-round'] = async function anotherRound(routeContext) {
-  document.body.style.backgroundColor = '#98947f';
+routes['#apps/tunnel-vision/end'] = async function end(routeContext) {
   await confirmation('Play another round?', routeContext);
 }
 
 async function confirmation(text, routeContext) {
 
   const panelA = document.createElement('div');
-  panelA.classList.add('tunnel-vision', 'confirmation-panel-A', 'flash');
-  panelA.innerHTML = `
+  panelA.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/apps/tunnel-vision/player/confirmation.css">
+
     <h1>${text}</h1>
   `;
 
   const panelB = document.createElement('div');
-  panelB.classList.add('tunnel-vision', 'confirmation-panel-B');
-  panelB.innerHTML = `
-    <push-button class="tunnel-vision"></push-button>
+  panelB.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/apps/tunnel-vision/player/confirmation.css">
+
+    <push-button id="confirm-button"></push-button>
   `;
 
   routeContext.listenForChannel((channel, channelName) => {
     if (channelName === 'confirm') {
       document.getElementById('panel-A').append(panelA);
       document.getElementById('panel-B').append(panelB);
-      panelB.querySelector('push-button').onclick = () => {
+      panelB.shadowRoot.getElementById('confirm-button').onclick = () => {
+        panelA.classList.add('confirmed');
+        panelB.classList.add('confirmed');
         channel.send(true);
-        panelA.classList.remove('flash');
-        panelB.classList.add('selected');
       }
     }
   });

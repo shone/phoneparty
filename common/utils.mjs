@@ -1,3 +1,9 @@
+export function clamp(f, min, max) {
+  f = Math.min(f, max);
+  f = Math.max(f, min);
+  return f;
+}
+
 export function waitForNSeconds(seconds) {
   return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }

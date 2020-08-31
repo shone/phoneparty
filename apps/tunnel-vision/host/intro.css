@@ -1,6 +1,8 @@
-@import url('tunnel-vision.css');
-@import url('/common/push-button.css');
 @import url('/common/base.css');
+@import url('/apps/tunnel-vision/base.css');
+@import url('/common/push-button.css');
+@import url('/host/audience.css');
+@import url('/host/speech-bubble.css');
 
 :host {
   position: fixed;
@@ -12,19 +14,25 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  background: var(--sand-light);
 }
 
-:host(.finished) {
+:host(.finished) > * {
   animation: 2s fade-out;
 }
 
 h1 {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
   text-align: center;
-  font-size: 25vmin;
-  color: white;
+  align-items: center;
+  justify-content: center;
+  font-size: 12rem;
+  color: var(--gravel);
   margin: 0;
-  -webkit-text-stroke: .4vmin black;
-  text-shadow: black -3px 7px 20px;
+  -webkit-text-stroke: .2rem var(--sand-light);
+  text-shadow: black 0 0.15rem 0.6rem;
   animation: ease-in-out show-title 4s both;
   animation-delay: 2s;
 }
@@ -40,64 +48,75 @@ canvas {
   width:  100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
-.continue-button {
-  width:  4rem;
-  height: 4rem;
+audience-el {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+#continue-button {
+  width:   4rem;
+  height: 12rem;
   position: absolute;
-  bottom: 7rem;
-  right: 1rem;
+  top: calc(50% - 6rem);
+  right: -5rem;
   border-radius: 1rem;
-  background-size: 70%;
+  background-size: 60%;
   background-image: url('data:image/svg+xml,\
     <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\
       <path fill="black" d="M0.1,0 v1 L0.9,0.5"/>\
     </svg>\
   ');
+  transition: 1s right;
+}
+#continue-button.reveal {
+  right: .5rem;
+}
+@keyframes reveal-continue-button {
+  to { transform: translateX(0); }
 }
 
 h1 .closeup-trickery {
-  display: inline-block;
-  font-size: 11vmin;
+  font-size: 6rem;
+  margin-top: 1rem;
   position: relative;
   --reveal-duration: 2s;
   --reveal-delay: 5s;
 }
 h1 .closeup-trickery .text {
-  line-height: 8vmin;
+  line-height: 5rem;
   animation: closeup-trickery-keyframes both;
   animation-duration: var(--reveal-duration);
   animation-delay: var(--reveal-delay);
 }
 @keyframes closeup-trickery-keyframes {
-  from { clip-path: inset(-3vmin 115% -3vmin -3vmin); }
-  to   { clip-path: inset(-3vmin -15% -3vmin -3vmin); }
+  from { clip-path: inset(-1rem 115% -1rem -1rem); }
+  to   { clip-path: inset(-1rem -15% -1rem -1rem); }
 }
 
 .magnifying-glass-container {
   position: absolute;
-  width: 20vmin;
-  height: 20vmin;
-  top: -1.5vmin;
-  left: calc(50% - 10vmin);
+  width:  5.2rem;
+  height: 10rem;
+  top: 0;
   animation: magnifying-glass-container-keyframes both;
   animation-duration: var(--reveal-duration);
   animation-delay: var(--reveal-delay);
 }
 @keyframes magnifying-glass-container-keyframes {
-  from { transform: translate(-35vmin); }
-  to   { transform: translate( 35vmin); }
+  from { right: 100%; }
+  to   { right: -5rem; }
 }
 
 .magnifying-glass-container .zoomed-text {
   transform: scale(1.3);
-  clip-path: circle(3.1vmin at center);
+  clip-path: circle(1.7rem at center);
   position: absolute;
-  width: 60vmin;
-  height: 8vmin;
-  left: calc(50% - 30.9vmin);
-  top: 1vmin;
+  width: 30rem;
+  height: 5rem;
+  left: calc(50% - 15.1rem);
   white-space: nowrap;
 }
 .magnifying-glass-container .zoomed-text > div {
@@ -106,31 +125,25 @@ h1 .closeup-trickery .text {
   animation-delay: var(--reveal-delay);
 }
 @keyframes zoomed-text-keyframes {
-  0%   { transform: translate( 8vmin); opacity: 0; background: transparent; }
-  15%  { opacity: 1; background: #98947f; }
-  100% { transform: translate(-28vmin); opacity: 1; background: #98947f; }
+  0%   { transform: translateX(15rem); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translateX(-15rem); opacity: 1; }
 }
 
 .magnifying-glass {
   width:  100%;
   height: 100%;
   background: no-repeat center / contain url('data:image/svg+xml,\
-    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">\
+    <svg viewBox="13 0 32 64" xmlns="http://www.w3.org/2000/svg">\
       <path stroke="%2385848c" stroke-width="4.5266" fill="none" d="m32.34 31.032 1.8757 7.0003"/>\
-      <circle cx="29.042" cy="16.233" r="14.126" fill="%2350d3f0" fill-opacity=".43889" stroke="%23554f63" stroke-linejoin="round" stroke-width="2.829"/>\
-      <path d="m17.871 17.188c0.24891-5.4407 3.2679-9.0543 7.3271-11.924 0 0-2.5686 3.0657-4.3157 5.6912-1.7471 2.6255-3.0114 6.2333-3.0114 6.2333z" fill="%23f3fcfe"/>\
-      <path d="m38.632 18.434c-0.1505 3.2896-1.9759 5.4745-4.4302 7.2099 0 0 1.5531-1.8536 2.6094-3.4411 1.0564-1.5874 1.8208-3.7688 1.8208-3.7688z" fill="%23f3fcfe"/>\
-      <path d="m37.719 37.073c-3.202-0.17228-5.0053 0.85079-6.8527 1.8362l6.9121 24.402c1.9449 0.22037 3.9293 0.15645 6.1555-1.6494z" fill="%239c6054"/>\
-      <path d="m33.568 37.637 7.1599 25.611c-1.0096 0.20897-1.9834 0.17186-2.9488 0.06248l-6.9139-24.402c0.85983-0.45863 1.7165-0.92044 2.7027-1.2711z" fill="%237a575c"/>\
-      <rect transform="rotate(-15)" x="19.783" y="48.49" width="7.0076" height="1.7321" fill="%23585570"/>\
+      <circle cx="29" cy="16.2" r="14.1" fill="%2350d3f0" fill-opacity=".4" stroke="%23554f63" stroke-linejoin="round" stroke-width="2.8"/>\
+      <path fill="%23f3fcfe" d="m17.871 17.188c0.24891-5.4407 3.2679-9.0543 7.3271-11.9 0 0-2.57 3.07-4.3 5.69-1.7471 2.6255-3.0114 6.2333-3.0114 6.2333z"/>\
+      <path fill="%23f3fcfe" d="m38.632 18.434c-0.1505 3.2896-1.9759 5.4745-4.4302 7.2099 0 0 1.5531-1.8536 2.6094-3.4411 1.0564-1.5874 1.8208-3.7688 1.8208-3.7688z"/>\
+      <path fill="%239c6054" d="m37.719 37.073c-3.202-0.17228-5.0053 0.85079-6.8527 1.8362l6.9121 24.402c1.9449 0.22037 3.9293 0.15645 6.1555-1.6494z"/>\
+      <path fill="%237a575c" d="m33.568 37.637 7.1599 25.611c-1.0096 0.20897-1.9834 0.17186-2.9488 0.06248l-6.9139-24.402c0.85983-0.45863 1.7165-0.92044 2.7027-1.2711z"/>\
+      <rect transform="rotate(-15)" x="19.8" y="48.5" width="7" height="1.7" fill="%23585570"/>\
     </svg>\
   ');
-  animation: magnifying-glass-keyframes both;
-  animation-duration: var(--reveal-duration);
+  animation: .5s fade-in both;
   animation-delay: var(--reveal-delay);
-}
-@keyframes magnifying-glass-keyframes {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  to   { opacity: 1; }
 }
