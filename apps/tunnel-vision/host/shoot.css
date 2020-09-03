@@ -12,6 +12,7 @@ h1 {
   right:  0;
   bottom: 0;
   margin: 0;
+  z-index: 2;
 
   font-size: 6rem;
   color: var(--mauve);

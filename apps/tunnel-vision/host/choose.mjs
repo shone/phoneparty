@@ -114,6 +114,8 @@ routes['#apps/tunnel-vision/choose'] = async function choose(routeContext) {
   container.classList.add('fade-out');
   await waitForNSeconds(1);
 
+  container.remove();
+
   return `#apps/tunnel-vision/goal?thing=${chosenThingElement.dataset.name}`;
 }
 

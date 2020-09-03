@@ -9,10 +9,7 @@ import {
 
 import routes from '/host/routes.mjs';
 
-import {
-  playerPhotos,
-  getNextPhotoId,
-} from './tunnel-vision.mjs';
+const photos = new Map();
 
 routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
 
@@ -44,10 +41,10 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   const shutterSound        = new Audio('/apps/tunnel-vision/sounds/camera-shutter.wav');
   const allPhotosTakenSound = new Audio('/apps/tunnel-vision/sounds/all-photos-taken.mp3');
 
-//   await waitForNSeconds(1);
-//   title.classList.add('transition', 'reveal');
-//   await waitForNSeconds(2);
-//   title.classList.remove('reveal');
+  await waitForNSeconds(1);
+  title.classList.add('transition', 'reveal');
+  await waitForNSeconds(2);
+  title.classList.remove('reveal');
 
   setTimeout(() => target.classList.add('transition', 'reveal'), 1000);
 
@@ -93,14 +90,12 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   });
 
   // Clear any photos from previous rounds of the game
-  while (playerPhotos.length > 0) {
-    playerPhotos.pop();
-  }
+  photos.clear();
 
   // Wait for every player to take a photo
   await new Promise(resolve => {
     function checkIfAllPhotosTaken() {
-      if (players.length >= 2 && players.every(player => playerPhotos.find(photo => photo.player === player))) {
+      if (players.length >= 2 && players.every(player => photos.has(player))) {
         stopAcceptingPlayers();
         stopListeningForLeavingPlayers(checkIfAllPhotosTaken);
         resolve();
@@ -108,10 +103,18 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
     }
     listenForPlayers(player => {
       createChannel(player, 'photo').onmessage = async ({data}) => {
-        const canvas = makeCroppedCanvasForPhotoArraybuffer(data);
+        const photoBlob = new Blob([data], {type: 'image/jpeg'});
+        const image = new Image();
+        image.src = URL.createObjectURL(photoBlob);
+        await new Promise(resolve => image.onload = resolve);
+
+        photos.set(player, image);
+
+        const canvas = makeCroppedCanvasForImage(image);
         const cell = cellMap.get(player);
         cell.append(canvas);
         cell.querySelector('video').remove();
+
         cell.classList.add('photo-taken');
         checkIfAllPhotosTaken();
         shutterSound.play().catch(() => {});
@@ -126,100 +129,38 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   await waitForNSeconds(2);
   title.classList.remove('reveal');
 
-  await waitForEnd();
-
   await waitForNSeconds(2);
 
-  // Highlight all photos
-//   const highlightDurationSecs = 0.4;
-//   players.forEach((player, index) => {
-//     const photo = playerPhotos.find(photo => photo.player === player);
-//     photo.photoContainer.style.animationDelay = `${highlightDurationSecs * (index / (players.length-1))}s`;
-//     photo.photoContainer.classList.add('all-photos-taken-highlight');
-//   });
-//   await waitForNSeconds(1);
-//   for (const photo of playerPhotos) {
-//     photo.photoContainer.style.animationDelay = '';
-//     photo.photoContainer.classList.remove('all-photos-taken-highlight');
-//   }
-
-  // Clean up
   container.remove();
 
   return `#apps/tunnel-vision/present?thing=${thingName}`;
 }
 
-function makeCroppedCanvasForPhotoArraybuffer(arrayBuffer) {
-  const photoBlob = new Blob([arrayBuffer], {type: 'image/jpeg'});
-  const img = new Image();
-  img.src = URL.createObjectURL(photoBlob);
+function makeCroppedCanvasForImage(image) {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
-  img.onload = () => {
-    const cropSize = Math.min(img.width, img.height) / 3;
-    canvas.width  = cropSize;
-    canvas.height = cropSize;
-    context.drawImage(
-      img,
-      (img.width / 2) - (cropSize / 2), (img.height / 2) - (cropSize / 2), // Source position
-      cropSize, cropSize, // Source dimensions
-      0, 0, // Destination position
-      cropSize, cropSize // Destination dimensions
-    );
-    context.globalCompositeOperation = 'destination-atop';
-    context.beginPath();
-    context.arc(
-      cropSize / 2, cropSize / 2, // Position
-      cropSize / 2, // Radius
-      0, Math.PI * 2 // Angles
-    );
-    context.fill();
-  }
+
+  // Draw image
+  const cropSize = Math.min(image.width, image.height) / 3;
+  canvas.width  = cropSize;
+  canvas.height = cropSize;
+  context.drawImage(
+    image,
+    (image.width / 2) - (cropSize / 2), (image.height / 2) - (cropSize / 2), // Source position
+    cropSize, cropSize, // Source dimensions
+    0, 0, // Destination position
+    cropSize, cropSize // Destination dimensions
+  );
+
+  // Crop
+  context.globalCompositeOperation = 'destination-atop';
+  context.beginPath();
+  context.arc(
+    cropSize / 2, cropSize / 2, // Position
+    cropSize / 2, // Radius
+    0, Math.PI * 2 // Angles
+  );
+  context.fill();
+
   return canvas;
 }
-
-// function acceptPhotoFromPlayer(player, photoArrayBuffer) {
-//   const photoBlob = new Blob([photoArrayBuffer], {type: 'image/jpeg'});
-// 
-//   const img = new Image();
-//   img.src = URL.createObjectURL(photoBlob);
-// 
-//   document.body.insertAdjacentHTML('beforeend', `
-//     <div class="tunnel-vision photo-container">
-//       <div class="crop-container">
-//         <img src="${photoUrl}">
-//       </div>
-//     </div>
-//   `);
-//   const photoContainer = document.body.lastElementChild;
-//   photoContainer.player = player;
-//   photoContainer.arrayBuffer = photoArrayBuffer;
-// 
-//   playerPhotos.push({player, photoContainer, id: getNextPhotoId()});
-// 
-//   player.classList.add('photo-taken', 'camera-shutter');
-//   setTimeout(() => player.classList.remove('camera-shutter'), 200);
-// 
-//   playerGrid.updateLayout();
-// 
-//   setTimeout(() => {
-//     player.remove();
-//     player.classList.remove('moving-to-grid', 'taking-photo', 'photo-taken');
-//     player.style.width  = '';
-//     player.style.height = '';
-//     player.querySelector('.phone').remove();
-//   }, 1000);
-// 
-//   listenForLeavingPlayers(function callback(leavingPlayer) {
-//     if (leavingPlayer === player) {
-//       photoContainer.remove();
-//       const playerPhoto = playerPhotos.find(photo => photo.player === player);
-//       if (playerPhoto) {
-//         playerPhoto.player = null;
-//         playerPhoto.photoContainer = null;
-//         playerPhoto.id = null;
-//       }
-//       stopListeningForLeavingPlayers(callback);
-//     }
-//   });
-// }

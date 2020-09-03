@@ -13,7 +13,7 @@ import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messa
 
 import routes from '/host/routes.mjs';
 
-import {playerPhotos} from './tunnel-vision.mjs';
+import {photos} from './shoot.mjs';
 
 import * as playerGrid from './playerGrid.mjs';
 import Audience from '/host/audience.mjs';
