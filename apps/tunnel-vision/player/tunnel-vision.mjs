@@ -1,7 +1,7 @@
 import './intro.mjs';
 import './choose.mjs';
 import './shoot.mjs';
-// import './photoJudgement.mjs';
+// import './present.mjs';
 
 import routes from '/player/routes.mjs';
 

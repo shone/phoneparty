@@ -1,3 +1,126 @@
+@import url('/common/base.css');
+@import url('/apps/tunnel-vision/base.css');
+@import url('/host/audience.css');
+
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#centered-content {
+  flex-grow: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items:     center;
+
+  position: relative;
+}
+
+audience-el {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+h1 {
+  font-size: 6rem;
+  color: var(--mauve);
+  text-align: center;
+
+  opacity: 0;
+  transform: scale(.5);
+}
+h1.transition {
+  transition: 1s opacity, 1s transform;
+}
+h1.reveal {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#grid {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+
+  display: grid;
+  align-content:   center;
+  justify-content: center;
+}
+#grid .cell {
+  position: relative;
+  opacity: 0;
+  transition: 1s opacity;
+}
+#grid.reveal .cell {
+  opacity: 1;
+}
+
+.photo {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+  transition: .5s left, .5s top, .5s width, .5s height;
+  cursor: pointer;
+}
+#grid .photo:hover {
+  filter: brightness(1.2);
+}
+.photo.present {
+  left: 0 !important;
+  top:  0 !important;
+  width:  100% !important;
+  height: 100% !important;
+  z-index: 1;
+}
+#grid .cell.last-presented {
+  z-index: 1;
+  opacity: 1;
+}
+
+#target {
+  position: absolute;
+  left: calc(50% - 1.5rem);
+  z-index: 2;
+
+  background: var(--sand-light);
+  border-bottom-left-radius:  1rem;
+  border-bottom-right-radius: 1rem;
+  box-shadow: 0 0 1rem rgb(0, 0, 0, .5);
+  padding: 0 .5rem .5rem .5rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items:     center;
+}
+#target img {
+  width:  3rem;
+  height: 3rem;
+}
+#target label {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-top: .5rem;
+}
+#target.transition {
+  transition: 1s opacity, 1s top;
+}
+#target:not(.reveal) {
+  opacity: 0;
+  top: -10rem;
+}
+#target.reveal {
+  opacity: 1;
+  top: 0;
+}
+
 .photo-container.fullscreen {
   left: calc(50% - 30vmin) !important;
   top:  calc(40% - 30vmin) !important;

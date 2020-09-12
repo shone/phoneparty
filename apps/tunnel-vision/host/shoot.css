@@ -68,13 +68,15 @@ h1.reveal {
 
 #grid {
   position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
+  left:   0;
+  right:  0;
+  top:    0;
   bottom: 0;
+
   display: grid;
-  align-content: center;
+  align-content:   center;
   justify-content: center;
+
   opacity: 0;
   transition: 1s opacity;
 }

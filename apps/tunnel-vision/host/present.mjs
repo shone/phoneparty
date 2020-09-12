@@ -1,40 +1,225 @@
-import {waitForNSeconds, waitForKeypress} from '/common/utils.mjs';
+import {waitForNSeconds, clamp, lerp, easeInOutQuad} from '/common/utils.mjs';
 
-import {
-  players,
-  waitForPlayerToLeave,
-  listenForAllPlayers,
-  listenForLeavingPlayers,
-  stopListeningForAllPlayers,
-  stopListeningForLeavingPlayers
-} from '/host/players.mjs';
-
-import {addSpeechBubbleToPlayer, clearSpeechBubblesFromPlayer} from '/host/messaging.mjs';
+import {players, stopListeningForAllPlayers} from '/host/players.mjs';
 
 import routes from '/host/routes.mjs';
+import Audience from '/host/audience.mjs';
 
 import {photos} from './shoot.mjs';
 
-import * as playerGrid from './playerGrid.mjs';
-import Audience from '/host/audience.mjs';
+routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
+  const {params, listenForPlayers, listenForLeavingPlayers, waitForEnd} = routeContext;
 
-routes['#apps/tunnel-vision/present'] = async function present({params}) {
   const thingName = params.get('thing');
 
-  audienceMode.start();
+  const container = document.createElement('div');
+  container.attachShadow({mode: 'open'}).innerHTML = `
+    <link rel="stylesheet" href="/apps/tunnel-vision/host/present.css">
 
-  await waitForNSeconds(2);
+    <div id="target">
+      <img>
+      <label></label>
+    </div>
 
-  if (playerPhotos.length === 0) {
-    //await waitForNSeconds(2);
-    // TODO: show message about there being no photos to present
-    playerGrid.stop();
-    return '#apps/tunnel-vision';
+    <div id="centered-content">
+      <h1>Present photos!</h1>
+      <div id="grid"></div>
+    </div>
+  `;
+  const title = container.shadowRoot.querySelector('h1');
+  const centeredContent = container.shadowRoot.getElementById('centered-content');
+  document.body.append(container);
+  waitForEnd().then(() => container.remove());
+
+//   await new Promise(resolve => {
+//     function onPlayer(player) {
+//       const photo = new Image();
+//       photo.src = '/apps/tunnel-vision/loafers.jpg';
+//       photo.player = player;
+//       photo.onload = () => photos.set(player, photo);
+//     }
+//     listenForPlayers(onPlayer);
+//     setTimeout(() => {
+//       stopListeningForAllPlayers(onPlayer);
+//       resolve();
+//     }, 1000);
+//   });
+
+  if (photos.size === 0) {
+    title.textContent = 'No photos to present';
+    title.classList.add('transition', 'reveal');
+    await waitForEnd();
+    return;
   }
 
-  playerGrid.start();
+  const audience = new Audience(routeContext);
+  container.shadowRoot.append(audience);
 
-  return `#apps/tunnel-vision/photo-judgement?thing=${thingName}&index=0`;
+  const target = container.shadowRoot.getElementById('target');
+  target.querySelector('img').src = `/apps/tunnel-vision/things/${thingName}.svg`;
+  target.querySelector('label').textContent = thingName;
+
+  await waitForNSeconds(1);
+  title.classList.add('transition', 'reveal');
+  await waitForNSeconds(2);
+  title.classList.remove('reveal');
+  await waitForNSeconds(1);
+
+  setTimeout(() => target.classList.add('transition', 'reveal'), 1000);
+
+  const grid = container.shadowRoot.getElementById('grid');
+
+
+  const gridCells = new Map();
+  for (const [player, photo] of photos.entries()) {
+    const canvas = document.createElement('canvas');
+    canvas.classList.add('photo');
+    canvas.player = player;
+    drawCroppedPhoto(canvas, photo, 1);
+
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.player = player;
+    cell.append(canvas);
+    grid.append(cell);
+    gridCells.set(player, cell);
+  }
+
+  function updateGridDimensions() {
+    const gridAspect = grid.clientWidth / grid.clientHeight;
+    let columns = 1, rows = 1;
+    while (columns * rows < photos.size) {
+      (columns / rows) < gridAspect ? columns++ : rows++;
+    }
+    grid.style.gridTemplateColumns = `repeat(${columns}, 1fr`;
+    grid.style.gridTemplateRows    = `repeat(${rows}, 1fr`;
+  }
+  updateGridDimensions();
+  window.addEventListener('resize', updateGridDimensions);
+  waitForEnd().then(() => window.removeEventListener('resize', updateGridDimensions));
+
+  grid.classList.add('reveal');
+
+  grid.onclick = async event => {
+    if (presentingCanvas) return;
+
+    event.stopPropagation();
+
+    const cell = event.target.closest('.cell');
+    if (!cell) return;
+
+    const canvas = cell.querySelector('canvas');
+    presentCanvas(canvas);
+  }
+  centeredContent.onclick = ({target}) => {
+    if (target === presentingCanvas) {
+      if (!presentingCanvas.uncroppedRevealed) {
+        revealPhotoUncropped(presentingCanvas);
+      } else {
+        unpresentCanvas();
+      }
+    }
+  }
+
+  let presentingCanvas = null;
+  function presentCanvas(canvas) {
+    presentingCanvas = canvas;
+
+    const photo = photos.get(canvas.player);
+    const cell = gridCells.get(canvas.player);
+
+    const lastPresented = grid.querySelector('.last-presented');
+    if (lastPresented) {
+      lastPresented.classList.remove('last-presented');
+    }
+    cell.classList.add('last-presented');
+
+    const destination = grid.getBoundingClientRect();
+    const origin      = cell.getBoundingClientRect();
+    canvas.style.left   = `${(origin.left   / destination.width)  * 100}%`;
+    canvas.style.top    = `${(origin.top    / destination.height) * 100}%`;
+    canvas.style.width  = `${(origin.width  / destination.width)  * 100}%`;
+    canvas.style.height = `${(origin.height / destination.height) * 100}%`;
+    centeredContent.append(canvas);
+    setTimeout(() => canvas.classList.add('present'), 200);
+
+    grid.classList.remove('reveal');
+  }
+
+  function unpresentCanvas() {
+    if (presentingCanvas) {
+      const canvas = presentingCanvas;
+
+      const cell = gridCells.get(canvas.player);
+
+      const destination = cell.getBoundingClientRect();
+      const origin      = grid.getBoundingClientRect();
+      cell.append(canvas);
+      canvas.style.left   = `${origin.left - destination.left}px`;
+      canvas.style.top    = `${origin.top  - destination.top}px`;
+      canvas.style.width  = `${origin.width}px`;
+      canvas.style.height = `${origin.height}px`;
+      canvas.classList.remove('present');
+      setTimeout(() => {
+        canvas.style.left   = null;
+        canvas.style.top    = null;
+        canvas.style.width  = null;
+        canvas.style.height = null;
+      }, 200);
+
+      presentingCanvas = null;
+      grid.classList.add('reveal');
+    }
+  }
+
+  function revealPhotoUncropped(canvas) {
+    canvas.uncroppedRevealed = true;
+
+    const photo = photos.get(canvas.player);
+
+    const duration = 2000;
+    const startTimestamp = performance.now();
+    requestAnimationFrame(function callback(timestamp) {
+      const t = clamp((timestamp - startTimestamp) / duration, 0, 1);
+      drawCroppedPhoto(canvas, photo, easeInOutQuad(1 - t));
+      if (timestamp - startTimestamp < duration) {
+        requestAnimationFrame(callback);
+      }
+    });
+  }
+
+  await waitForNSeconds(999);
+
+  return '#apps/tunnel-vision/end';
+}
+
+function drawCroppedPhoto(canvas, photo, ratio) {
+  const fullyCroppedSize = Math.min(photo.width, photo.height) / 3;
+  const cropWidth  = lerp(photo.width,  fullyCroppedSize, ratio);
+  const cropHeight = lerp(photo.height, fullyCroppedSize, ratio);
+  canvas.width  = cropWidth;
+  canvas.height = cropHeight;
+  const context = canvas.getContext('2d');
+
+  context.drawImage(
+    photo,
+    (photo.width / 2) - (cropWidth / 2), (photo.height / 2) - (cropHeight / 2), // Source position
+    cropWidth, cropHeight, // Source dimensions
+    0, 0, // Destination position
+    cropWidth, cropHeight // Destination dimensions
+  );
+
+  // Crop
+  const uncroppedDiameter = Math.sqrt((photo.width * photo.width) + (photo.height * photo.height));
+  const cropDiameter = lerp(uncroppedDiameter, fullyCroppedSize, ratio);
+  context.globalCompositeOperation = 'destination-atop';
+  context.beginPath();
+  context.arc(
+    cropWidth / 2, cropHeight / 2, // Position
+    cropDiameter / 2, // Radius
+    0, Math.PI * 2 // Angles
+  );
+  context.fill();
 }
 
 const fooledSound    = new Audio('/apps/tunnel-vision/sounds/fooled.mp3');

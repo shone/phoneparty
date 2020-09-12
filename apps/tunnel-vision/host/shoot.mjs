@@ -1,4 +1,4 @@
-import {waitForNSeconds} from '/common/utils.mjs';
+import {waitForNSeconds, getMessageFromChannel} from '/common/utils.mjs';
 
 import {
   players,
@@ -9,7 +9,7 @@ import {
 
 import routes from '/host/routes.mjs';
 
-const photos = new Map();
+export const photos = new Map();
 
 routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
 
@@ -102,23 +102,35 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
       }
     }
     listenForPlayers(player => {
-      createChannel(player, 'photo').onmessage = async ({data}) => {
-        const photoBlob = new Blob([data], {type: 'image/jpeg'});
-        const image = new Image();
-        image.src = URL.createObjectURL(photoBlob);
-        await new Promise(resolve => image.onload = resolve);
+      const channel = createChannel(player);
+      (async function() {
+        let [message, error] = await getMessageFromChannel(channel);
+        if (error !== null) {
+          return;
+        }
+        const photoBlob = new Blob([message], {type: 'image/jpeg'});
+        const photo = new Image();
+        photo.src = URL.createObjectURL(photoBlob);
 
-        photos.set(player, image);
+        [photo.judgement, error] = await getMessageFromChannel(channel);
+        if (error !== null) {
+          return;
+        }
 
-        const canvas = makeCroppedCanvasForImage(image);
+        if (!photo.complete) {
+          await new Promise(resolve => photo.onload = resolve);
+        }
+        const canvas = makeCroppedCanvasForImage(photo);
         const cell = cellMap.get(player);
         cell.append(canvas);
         cell.querySelector('video').remove();
 
         cell.classList.add('photo-taken');
+        photos.set(player, photo);
         checkIfAllPhotosTaken();
+
         shutterSound.play().catch(() => {});
-      }
+      })();
     });
     listenForLeavingPlayers(checkIfAllPhotosTaken);
   });

@@ -2,7 +2,7 @@ import './intro.mjs';
 import './choose.mjs';
 import './goal.mjs';
 import './shoot.mjs';
-// import './present.mjs';
+import './present.mjs';
 import './end.mjs';
 
 document.head.insertAdjacentHTML('beforeend', `

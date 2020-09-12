@@ -4,6 +4,14 @@ export function clamp(f, min, max) {
   return f;
 }
 
+export function lerp(a, b, t) {
+  return a + ((b - a) * t);
+}
+
+export function easeInOutQuad(t) {
+  return t<.5 ? 2*t*t : -1+(4-2*t)*t;
+}
+
 export function waitForNSeconds(seconds) {
   return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }
