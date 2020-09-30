@@ -10,7 +10,7 @@
   right:  0;
 
   background: black;
-  --camera-button-thickness: 9rem;
+  --camera-button-thickness: 8rem;
 
   display: flex;
   align-items: stretch;
@@ -49,12 +49,15 @@ canvas {
   color: var(--mauve);
   font-size: 4rem;
 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
-  margin: 1rem;
+  padding: 0;
 
   flex-basis: 0;
   overflow: hidden;
-  transition: 1s flex-basis;
+  transition: 1s flex-basis, 1s padding;
 }
 #judgement > * {
   opacity: 0;
@@ -63,21 +66,29 @@ canvas {
 }
 #judgement.reveal {
   flex-basis: 50%;
+  padding: 1rem;
 }
 #judgement.reveal > * {
   opacity: 1;
 }
+#judgement p {
+  margin: 0;
+}
 #judgement .options push-button {
   display: inline-flex;
-  margin: 1rem;
   width: 8rem;
   height: 5rem;
   border-radius: 2rem;
   font-weight: bold;
+  border: 1rem solid var(--sand-light);
+}
+#judgement .options push-button.selected {
+  border: 1rem solid yellow;
 }
 
 #goal {
   position: absolute;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items:     center;
@@ -107,12 +118,12 @@ canvas {
   }
 }
 #goal img {
-  width:  8rem;
-  height: 8rem;
-  margin: 1rem;
+  width:  6rem;
+  height: 6rem;
+  margin: .5rem;
 }
 #goal .label {
-  font-size: 6rem;
+  font-size: 5rem;
   font-weight: bold;
 }
 
@@ -144,7 +155,7 @@ canvas {
   #take-photo-button {
     bottom: 2rem;
     width: var(--camera-button-thickness);
-    height: 8rem;
+    height: 7rem;
     left: calc(50vw - (var(--camera-button-thickness) / 2));
   }
   #switch-cameras-button {
@@ -154,13 +165,13 @@ canvas {
 }
 @media (orientation: landscape) {
   #take-photo-button {
-    right: 2rem;
-    width: 7rem;
+    right: 1rem;
+    width: 6rem;
     height: var(--camera-button-thickness);
     top: calc(50vh - (var(--camera-button-thickness) / 2));
   }
   #switch-cameras-button {
-    right: 3rem;
+    right: 2rem;
     top: calc(50% + (var(--camera-button-thickness) / 2) + 1rem);
   }
 }

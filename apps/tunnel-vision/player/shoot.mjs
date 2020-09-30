@@ -29,8 +29,8 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
     <div id="judgement">
       <p>Is your photo really of <span class="target"></span>?</p>
       <div class="options">
-        <push-button class="yes-button">Yes</push-button>
-        <push-button class="no-button">No</push-button>
+        <push-button data-state="real">Yes</push-button>
+        <push-button data-state="fake">No</push-button>
       </div>
     </div>
   `;
@@ -150,8 +150,18 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
         // TODO: use large buffer transfer function
         channel.send(arrayBuffer);
 
-        judgement.querySelector('.yes-button').onclick = () => channel.send('real');
-        judgement.querySelector('.no-button').onclick  = () => channel.send('fake');
+        function setRealFake(state) {
+          channel.send(state);
+          for (const button of judgement.querySelectorAll('push-button')) {
+            button.classList.toggle('selected', button.dataset.state === state);
+          }
+        }
+
+        judgement.querySelector('.options').onclick = event => {
+          if (event.target.dataset.state) {
+            setRealFake(event.target.dataset.state);
+          }
+        }
       });
 
       shutterSound.play().catch(() => {});
