@@ -101,7 +101,7 @@
   background-position: center;
 }
 
-.device-container .controls .rotate-button {
+.device-container .controls button[data-action='rotate'] {
   margin-right: 15px;
   background-size: 80%;
   background-image: url('data:image/svg+xml,\
@@ -119,7 +119,7 @@
   ');
 }
 
-.device-container .controls .remove-button {
+.device-container .controls button[data-action='remove'] {
   background-size: 55%;
   background-image: url('data:image/svg+xml,\
     <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\

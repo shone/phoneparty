@@ -1,9 +1,9 @@
-const host             = document.getElementById('host');
-const splitter         = document.getElementById('splitter');
-const devicesPanel     = document.getElementById('devices-panel');
-const devicesContainer = document.getElementById('devices');
-const addDevicePanel   = document.getElementById('add-device-panel');
-const routeInput       = document.getElementById('route');
+const host             = document.getElementById('host'),
+      splitter         = document.getElementById('splitter'),
+      devicesPanel     = document.getElementById('devices-panel'),
+      devicesContainer = document.getElementById('devices'),
+      addDevicePanel   = document.getElementById('add-device-panel'),
+      routeInput       = document.getElementById('route');
 
 host.src = "/host" + location.hash;
 
@@ -21,6 +21,8 @@ window.onhashchange = () => {
   host.contentWindow.location.hash = location.hash;
 }
 
+devicesPanel.style.setProperty('--panel-height', `${localStorage.getItem('sandbox-panel-height') || '45'}vh`);
+
 splitter.onpointerdown = event => {
   event.preventDefault();
 
@@ -36,7 +38,8 @@ splitter.onpointerdown = event => {
     panelHeight = Math.min(panelHeight, 70);
     panelHeight = Math.max(panelHeight, 20);
     devicesPanel.style.setProperty('--panel-height', `${panelHeight}vh`);
-    layoutDeviceIframes();
+    localStorage.setItem('sandbox-panel-height', panelHeight);
+    devicesContainer.childNodes.forEach(layoutDeviceIframe);
   }
 
   splitter.onpointerup = splitter.onpointercancel = event => {
@@ -48,78 +51,74 @@ splitter.onpointerdown = event => {
   }
 }
 
-let devices = [];
+const devices = JSON.parse(localStorage.getItem('sandbox_devices') || '[]');
 
-const localStorageDevices = localStorage.getItem('sandbox_devices');
-if (localStorageDevices) {
-  devices = JSON.parse(localStorageDevices);
-} else {
-  devices = [
-    {name: 'Pixel 4',           orientation: 'portrait'},
-    {name: 'iPhone 11',         orientation: 'portrait'},
-    {name: 'iPad Pro 2020 11"', orientation: 'portrait'},
-  ];
-}
-
-for (const device of devices) {
-  addDevice(device);
-}
+devicesContainer.append(...devices.map(createDeviceContainer));
 
 addDevicePanel.onclick = ({target}) => {
   if (target.tagName === 'BUTTON') {
     const device = {name: target.textContent.trim(), orientation: 'portrait'};
-    addDevice(device);
+    const deviceElement = createDeviceContainer(device);
+    devicesContainer.append(deviceElement);
+    layoutDeviceIframe(deviceElement);
+    deviceElement.scrollIntoView({behavior: 'smooth'});
     devices.push(device);
     localStorage.setItem('sandbox_devices', JSON.stringify(devices));
   }
 }
 
-function addDevice(device) {
-  devicesContainer.insertAdjacentHTML('beforeend', `
-    <span class="device-container" data-device='${device.name}' data-orientation="${device.orientation}">
-      <div class="device">
-        <div class="screen-content">
-          <iframe src="/player"></iframe>
-        </div>
+function createDeviceContainer(device) {
+  const element = document.createElement('span');
+
+  element.classList.add('device-container');
+
+  element.dataset.device = device.name;
+  element.dataset.orientation = device.orientation;
+
+  element.innerHTML = `
+    <div class="device">
+      <div class="screen-content">
+        <iframe src="/player"></iframe>
       </div>
-      <div class="controls">
-        <button class="rotate-button"></button>
-        <button class="remove-button"></button>
-      </div>
-    </span>
-  `);
-  layoutDeviceIframes();
-  devicesContainer.scrollTo({left: devicesContainer.scrollWidth, behavior: 'smooth'});
+    </div>
+    <div class="controls">
+      <button data-action="rotate"></button>
+      <button data-action="remove"></button>
+    </div>
+  `;
+
+  return element;
 }
 
-function layoutDeviceIframes() {
-  for (const deviceContainer of devicesContainer.querySelectorAll('.device-container')) {
-    const screenContent = deviceContainer.querySelector('.screen-content');
-    const iframe = deviceContainer.querySelector('iframe');
-    const scale = screenContent.offsetHeight / iframe.contentWindow.innerHeight;
-    iframe.style.transform = `scale(${scale})`;
-  }
+function layoutDeviceIframe(deviceContainer) {
+  const screenContent = deviceContainer.querySelector('.screen-content');
+  const iframe = deviceContainer.querySelector('iframe');
+  const scale = screenContent.offsetHeight / iframe.contentWindow.innerHeight;
+  iframe.style.transform = `scale(${scale})`;
 }
 
-layoutDeviceIframes();
-window.addEventListener('resize', layoutDeviceIframes);
+devicesContainer.childNodes.forEach(layoutDeviceIframe);
+window.addEventListener('resize', () => devicesContainer.childNodes.forEach(layoutDeviceIframe));
 
-devicesContainer.onclick = event => {
-  const deviceContainer = event.target.closest('.device-container');
-  if (!deviceContainer) return;
+devicesContainer.onclick = ({target}) => {
+  const deviceContainer = target.closest('.device-container');
+  const action = target.dataset.action;
+  if (!(deviceContainer && action)) return;
 
-  const index = [...devicesContainer.querySelectorAll('.device-container')].indexOf(deviceContainer);
+  const index = [...devicesContainer.childNodes].indexOf(deviceContainer);
 
-  if (event.target.classList.contains('rotate-button')) {
-    const orientation = deviceContainer.dataset.orientation === 'portrait' ? 'landscape' : 'portrait';
-    deviceContainer.dataset.orientation = orientation;
-    layoutDeviceIframes();
-    deviceContainer.scrollIntoView({behavior: 'smooth'});
-    devices[index].orientation = orientation;
-    localStorage.setItem('sandbox_devices', JSON.stringify(devices));
-  } else if (event.target.classList.contains('remove-button')) {
-    event.target.closest('.device-container').remove();
-    devices.splice(index, 1);
-    localStorage.setItem('sandbox_devices', JSON.stringify(devices));
+  switch (action) {
+    case 'rotate':
+      const orientation = deviceContainer.dataset.orientation === 'portrait' ? 'landscape' : 'portrait';
+      deviceContainer.dataset.orientation = orientation;
+      layoutDeviceIframe(deviceContainer);
+      deviceContainer.scrollIntoView({behavior: 'smooth'});
+      devices[index].orientation = orientation;
+      break;
+    case 'remove':
+      deviceContainer.remove();
+      devices.splice(index, 1);
+      break;
   }
+  localStorage.setItem('sandbox_devices', JSON.stringify(devices));
 }
