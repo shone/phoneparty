@@ -1,7 +1,7 @@
 @import url('/host/player-bubble.css');
 
 audience-el {
-  --slot-size: min((100vw / var(--player-count)) - (var(--slot-margin) * 2), 5rem);
+  --slot-size: min((100vw / var(--slot-count)) - (var(--slot-margin) * 2), 5rem);
   --slot-margin: .3rem;
 
   max-height: var(--slot-size);
@@ -21,8 +21,6 @@ audience-el .slot {
   margin-right: var(--slot-margin);
   transition: .2s margin;
 
-/*   outline: 1px solid red; */
-
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,6 +28,32 @@ audience-el .slot {
 audience-el .slot:not(.open) {
   font-size: 0;
   margin: 0;
+}
+audience-el .slot:empty::before {
+  content: '';
+  pointer-events: auto;
+  border-radius: 1em;
+  animation: 1s audience-placeholder-reveal forwards, audience-placeholder-pulse 1s 1s infinite alternate ease-in-out;
+  width:  1em;
+  height: 1em;
+  background: no-repeat center / contain url('data:image/svg+xml,\
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">\
+      <g fill="%238b8b8b">\
+        <path d="M32.1.73c-.2 0-7.38-.39-11.17 5.14-3.62 5.27-2.74 14.75.52 21.22 3.78 7.49 10.47 7.08 10.52 7.08.05 0 7 .41 10.77-7.08 3.27-6.47 4.14-15.94.52-21.22C39.47.34 32.3.73 32.1.73zm.67 2.7c2.61 0 4.63.63 6.07 1.88a6.04 6.04 0 012.18 4.8c0 1.02-.16 1.91-.49 2.67a6.83 6.83 0 01-1.47 2.1c-.65.64-1.47 1.31-2.45 2.04-.73.53-1.3.98-1.7 1.36-.4.38-.67.74-.82 1.1-.13.35-.2.79-.2 1.31v1.1h-4.86v-1.36c0-1.26.27-2.31.8-3.17.53-.85 1.43-1.75 2.71-2.67 1.13-.8 1.93-1.5 2.41-2.08.5-.6.76-1.3.76-2.1 0-.81-.3-1.42-.9-1.82a4.06 4.06 0 00-2.46-.64c-1.05 0-2.1.17-3.13.5-1.03.32-2.08.76-3.16 1.31l-2-4.03a20.19 20.19 0 014-1.66c1.43-.43 3-.64 4.7-.64zm-1.1 21.52c.88 0 1.64.24 2.26.71.63.46.95 1.26.95 2.42 0 1.1-.32 1.9-.95 2.4-.62.49-1.38.73-2.26.73-.9 0-1.67-.24-2.3-.72-.62-.5-.94-1.3-.94-2.41 0-1.16.32-1.96.94-2.42.63-.47 1.4-.71 2.3-.71z"/>\
+        <path d="M42.99 32.64a14.94 14.94 0 01-21.75.01c-.14.08-1.82 1.02-4.06 1.71-2.76.85-4.09 1.3-5.72 2.93C8 40.73 6.94 54.97 7.05 56.93c.05.95.22 1.5 1.19 1.92 4.87 2.05 14.26 4.57 23.88 4.57S51.14 60.9 56 58.85c.97-.41 1.14-.97 1.2-1.92.1-1.97-.96-16.21-4.42-19.64-1.64-1.63-2.96-2.08-5.72-2.93a21.95 21.95 0 01-4.08-1.72z"/>\
+      </g>\
+    </svg>\
+  ');
+/*   animation: ; */
+}
+@keyframes audience-placeholder-reveal {
+    0% { width:   0; height:   0; opacity: 0; }
+   50% { width: 1em; height: 1em; opacity: 0; }
+  100% { width: 1em; height: 1em; opacity: 1; }
+}
+@keyframes audience-placeholder-pulse {
+  from { opacity: 1   }
+  to   { opacity: 0.2 }
 }
 
 audience-el player-bubble {

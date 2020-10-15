@@ -74,7 +74,7 @@ routes['#apps/tunnel-vision/goal'] = async function goal(routeContext) {
   [...messagingChannels].forEach(channel => channel.close());
   stopListeningForAllPlayers(onPlayer);
 
-//   audience.setMinPlayers(2);
+  audience.setMinPlayerCount(2);
 
   const speechBubbles = new Set();
 
