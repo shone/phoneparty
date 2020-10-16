@@ -99,37 +99,68 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
         stopAcceptingPlayers();
         stopListeningForLeavingPlayers(checkIfAllPhotosTaken);
         resolve();
+        return true;
+      } else {
+        return false;
       }
     }
     listenForPlayers(player => {
       const channel = createChannel(player);
       (async function() {
-        let [message, error] = await getMessageFromChannel(channel);
-        if (error !== null) {
-          return;
+        while (true) {
+          let [message, error] = await getMessageFromChannel(channel);
+          if (error !== null) {
+            return;
+          }
+
+          const cell = cellMap.get(player);
+
+          const photoBlob = new Blob([message], {type: 'image/jpeg'});
+          const photo = new Image();
+          photo.src = URL.createObjectURL(photoBlob);
+
+          [message, error] = await getMessageFromChannel(channel);
+          if (error !== null) {
+            return;
+          }
+
+          if (message === 'retake') {
+            continue;
+          }
+
+          photo.judgement = message;
+
+          if (!photo.complete) {
+            await new Promise(resolve => photo.onload = resolve);
+          }
+          const canvas = makeCroppedCanvasForImage(photo);
+          cell.append(canvas);
+
+          shutterSound.play().catch(() => {});
+
+          cell.classList.add('photo-taken');
+          photos.set(player, photo);
+
+          if (checkIfAllPhotosTaken()) {
+            break;
+          }
+
+          while (true) {
+            [message, error] = await getMessageFromChannel(channel);
+            if (error !== null) {
+              return;
+            }
+
+            if (message === 'retake') {
+              cell.querySelector('canvas').remove();
+              cell.classList.remove('photo-taken');
+              photos.delete(player);
+              break;
+            } else {
+              photo.judgement = message;
+            }
+          }
         }
-        const photoBlob = new Blob([message], {type: 'image/jpeg'});
-        const photo = new Image();
-        photo.src = URL.createObjectURL(photoBlob);
-
-        [photo.judgement, error] = await getMessageFromChannel(channel);
-        if (error !== null) {
-          return;
-        }
-
-        if (!photo.complete) {
-          await new Promise(resolve => photo.onload = resolve);
-        }
-        const canvas = makeCroppedCanvasForImage(photo);
-        const cell = cellMap.get(player);
-        cell.append(canvas);
-        cell.querySelector('video').remove();
-
-        cell.classList.add('photo-taken');
-        photos.set(player, photo);
-        checkIfAllPhotosTaken();
-
-        shutterSound.play().catch(() => {});
       })();
     });
     listenForLeavingPlayers(checkIfAllPhotosTaken);

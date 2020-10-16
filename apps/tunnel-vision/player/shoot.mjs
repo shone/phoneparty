@@ -5,7 +5,7 @@ import '/common/push-button.mjs';
 
 import routes from '/player/routes.mjs';
 
-export let canvas = null;
+// export let canvas = null;
 
 routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, listenForChannel}) {
   const thing = params.get('thing');
@@ -21,7 +21,9 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
 
     <video playsinline autoplay muted></video>
 
-    <canvas></canvas>
+    <canvas id="crop-guide"></canvas>
+
+    <canvas id="photo-display"></canvas>
 
     <push-button class="hide" id="take-photo-button"></push-button>
     <push-button class="hide" id="switch-cameras-button"></push-button>
@@ -29,8 +31,10 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
     <div id="judgement">
       <p>Is your photo really of <span class="target"></span>?</p>
       <div class="options">
-        <push-button data-state="real">Yes</push-button>
-        <push-button data-state="fake">No</push-button>
+        <push-button data-action="mark-real">Yes</push-button>
+        <push-button data-action="mark-fake">No</push-button>
+        <br>
+        <push-button data-action="retake">Retake</push-button>
       </div>
     </div>
   `;
@@ -43,8 +47,12 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
   setTimeout(() => goal.classList.add('transition', 'reveal'), 100);
 
   const video = container.shadowRoot.querySelector('video');
-  canvas = container.shadowRoot.querySelector('canvas');
-  const canvasCtx = canvas.getContext('2d');
+
+  const cropGuide = container.shadowRoot.getElementById('crop-guide');
+  const cropGuideCtx = cropGuide.getContext('2d');
+
+  const photoDisplayCanvas = container.shadowRoot.getElementById('photo-display');
+  const photoDisplayCanvasCtx = photoDisplayCanvas.getContext('2d');
 
   const takePhotoButton     = container.shadowRoot.getElementById('take-photo-button');
   const switchCamerasButton = container.shadowRoot.getElementById('switch-cameras-button');
@@ -81,23 +89,23 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
   const shutterSound = new Audio('/apps/tunnel-vision/sounds/camera-shutter.wav');
 
   function updateCropGuide() {
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
+    cropGuide.width  = video.videoWidth;
+    cropGuide.height = video.videoHeight;
     const cropSize = Math.min(video.videoWidth, video.videoHeight) / 3;
 
-    canvasCtx.globalCompositeOperation = 'source-over';
-    canvasCtx.fillStyle = 'rgb(255, 255, 255, .6)';
-    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    cropGuideCtx.globalCompositeOperation = 'source-over';
+    cropGuideCtx.fillStyle = 'rgb(255, 255, 255, .6)';
+    cropGuideCtx.fillRect(0, 0, cropGuide.width, cropGuide.height);
 
-    canvasCtx.globalCompositeOperation = 'destination-out';
-    canvasCtx.beginPath();
-    canvasCtx.arc(
+    cropGuideCtx.globalCompositeOperation = 'destination-out';
+    cropGuideCtx.beginPath();
+    cropGuideCtx.arc(
       video.videoWidth  / 2, // X
       video.videoHeight / 2, // Y
       cropSize / 2, // Radius
       0, Math.PI * 2 // Angles
     );
-    canvasCtx.fill();
+    cropGuideCtx.fill();
   }
 
   video.onloadedmetadata = updateCropGuide;
@@ -107,9 +115,6 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
   video.onloadeddata = () => {
     takePhotoButton.classList.remove('hide');
     takePhotoButton.onclick = function() {
-
-      video.onloadedmetadata = null;
-      window.removeEventListener('resize', updateCropGuide)
 
       const photo = document.createElement('canvas');
       photo.width  = video.videoWidth;
@@ -122,30 +127,28 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
       photoCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
       // Draw photo onto canvas
-      canvas.width  = video.videoWidth;
-      canvas.height = video.videoHeight;
+      photoDisplayCanvas.width  = video.videoWidth;
+      photoDisplayCanvas.height = video.videoHeight;
 //       const context = canvas.getContext('2d');
 //       if (video.classList.contains('flip')) {
 //         canvasCtx.translate(canvas.width, 0);
 //         canvasCtx.scale(-1, 1);
 //       }
-      canvasCtx.drawImage(photo, 0, 0, canvas.width, canvas.height);
+      photoDisplayCanvasCtx.drawImage(photo, 0, 0, photoDisplayCanvas.width, photoDisplayCanvas.height);
 
       container.classList.add('photo-taken');
-      takePhotoButton.remove();
-      switchCamerasButton.remove();
       goal.classList.remove('reveal');
 
       (async function() {
         await waitForNSeconds(1);
-        await animatePhotoCrop(photo, canvas, canvasCtx);
+        await animatePhotoCrop(photo, photoDisplayCanvas, photoDisplayCanvasCtx);
         await waitForNSeconds(1);
         judgement.classList.add('reveal');
       })();
 
       // Send photo to host
       listenForChannel(async channel => {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+        const blob = await new Promise(resolve => photo.toBlob(resolve, 'image/jpeg'));
         const arrayBuffer = await new Response(blob).arrayBuffer();
         // TODO: use large buffer transfer function
         channel.send(arrayBuffer);
@@ -153,13 +156,23 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
         function setRealFake(state) {
           channel.send(state);
           for (const button of judgement.querySelectorAll('push-button')) {
-            button.classList.toggle('selected', button.dataset.state === state);
+            button.classList.toggle('selected', button.dataset.action === state);
           }
         }
 
-        judgement.querySelector('.options').onclick = event => {
-          if (event.target.dataset.state) {
-            setRealFake(event.target.dataset.state);
+        judgement.querySelector('.options').onclick = ({target}) => {
+          if (target.dataset.action) {
+            if (target.dataset.action === 'retake') {
+              channel.send('retake');
+              judgement.querySelector('.options').onclick = null;
+              [...judgement.querySelectorAll('.options .selected')].forEach(button => button.classList.remove('selected'));
+              photoDisplayCanvasCtx.clearRect(0, 0, photoDisplayCanvas.width, photoDisplayCanvas.height);
+              container.classList.remove('photo-taken');
+              judgement.classList.remove('reveal');
+              goal.classList.add('reveal');
+            } else {
+              setRealFake(target.dataset.action);
+            }
           }
         }
       });

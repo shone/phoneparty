@@ -106,6 +106,9 @@ h1.reveal {
 #grid > div canvas {
   object-fit: contain;
 }
+#grid > div.photo-taken video {
+  display: none;
+}
 #grid > div:not(.photo-taken)::after {
   content: '';
   position: absolute;

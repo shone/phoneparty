@@ -36,6 +36,13 @@ video.flip {
   transform: scaleX(-1);
 }
 
+#crop-guide {
+  position: absolute;
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 canvas {
   flex-basis: 50%;
   flex-grow: 1;
@@ -84,6 +91,20 @@ canvas {
 }
 #judgement .options push-button.selected {
   border: 1rem solid yellow;
+}
+#judgement .options push-button[data-action="retake"] {
+  font-size: 3rem;
+  color: #555;
+  padding-left: 2.7rem;
+  background-image: url('data:image/svg+xml,\
+    <svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">\
+      <path fill="%23555" d="M.962.79a.02.02 0 01-.02-.012C.94.772.882.639.66.613A1.52 1.52 0 00.49.603V.77a.02.02 0 01-.01.018.02.02 0 01-.022-.001L.032.5a.02.02 0 010-.035L.458.178a.02.02 0 01.021 0A.02.02 0 01.49.194V.35c.093.012.492.084.492.42a.02.02 0 01-.016.02H.962z"/>\
+    </svg>\
+  ');
+  background-position: .5rem;
+  background-size: 3rem;
+  -webkit-text-stroke: transparent;
+  text-shadow: none;
 }
 
 #goal {
@@ -179,6 +200,19 @@ canvas {
 :host(.photo-taken) video {
   display: none;
 }
+:host(.photo-taken) #crop-guide {
+  display: none;
+}
+:host(.photo-taken) #take-photo-button {
+  display: none;
+}
+:host(:not(.photo-taken)) #judgement {
+  display: none;
+}
+:host(.photo-taken) #switch-cameras-button {
+  display: none;
+}
+
 :host(.photo-taken) canvas {
   animation: 0.4s camera-flash forwards;
 }
