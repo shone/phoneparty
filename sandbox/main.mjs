@@ -51,7 +51,11 @@ splitter.onpointerdown = event => {
   }
 }
 
-const devices = JSON.parse(localStorage.getItem('sandbox_devices') || '[]');
+const devices = JSON.parse(localStorage.getItem('sandbox_devices')) || [
+  {name: 'Pixel 4',           orientation: 'portrait'},
+  {name: 'iPhone 11',         orientation: 'portrait'},
+  {name: 'iPad Pro 2020 11"', orientation: 'portrait'},
+];
 
 devicesContainer.append(...devices.map(createDeviceContainer));
 
