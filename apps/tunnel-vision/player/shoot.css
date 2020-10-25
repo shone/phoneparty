@@ -36,6 +36,38 @@ video.flip {
   transform: scaleX(-1);
 }
 
+#camera-status {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+  padding: 1rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items:     center;
+  text-align:      center;
+
+  background: black;
+  font-size: 3rem;
+  font-weight: bold;
+}
+#camera-status:empty {
+  display: none;
+}
+#camera-status h1 {
+  margin: 1rem;
+}
+#camera-status p {
+  margin: 1rem;
+}
+#camera-status push-button {
+  padding: .5rem;
+  border-radius: 1rem;
+}
+
 #crop-guide {
   position: absolute;
   width:  100%;
@@ -43,15 +75,22 @@ video.flip {
   object-fit: contain;
 }
 
-canvas {
+#photo-display {
+  z-index: 1;
   flex-basis: 50%;
   flex-grow: 1;
+  pointer-events: none;
+
   object-fit: contain;
-  transform: scale(1);
-  transition: 1s transform;
+}
+:host(.photo-taken) #photo-display {
+  background: black;
+  pointer-events: auto;
 }
 
 #judgement {
+  z-index: 1;
+
   background: var(--sand-light);
   color: var(--mauve);
   font-size: 4rem;
@@ -109,7 +148,6 @@ canvas {
 
 #goal {
   position: absolute;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items:     center;

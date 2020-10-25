@@ -31,6 +31,7 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
     <div id="grid"></div>
   `;
   document.body.append(container);
+  waitForEnd().then(() => container.remove());
 
   const title = container.shadowRoot.querySelector('h1');
 
@@ -93,17 +94,18 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   photos.clear();
 
   // Wait for every player to take a photo
-  await new Promise(resolve => {
+  const waitResult = await new Promise(resolve => {
     function checkIfAllPhotosTaken() {
       if (players.length >= 2 && players.every(player => photos.has(player))) {
         stopAcceptingPlayers();
         stopListeningForLeavingPlayers(checkIfAllPhotosTaken);
-        resolve();
+        resolve('all-photos-taken');
         return true;
       } else {
         return false;
       }
     }
+    waitForEnd().then(() => resolve('route-ended'));
     listenForPlayers(player => {
       const channel = createChannel(player);
       (async function() {
@@ -166,6 +168,10 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
     listenForLeavingPlayers(checkIfAllPhotosTaken);
   });
 
+  if (waitResult === 'route-ended') {
+    return;
+  }
+
   title.textContent = 'All photos taken';
   title.classList.add('reveal');
   allPhotosTakenSound.play().catch(() => {});
@@ -173,8 +179,6 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   title.classList.remove('reveal');
 
   await waitForNSeconds(2);
-
-  container.remove();
 
   return `#apps/tunnel-vision/present?thing=${thingName}`;
 }
