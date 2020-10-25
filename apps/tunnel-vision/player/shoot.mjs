@@ -130,8 +130,7 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
           cameraStatus.querySelector('p').textContent = error;
         }
         const waitForRetry = new Promise(resolve => cameraStatus.querySelector('push-button').onclick = () => resolve('retry'));
-        const waitResult = await Promise.race([waitForRetry, waitForEnd()]);
-        switch (waitResult) {
+        switch (await Promise.race([waitForRetry, waitForEnd()])) {
           case 'retry':
             cameraStatus.innerHTML = '<h1>Acquiring camera...</h1>';
             await waitForNSeconds(1);
@@ -152,8 +151,7 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
 
       const waitForTrackEnded = new Promise(resolve => videoTrack.onended = () => resolve('track-ended'));
       const waitForSwitchCamera = new Promise(resolve => switchCameraButtonCallback = () => resolve('switch-camera'));
-      const waitResult = await Promise.race([waitForTrackEnded, waitForSwitchCamera, waitForEnd()]);
-      switch (waitResult) {
+      switch (await Promise.race([waitForTrackEnded, waitForSwitchCamera, waitForEnd()])) {
         case 'switch-camera':
           continue;
         case 'track-ended':

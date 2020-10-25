@@ -22,11 +22,18 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
     </div>
 
     <div id="centered-content">
-      <h1>Present photos!</h1>
       <div id="grid"></div>
+      <div id="message"></div>
+      <push-button id="end-round-button">End Round</push-button>
     </div>
   `;
-  const title = container.shadowRoot.querySelector('h1');
+  const message = container.shadowRoot.getElementById('message');
+  message.ontransitionend = () => {
+    if (message.classList.contains('clear')) {
+      message.classList.remove('clear');
+      message.innerHTML = '';
+    }
+  }
   const centeredContent = container.shadowRoot.getElementById('centered-content');
   document.body.append(container);
   waitForEnd().then(() => container.remove());
@@ -46,10 +53,15 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
 //   });
 
   if (photos.size === 0) {
-    title.textContent = 'No photos to present';
-    title.classList.add('transition', 'reveal');
-    await waitForEnd();
-    return;
+    message.innerHTML = `
+      <h1>No photos to present</h1>
+      <push-button>Take Photos</push-button>
+    `;
+    const waitForButton = new Promise(resolve => message.querySelector('push-button').onclick = () => resolve('take-photos'));
+    switch (await Promise.race([waitForButton, waitForEnd()])) {
+      case 'take-photos': return '#apps/tunnel-vision/shoot';
+      case 'route-ended': return;
+    }
   }
 
   const audience = new Audience(routeContext);
@@ -60,15 +72,15 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
   target.querySelector('label').textContent = thingName;
 
   await waitForNSeconds(1);
-  title.classList.add('transition', 'reveal');
+  message.innerHTML = '<h1>Present your photos!</h1>';
   await waitForNSeconds(2);
-  title.classList.remove('reveal');
+  message.classList.add('clear');
   await waitForNSeconds(1);
 
-  setTimeout(() => target.classList.add('transition', 'reveal'), 1000);
+  target.classList.add('transition', 'reveal');
+  await waitForNSeconds(1);
 
   const grid = container.shadowRoot.getElementById('grid');
-
 
   const gridCells = new Map();
   for (const [player, photo] of photos.entries()) {
@@ -188,7 +200,12 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
     });
   }
 
-  await waitForNSeconds(999);
+  await waitForNSeconds(1);
+  const endRoundButton = container.shadowRoot.getElementById('end-round-button');
+  endRoundButton.classList.add('reveal');
+  const waitForEndRoundButton = await new Promise(resolve => endRoundButton.onclick = resolve);
+
+  await Promise.race([waitForEndRoundButton, waitForEnd()]);
 
   return '#apps/tunnel-vision/end';
 }
