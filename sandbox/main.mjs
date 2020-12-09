@@ -2,24 +2,16 @@ const host             = document.getElementById('host'),
       splitter         = document.getElementById('splitter'),
       devicesPanel     = document.getElementById('devices-panel'),
       devicesContainer = document.getElementById('devices'),
-      addDevicePanel   = document.getElementById('add-device-panel'),
-      routeInput       = document.getElementById('route');
+      addDevicePanel   = document.getElementById('add-device-panel');
 
-host.src = "/host" + location.hash;
-
-routeInput.value = location.hash;
-
+// Keep the host IFrame and the parent sandbox hash location in sync
+host.contentWindow.location.replace("/host" + location.hash)
 host.onload = () => {
-  host.contentWindow.addEventListener('hashchange', () => {
-    const route = host.contentWindow.location.hash;
-    routeInput.value = route;
-    location.hash = route;
+  host.contentWindow.addEventListener('hashchange', event => {
+    history.replaceState('', '', host.contentWindow.location.hash);
   });
 }
-
-window.onhashchange = () => {
-  host.contentWindow.location.hash = location.hash;
-}
+window.onhashchange = () => host.contentWindow.location.hash = location.hash;
 
 devicesPanel.style.setProperty('--panel-height', `${localStorage.getItem('sandbox-panel-height') || '45'}vh`);
 

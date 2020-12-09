@@ -59,7 +59,7 @@ export async function startRouting(rtcConnection, routeChannel) {
   while (true) {
     if (routeChannel.readyState === 'closing' || routeChannel.readyState === 'closed') {
       currentRouteCounter = -1;
-      location.hash = '';
+      history.replaceState('', '', '');
       return;
     }
 
@@ -67,7 +67,7 @@ export async function startRouting(rtcConnection, routeChannel) {
       const result = await new Promise(resolve => waitOnNextRouteCallback = resolve);
       if (result === 'routing-ended') {
         currentRouteCounter = -1;
-        location.hash = '';
+        history.replaceState('', '', '');
         return;
       }
     }
@@ -76,7 +76,8 @@ export async function startRouting(rtcConnection, routeChannel) {
 
     const route = nextRoute;
     const routeCounter = nextRouteCounter;
-    location.hash = route;
+    // Use replaceState to avoid adding to history and affecting parent history when in sandbox
+    history.replaceState('', '', route);
 
     currentRouteCounter = routeCounter;
 
