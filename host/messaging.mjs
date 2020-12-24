@@ -42,6 +42,7 @@ export default function startMessaging(channel, container) {
   channel.addEventListener('close', () => {
     channel.removeEventListener('message', onmessage);
     while (speechBubbles.length > 0) speechBubbles.pop().remove();
+    container.classList.remove('shout');
   }, {once: true});
 }
 
