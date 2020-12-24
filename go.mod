@@ -1,8 +1,8 @@
 module github.com/joshua-shone/phoneparty
 
-go 1.14
+go 1.15
 
 require (
 	github.com/gorilla/websocket v1.4.2
-	golang.org/x/crypto v0.0.0-20200707235045-ab33eee955e0
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 )
