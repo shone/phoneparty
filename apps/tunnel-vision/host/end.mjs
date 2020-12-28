@@ -57,5 +57,5 @@ routes['#apps/tunnel-vision/end'] = async function end(routeContext) {
 
   container.remove();
 
-  return '#apps/tunnel-vision/thing-choosing';
+  return '#apps/tunnel-vision/choose';
 }

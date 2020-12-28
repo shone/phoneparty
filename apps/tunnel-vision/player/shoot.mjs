@@ -55,9 +55,12 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
   if (!navigator.mediaDevices) {
     cameraStatus.innerHTML = `
       <h1>Can't search for cameras</h1>
-      <p>navigator.mediaDevices unavailable. This may happen if there's no HTTPS.</p>
+      <p>navigator.mediaDevices unavailable. <span class="reason"></span></p>
       <push-button>Reload</push-button>
     `;
+    if (location.protocol !== 'https:') {
+      cameraStatus.querySelector('.reason').textContent = 'Probably because HTTPS is unavailable.';
+    }
     cameraStatus.querySelector('push-button').onclick = async () => {
       cameraStatus.innerHTML = '<h1>Reloading...</h1>';
       await waitForNSeconds(1);
@@ -194,6 +197,8 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
     takePhotoButton.classList.remove('hide');
     takePhotoButton.onclick = function() {
 
+      // TODO: Use ImageCapture API (currently Chrome only)
+
       const photo = document.createElement('canvas');
       photo.width  = video.videoWidth;
       photo.height = video.videoHeight;
@@ -222,9 +227,8 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
       // Send photo to host
       listenForChannel(async channel => {
         const blob = await new Promise(resolve => photo.toBlob(resolve, 'image/jpeg'));
-        const arrayBuffer = await new Response(blob).arrayBuffer();
         // TODO: use large buffer transfer function
-        channel.send(arrayBuffer);
+        channel.send(blob);
 
         function setRealFake(state) {
           channel.send(state);

@@ -1,4 +1,4 @@
-import {waitForNSeconds, getMessageFromChannel} from '/common/utils.mjs';
+import {waitForNSeconds, getMessageFromChannel, uuidv4, createChannelQueue} from '/common/utils.mjs';
 
 import {
   players,
@@ -9,6 +9,7 @@ import {
 
 import routes from '/host/routes.mjs';
 
+// Map of players -> photos
 export const photos = new Map();
 
 routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
@@ -66,6 +67,8 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   waitForEnd().then(() => window.removeEventListener('resize', updateGridDimensions));
 
   acceptAllPlayers(player => {
+    // TODO: Don't add players without cameras to the grid
+
     updateGridDimensions();
 
     const video = document.createElement('video');
@@ -108,39 +111,46 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
     waitForEnd().then(() => resolve('route-ended'));
     listenForPlayers(player => {
       const channel = createChannel(player);
+      channel.binaryType = 'blob';
+      const channelQueue = createChannelQueue(channel);
+      const cell = cellMap.get(player);
       (async function() {
         while (true) {
-          let [message, error] = await getMessageFromChannel(channel);
-          if (error !== null) {
+          var {value: photoBlob, done} = await channelQueue.next();
+          if (done) {
             return;
           }
+          const photoImage = new Image();
+          photoImage.src = URL.createObjectURL(photoBlob);
 
-          const cell = cellMap.get(player);
-
-          const photoBlob = new Blob([message], {type: 'image/jpeg'});
-          const photo = new Image();
-          photo.src = URL.createObjectURL(photoBlob);
-
-          [message, error] = await getMessageFromChannel(channel);
-          if (error !== null) {
+          var {value: action, done} = await channelQueue.next();
+          if (done) {
             return;
           }
-
-          if (message === 'retake') {
+          if (action === 'retake') {
             continue;
           }
 
-          photo.judgement = message;
-
-          if (!photo.complete) {
-            await new Promise(resolve => photo.onload = resolve);
+          if (!photoImage.complete) {
+            await new Promise((resolve, reject) => {
+              photoImage.onload = resolve;
+              photoImage.onerror = reject;
+            });
           }
-          const canvas = makeCroppedCanvasForImage(photo);
+          const canvas = makeCroppedCanvasForImage(photoImage);
           cell.append(canvas);
 
+          cell.classList.add('photo-taken');
           shutterSound.play().catch(() => {});
 
-          cell.classList.add('photo-taken');
+          const photo = {
+            id: uuidv4(),
+            image: photoImage,
+            blob: photoBlob,
+            isReal: action === 'mark-real',
+            judgements: new Map(),
+            uncroppedRevealed: false,
+          }
           photos.set(player, photo);
 
           if (checkIfAllPhotosTaken()) {
@@ -148,18 +158,18 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
           }
 
           while (true) {
-            [message, error] = await getMessageFromChannel(channel);
-            if (error !== null) {
+            var {value: action, done} = await channelQueue.next();
+            if (done) {
               return;
             }
 
-            if (message === 'retake') {
-              cell.querySelector('canvas').remove();
+            if (action === 'retake') {
+              canvas.remove();
               cell.classList.remove('photo-taken');
               photos.delete(player);
               break;
             } else {
-              photo.judgement = message;
+              photo.isReal = action === 'mark-real';
             }
           }
         }

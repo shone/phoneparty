@@ -1,3 +1,5 @@
+@import url('/common/push-button.css');
+
 :host {
   background: var(--sand-light);
 

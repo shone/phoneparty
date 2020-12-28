@@ -2,6 +2,7 @@
 @import url('/common/push-button.css');
 @import url('/apps/tunnel-vision/base.css');
 @import url('/host/audience.css');
+@import url('/host/speech-bubble.css');
 
 :host {
   height: 100%;
@@ -22,6 +23,7 @@
 audience-el {
   width: 100%;
   flex-shrink: 0;
+  z-index: 1;
 }
 
 #message {
@@ -33,6 +35,9 @@ audience-el {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  font-weight: bold;
+  font-size: 3rem;
 }
 #message:not(:empty) {
   opacity: 1;
@@ -42,19 +47,21 @@ audience-el {
   opacity: 0;
   transform: scale(.5);
 }
-
 #message push-button {
   font-size: 3.5rem;
   padding: .8rem;
   border-radius: 1rem;
   font-weight: bold;
 }
-
 #message h1 {
   font-size: 6rem;
   color: var(--mauve);
   text-align: center;
   margin: 1rem;
+}
+#message p {
+  -webkit-text-stroke: transparent;
+  text-shadow: none;
 }
 
 #grid {
@@ -84,17 +91,19 @@ audience-el {
   width:  100%;
   height: 100%;
   object-fit: contain;
-  transition: .5s left, .5s top, .5s width, .5s height;
+  transition: .5s left, .5s top, .5s width, .5s height, .1s transform;
   cursor: pointer;
+  transform: scale(.9);
 }
 #grid .photo:hover {
-  filter: brightness(1.2);
+  transform: scale(1);
 }
 .photo.present {
   left: 0 !important;
   top:  0 !important;
   width:  100% !important;
   height: 100% !important;
+  transform: scale(1);
   z-index: 1;
 }
 #grid .cell.last-presented {
@@ -145,7 +154,9 @@ audience-el {
   bottom: 1rem;
 
   font-size: 2.5rem;
-  font-weight: bold;
+  font-weight: 400;
+  -webkit-text-stroke: transparent;
+  text-shadow: none;
 
   padding: .5rem;
   border-radius: 1rem;

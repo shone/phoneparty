@@ -1,0 +1,102 @@
+@import url('/apps/tunnel-vision/base.css');
+@import url('/common/push-button.css');
+
+:host(.panel-a) {
+  background: black;
+}
+
+#grid {
+  position: absolute;
+  left:   0;
+  top:    0;
+  right:  0;
+  bottom: 0;
+
+  display: grid;
+  align-content:   center;
+  justify-content: center;
+}
+
+#grid .cell {
+  position: relative;
+}
+
+canvas {
+  position: absolute;
+  left: 0;
+  top:  0;
+  width:  100%;
+  height: 100%;
+
+  background: black;
+  object-fit: contain;
+
+  transition: .5s left, .5s top, .5s width, .5s height;
+}
+canvas.present {
+  left: 0 !important;
+  top:  0 !important;
+  width:  100% !important;
+  height: 100% !important;
+  z-index: 1;
+}
+
+:host(.panel-b) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#target {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items:     center;
+
+  color: var(--mauve);
+  -webkit-text-stroke: transparent;
+  text-shadow: none;
+  font-size: 3rem;
+}
+p {
+  margin-top:    .5rem;
+  margin-bottom: .5rem;
+}
+#target span {
+  display: flex;
+  align-items: center;
+}
+#target img {
+  width:  4rem;
+  height: 4rem;
+}
+#target label {
+/*   font-size: 3rem; */
+}
+
+#judgement {
+/*   position: absolute; */
+/*   width:  100%; */
+/*   height: 100%; */
+
+  display: flex;
+  justify-content: center;
+  align-items:     center;
+
+  opacity: 0;
+  transition: 1s opacity;
+  pointer-events: none;
+}
+#judgement.reveal {
+  opacity: 1;
+  pointer-events: auto;
+}
+#judgement push-button {
+  border-radius: 1rem;
+  margin: 1rem;
+  padding: .5rem;
+
+  font-size: 5rem;
+  -webkit-text-stroke: transparent;
+  text-shadow: none;
+}
