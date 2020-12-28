@@ -5,6 +5,8 @@ import {
   listenForLeavingPlayers, stopListeningForLeavingPlayers,
 } from '/host/players.mjs';
 
+import {clamp} from '/common/utils.mjs';
+
 const routes = {};
 export default routes;
 
@@ -79,6 +81,36 @@ export async function startRouting({defaultRoute}) {
         }
         return player.rtcConnection.createDataChannel(channelLabel);
       },
+
+      animate: async (frameCallback, durationMs) => {
+        if (hasRouteEnded) return 'route-ended';
+
+        const startTimestamp = performance.now();
+        let t = 0;
+        let frameId = requestAnimationFrame(function callback(timestamp) {
+          t = clamp((timestamp - startTimestamp) / durationMs, 0, 1);
+          frameCallback(t);
+          if (timestamp - startTimestamp < durationMs) {
+            frameId = requestAnimationFrame(callback);
+          }
+        });
+
+        return new Promise(resolve => {
+          const timerId = setTimeout(() => {
+            cancelAnimationFrame(frameId);
+            if (t < 1) {
+              frameCallback(1);
+            }
+            resolve('animation-finished');
+          }, durationMs);
+
+          routeEndListeners.add(() => {
+            cancelAnimationFrame(frameId);
+            clearTimeout(timerId);
+            resolve('route-ended');
+          });
+        });
+      }
     };
 
     // Call route handler

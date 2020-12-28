@@ -1,3 +1,5 @@
+import {clamp} from '/common/utils.mjs';
+
 const routes = {};
 export default routes;
 
@@ -102,7 +104,8 @@ export async function startRouting(rtcConnection, routeChannel) {
 
       waitForEnd: async () => {
         switch (routeChannel.readyState) {
-          case 'closing': case 'closed': return 'route-ended';
+          case 'closing': case 'closed':
+            return 'route-ended';
         }
         if (currentRouteCounter !== routeCounter) {
           return 'route-ended';
@@ -120,6 +123,42 @@ export async function startRouting(rtcConnection, routeChannel) {
           }
         }
         routeChannelListeners.push(callback);
+      },
+
+      animate: async (frameCallback, durationMs) => {
+        switch (routeChannel.readyState) {
+          case 'closing': case 'closed':
+            return 'route-ended';
+        }
+        if (currentRouteCounter !== routeCounter) {
+          return 'route-ended';
+        }
+
+        const startTimestamp = performance.now();
+        let t = 0;
+        let frameId = requestAnimationFrame(function callback(timestamp) {
+          t = clamp((timestamp - startTimestamp) / durationMs, 0, 1);
+          frameCallback(t);
+          if (timestamp - startTimestamp < durationMs) {
+            frameId = requestAnimationFrame(callback);
+          }
+        });
+
+        return new Promise(resolve => {
+          const timerId = setTimeout(() => {
+            cancelAnimationFrame(frameId);
+            if (t < 1) {
+              frameCallback(1);
+            }
+            resolve('animation-finished');
+          }, durationMs);
+
+          routeEndListeners.push(() => {
+            cancelAnimationFrame(frameId);
+            clearTimeout(timerId);
+            resolve('route-ended');
+          });
+        });
       }
     }
 
