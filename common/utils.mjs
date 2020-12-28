@@ -20,6 +20,12 @@ export function randomInArray(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+export function uuidv4() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
 export async function waitForPageToBeVisible() {
   if (document.visibilityState === 'visible') {
     return;
@@ -133,6 +139,31 @@ export function getMessageFromChannel(channel) {
       resolve([null, new Error('Channel closed before message received.')]);
     }, {once: true});
   });
+}
+
+export async function* createChannelQueue(channel) {
+  const messages = [];
+  let newMessageCallback = null;
+  channel.addEventListener('message', ({data}) => {
+    messages.push(data);
+    if (newMessageCallback) {
+      newMessageCallback();
+    }
+  });
+  channel.addEventListener('close', () => {
+    if (newMessageCallback) {
+      newMessageCallback('closed');
+    }
+  });
+
+  while (channel.readyState !== 'closed') {
+    if (messages.length === 0) {
+      if (await new Promise(resolve => {newMessageCallback = resolve}) === 'closed') {
+        return;
+      }
+    }
+    yield messages.shift();
+  }
 }
 
 export async function sendBlobOnChannel(channel, blob) {
