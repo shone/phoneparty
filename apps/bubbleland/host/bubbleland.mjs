@@ -2,7 +2,6 @@ import routes from '/host/routes.mjs';
 import {players} from '/host/players.mjs';
 
 import startMessaging from '/host/messaging.mjs';
-import * as audienceMode from '/host/audienceMode.mjs';
 
 import PlayerBubble from '/host/player-bubble.mjs';
 
@@ -12,8 +11,6 @@ document.head.insertAdjacentHTML('beforeend', `
 
 routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChannel, acceptAllPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = 'purple';
-
-  audienceMode.stop(); // TODO: wait for audience mode to stop
 
   const container = document.createElement('div');
   container.attachShadow({mode: 'open'}).innerHTML = `

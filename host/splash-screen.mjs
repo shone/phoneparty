@@ -1,11 +1,10 @@
 import * as utils from '/common/utils.mjs';
-import * as audienceMode from '/host/audienceMode.mjs';
 
 import routes from '/host/routes.mjs';
 
 import '/common/splash-screen.mjs';
 
-routes['#splash-screen'] = async function splashScreen({waitForEnd, createChannel, acceptAllPlayers}) {
+routes['#splash-screen'] = async function splashScreen({waitForEnd, createChannel, listenForPlayers}) {
   document.body.style.backgroundColor = 'black';
 
   const splashScreen = document.createElement('splash-screen');
@@ -15,11 +14,8 @@ routes['#splash-screen'] = async function splashScreen({waitForEnd, createChanne
   continueButton.id = 'continue-button';
   splashScreen.shadowRoot.append(continueButton);
 
-  audienceMode.stop();
-
   const channels = [];
-  acceptAllPlayers(player => {
-    player.remove();
+  listenForPlayers(player => {
     channels.push(createChannel(player));
   });
 

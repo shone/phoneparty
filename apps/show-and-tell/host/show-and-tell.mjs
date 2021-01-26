@@ -108,6 +108,5 @@ routes['#apps/show-and-tell'] = async function showAndTell(routeContext) {
 
   await waitForEnd();
 
-  audienceMode.stop();
   container.remove();
 }
