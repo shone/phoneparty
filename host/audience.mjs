@@ -63,6 +63,7 @@ export default class Audience extends HTMLElement {
     this.minPlayerCount = minPlayerCount;
     const slotCount = this.getSlotCount();
     if (slotCount < minPlayerCount) {
+      // Create empty slots for missing players
       const newSlotCount = minPlayerCount - slotCount;
       const template = document.createElement('template');
       template.innerHTML = '<div class="slot open"></div>'.repeat(newSlotCount);
@@ -70,6 +71,7 @@ export default class Audience extends HTMLElement {
       this.append(template.content);
       this.style.setProperty('--slot-count', newSlotCount);
     }
+    // TODO: remove empty slots when necessary
   }
 }
 
