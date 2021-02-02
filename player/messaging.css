@@ -35,7 +35,7 @@ button:hover {
   background: #888;
   border-radius: 4px;
 }
-#emoji-buttons::-webkit-scrollbar-thumb:hover {
+#emoji-buttons:hover::-webkit-scrollbar-thumb {
   background: #999;
 }
 #emoji-buttons button {
