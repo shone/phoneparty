@@ -17,7 +17,7 @@ speech-bubble {
 
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items:     center;
 
   transform: scale(0);
   transform-origin: bottom;
@@ -27,16 +27,19 @@ speech-bubble {
 /* Arrow */
 speech-bubble:before {
   content: '';
+
   --arrow-size: .7rem;
   width:  var(--arrow-size);
   height: var(--arrow-size);
+
   background: white;
   border-left:   var(--outline-thickness) solid black;
   border-bottom: var(--outline-thickness) solid black;
-  transform: rotate(-45deg);
+
   position: absolute;
   top: calc(100% - (var(--arrow-size) * .47));
   right: .5rem;
+  transform: rotate(-45deg);
   z-index: -1;
 }
 
