@@ -1,22 +1,9 @@
-import {waitForRtcClose} from '/common/utils.mjs';
+import {
+  waitForRtcClose,
+  setupKeepaliveChannel
+} from '/common/utils.mjs';
 
 export const players = [];
-
-const playersWaitingToBeAccepted = [];
-
-let acceptedPlayerHandler = null;
-export function acceptAllPlayers(handler = () => {}) {
-  while (playersWaitingToBeAccepted.length > 0) {
-    const callback = playersWaitingToBeAccepted.pop();
-    callback();
-  }
-  listenForAllPlayers(handler);
-  acceptedPlayerHandler = handler;
-}
-export function stopAcceptingPlayers() {
-  stopListeningForAllPlayers(acceptedPlayerHandler);
-  acceptedPlayerHandler = null;
-}
 
 const listenForNewPlayersCallbacks = [];
 export function listenForNewPlayers(callback) {
@@ -83,24 +70,11 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   const iceCandidatesToSend = [];
   rtcConnection.onicecandidate = event => {
     if (event.candidate) {
-      iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
+      iceCandidatesToSend.push(event.candidate.toJSON());
       if (hasSentSdp) {
         while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, iceCandidate: iceCandidatesToSend.pop()}));
       }
     }
-  }
-
-  const video = document.createElement('video');
-  player.video = video;
-  video.autoplay = true;
-  video.muted = true;
-  player.stream = null;
-  rtcConnection.ontrack = event => {
-    player.stream = event.streams[0];
-//     if (video.srcObject !== event.streams[0]) {
-//       video.srcObject = event.streams[0];
-//       player.appendChild(video);
-//     }
   }
 
   function onWebsocketMessage({data}) {
@@ -109,7 +83,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
       if (message.connectionState === 'disconnected') {
         websocket.removeEventListener('message', onWebsocketMessage);
       } else if (message.iceCandidate) {
-        rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
+        rtcConnection.addIceCandidate(message.iceCandidate);
       }
     }
   }
@@ -117,10 +91,12 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   await rtcConnection.setRemoteDescription({type: 'offer', sdp: sdp});
 
+  const keepaliveChannel        = rtcConnection.createDataChannel('keepalive',       {negotiated: true, id: 7, ordered: false});
+  const waitForKeepaliveEnd = setupKeepaliveChannel(keepaliveChannel);
+
   const accelerometerChannel    = rtcConnection.createDataChannel('accelerometer',   {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
   const visibilityChannel       = rtcConnection.createDataChannel('visibility',      {negotiated: true, id: 5, ordered: true});
-  player.closeChannel           = rtcConnection.createDataChannel('close',           {negotiated: true, id: 7, ordered: true});
-  const acceptPlayerChannel     = rtcConnection.createDataChannel('acceptPlayer',    {negotiated: true, id: 8, ordered: true});
+
   player.routeChannel           = rtcConnection.createDataChannel('route',           {negotiated: true, id: 9, ordered: true});
 
   const answer = await rtcConnection.createAnswer();
@@ -129,7 +105,7 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
   hasSentSdp = true;
   while (iceCandidatesToSend.length) websocket.send(JSON.stringify({playerId: playerId, iceCandidate: iceCandidatesToSend.pop()}));
 
-  // Wait for RTC connection to connect
+  // Wait for RTC to connect
   await new Promise((resolve, reject) => {
     rtcConnection.oniceconnectionstatechange = () => {
       if (rtcConnection.iceConnectionState === 'connected') {
@@ -182,22 +158,6 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   visibilityChannel.onmessage = event => player.dataset.visibility = event.data;
 
-  if (!acceptedPlayerHandler) {
-    const waitToBeAccepted = new Promise(resolve => playersWaitingToBeAccepted.push(() => resolve('accepted')));
-    const waitResult = Promise.race([waitToBeAccepted, waitForRtcClose(rtcConnection)]);
-    if (waitResult === 'rtc-closed') {
-      players.splice(players.indexOf(player), 1);
-      return;
-    }
-  }
-  if (acceptPlayerChannel.readyState === 'open') {
-    acceptPlayerChannel.send(true);
-  } else {
-    acceptPlayerChannel.onopen = () => {
-      acceptPlayerChannel.send(true);
-    }
-  }
-
   player.classList.add('player', 'new');
   setTimeout(() => player.classList.remove('new'), 500);
 
@@ -212,8 +172,6 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
 
   newPlayerSound.play().catch(() => {});
 
-  const waitForCloseChannel = new Promise(resolve => player.closeChannel.onmessage = resolve);
-
   const waitForPlayerKicked = new Promise(resolve => {
     player.addEventListener('contextmenu', event => {
       resolve();
@@ -221,13 +179,9 @@ export async function handleNewPlayer(playerId, sdp, websocket) {
     }, {once: true});
   });
 
-  await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel, waitForPlayerKicked]);
+  await Promise.race([waitForRtcClose(rtcConnection), waitForKeepaliveEnd, waitForPlayerKicked]);
 
-  if (player.closeChannel.readyState === 'open') {
-    try {
-      player.closeChannel.send('true');
-    } catch (e) { }
-  }
+  keepaliveChannel.close();
   rtcConnection.close();
 
   websocket.removeEventListener('message', onWebsocketMessage);

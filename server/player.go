@@ -33,7 +33,7 @@ type PlayerMessage struct {
 
 	// An Interactive Connectivity Establishment candidate used in the process of
 	// making a WebRTC connection with a host
-	ICECandidate *string `json:"iceCandidate"`
+	ICECandidate *map[string]interface{} `json:"iceCandidate"`
 
 	// This will be 'disconnected' when the player websocket disconnects
 	ConnectionState *string `json:"connectionState"`

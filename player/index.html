@@ -32,6 +32,16 @@
       <div class="items">
         <push-button class="fullscreen unimplemented">Full-screen</push-button>
         <push-button class="host">Be a host</push-button>
+        <push-button class="connection-info">Connection info</push-button>
+      </div>
+      <div class="connection-info">
+        <push-button class="close-button">X</push-button>
+        <h1>WebRTC</h1>
+        <div> ICE connection state: <span class="ice-connection-state"></span> </div>
+        <div> ICE gathering state: <span class="ice-gathering-state"></span> </div>
+        <div> Signaling state: <span class="signaling-state"></span> </div>
+        <h2>Local ICE candidates</h2>
+        <div class="local-ice-candidates"></div>
       </div>
     </div>
 

@@ -29,7 +29,7 @@ type HostMessage struct {
 	SDP *string `json:"sdp"`
 
 	// An Interactive Connectivity Establishment candidate used in the process of making a WebRTC connection with a player
-	ICECandidate *string `json:"iceCandidate"`
+	ICECandidate *map[string]interface{} `json:"iceCandidate"`
 
 	// Indicates to players whether the host for their IP is 'connected' or 'disconnected'
 	HostState *string `json:"host"`
@@ -81,7 +81,7 @@ func HandleHostWebsocket(multihost bool) http.Handler {
 			// Notify players that the host has disconnected
 			players.RLock()
 			for _, player := range players.m {
-				if player.IP == ip {
+				if player.IP == ip || !multihost {
 					err := player.Websocket.WriteMessage(websocket.TextMessage, []byte(`{"host": "disconnected"}`))
 					if err != nil {
 						log.Printf("Could not notify player %d at '%s' that the host had disconnected: %s", player.ID, player.IP, err)

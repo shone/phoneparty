@@ -105,14 +105,6 @@ function setupFullscreenButton() {
   fullscreenButton.classList.remove('unimplemented');
 }
 
-window.onbeforeunload = () => {
-  for (const player of players) {
-    if (player.closeChannel.readyState === 'open') {
-      player.closeChannel.send('true');
-    }
-  }
-}
-
 export let paused = false;
 window.addEventListener('keydown', event => {
   if (event.key === 'p') {

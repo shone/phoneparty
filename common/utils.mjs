@@ -232,3 +232,40 @@ export async function getBlobOnChannel(channel) {
     }, {once: true});
   });
 }
+
+export function setupKeepaliveChannel(channel) {
+  let sendInterval = null;
+  let receiveInterval = null;
+  let onKeepaliveTimeout = null;
+  channel.addEventListener('open', () => {
+    sendInterval = setInterval(() => channel.send(performance.now()), 1000);
+    let lastKeepaliveTimestamp = performance.now();
+    channel.addEventListener('message', event => {
+      lastKeepaliveTimestamp = performance.now();
+    });
+    receiveInterval = setInterval(() => {
+      const timeSinceLastKeepalive = performance.now() - lastKeepaliveTimestamp;
+      if (timeSinceLastKeepalive > 3000) {
+        if (onKeepaliveTimeout) {
+          onKeepaliveTimeout();
+        }
+        clearInterval(sendInterval);
+        clearInterval(receiveInterval);
+        channel.close();
+      }
+    }, 1000);
+  });
+  channel.addEventListener('close', () => {
+    clearInterval(sendInterval);
+    clearInterval(receiveInterval);
+  });
+  const onBeforeUnload = () => channel.close();
+  channel.addEventListener('open', window.addEventListener('beforeunload', onBeforeUnload));
+  channel.addEventListener('close', window.removeEventListener('beforeunload', onBeforeUnload));
+
+  const waitForKeepaliveEnd = new Promise(resolve => {
+    channel.addEventListener('close', () => resolve('keepalive-end'));
+    onKeepaliveTimeout = () => resolve('keepalive-end');
+  });
+  return waitForKeepaliveEnd;
+}

@@ -2,15 +2,11 @@ import {
   waitForNSeconds,
   waitForPageToBeVisible,
   waitForWebsocketOpen,
-  waitForWebsocketClose,
-  waitForRtcConnect,
-  waitForRtcClose
+  waitForRtcClose,
+  setupKeepaliveChannel
 } from '/common/utils.mjs';
 
-import {playTone} from './audio.mjs';
 import {startRouting} from './routes.mjs';
-
-import handleMessaging from './messaging.mjs';
 
 import './splash-screen.mjs';
 
@@ -29,26 +25,26 @@ async function showStatus(status, description='', detail='') {
 }
 
 if (navigator.serviceWorker) {
+  // A registered service worker is a browser requirement to allow the app to be installed as a PWA.
   navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'});
 }
 
 location.hash = '';
 
-export let stream = null;
-export let rtcConnection = null;
-
 (async function main() {
 
   setupMenu();
-
-  stream = await getCameraStream();
 
   while (true) {
     await waitForPageToBeVisible();
 
     showStatus('waiting', 'Connecting..', 'Opening websocket');
-
-    const websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
+    try {
+      var websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
+    } catch(error) {
+      showStatus('error', 'failed to connect', `Unable to initialize websocket: ${error}`);
+      continue;
+    }
 
     let hasHost = false;
     let waitingOnHostCallback = null;
@@ -68,8 +64,22 @@ export let rtcConnection = null;
       }
     });
 
-    if (await waitForWebsocketOpen(websocket) !== 'websocket-open') {
-      await showStatus('error', 'failed to connect', 'Could not establish websocket, retrying in 2 seconds..');
+    const websocketConnectResult = await new Promise(resolve => {
+      websocket.addEventListener('open',  () => resolve('websocket-open'),   {once: true});
+      websocket.addEventListener('close', () => resolve('websocket-closed'), {once: true});
+      websocket.addEventListener('error', () => resolve('websocket-error'),  {once: true});
+      setTimeout(() => {
+        resolve('timeout');
+        websocket.close();
+      }, 3000);
+    });
+
+    if (websocketConnectResult !== 'websocket-open') {
+      if (websocketConnectResult === 'timeout') {
+        await showStatus('error', 'failed to connect', 'Timed-out waiting for websocket to connect');
+      } else {
+        await showStatus('error', 'failed to connect', 'Could not open websocket');
+      }
       showStatus('waiting', 'Connecting..', 'Opening websocket');
       await waitForNSeconds(1);
       continue;
@@ -93,46 +103,9 @@ export let rtcConnection = null;
       }
 
       await connectRtcAndStartRouting(websocket);
-      if (websocket.readyState !== websocket.OPEN) {
-        break;
-      }
     }
   }
 })();
-
-async function getCameraStream() {
-  while (true) {
-    showStatus('waiting', 'Accessing camera..');
-    if (!navigator.mediaDevices) {
-      return null;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
-      showStatus('');
-      return stream;
-    } catch(error) {
-      if (location.hostname === 'localhost') {
-        return null;
-      }
-      if (error && error.name === 'NotFoundError') {
-        showStatus('error', 'no camera found');
-      } else {
-        showStatus('error', 'Could not get camera', error);
-      }
-      const statusDetail = document.getElementById('status-detail');
-      statusDetail.insertAdjacentHTML('beforeend', `
-        <push-button class="camera-retry-button">
-          retry
-        </push-button>
-      `);
-      const retryButton = statusDetail.lastElementChild;
-      await new Promise(resolve => retryButton.onclick = resolve);
-      retryButton.remove();
-      showStatus('waiting', 'Accessing camera..');
-      await waitForNSeconds(1);
-    }
-  }
-}
 
 function setupMenu() {
   const menu = document.getElementById('menu');
@@ -140,40 +113,22 @@ function setupMenu() {
     menu.classList.toggle('visible');
   }
 
-  setupFullscreenButton();
-
   menu.querySelector('.host').onclick = () => {
     location.pathname = 'host';
   }
 
-  let installButton = null;
-  window.onbeforeinstallprompt = event => {
-    event.preventDefault();
-    if (!installButton) {
-      installButton = document.createElement('push-button');
-      installButton.textContent = 'Install';
-      menu.querySelector('.items').append(installButton);
-    }
-    installButton.onclick = () => {
-      event.prompt();
-    }
-    event.userChoice.then(result => {
-      if (result.outcome === 'accepted') {
-        installButton.remove();
-      }
-    });
-  }
+  setupFullscreenButton();
+  setupInstallButton();
+  setupConnectionInfoButton();
 }
 
 function setupFullscreenButton() {
-  // - Only show the fullscreen button if the fullscreen API is available.
-  // - If the app was started in fullscreen mode, assume that it's running as an installed PWA and therefore doesn't
-  // need a fullscreen button.
-  if (!document.documentElement.requestFullscreen || window.matchMedia('(display-mode: fullscreen)').matches) {
+  // Only show the fullscreen button if the fullscreen API is available.
+  if (!document.documentElement.requestFullscreen) {
     return;
   }
 
-  const fullscreenButton = document.querySelector('#menu .fullscreen');
+  const fullscreenButton = document.querySelector('#menu .items .fullscreen');
 
   const clickSound = new Audio('/sounds/click.wav');
   function toggleFullscreen() {
@@ -192,143 +147,178 @@ function setupFullscreenButton() {
   fullscreenButton.classList.remove('unimplemented');
 }
 
+function setupInstallButton() {
+  let installButton = null;
+  window.onbeforeinstallprompt = event => {
+    event.preventDefault();
+    if (!installButton) {
+      installButton = document.createElement('push-button');
+      installButton.textContent = 'Install';
+      document.querySelector('#menu .items').append(installButton);
+    }
+    installButton.onclick = () => {
+      event.prompt();
+    }
+    event.userChoice.then(result => {
+      if (result.outcome === 'accepted') {
+        installButton.remove();
+      }
+    });
+  }
+}
+
+function setupConnectionInfoButton() {
+  const connectionInfoButton = document.querySelector('#menu .items .connection-info');
+  connectionInfoButton.onclick = () => {
+    document.querySelector('#menu > .connection-info').classList.toggle('visible');
+  }
+  document.querySelector('#menu > .connection-info .close-button').onclick = () => document.querySelector('#menu > .connection-info').classList.remove('visible');
+}
+
 async function connectRtcAndStartRouting(websocket) {
   showStatus('waiting', 'Establishing WebRTC connection', 'Setting up connection object');
 
-  rtcConnection = new RTCPeerConnection();
+  const rtcConnection = new RTCPeerConnection();
 
-  if (stream) {
-    stream.getTracks().forEach(track => rtcConnection.addTrack(track, stream));
-  }
-
-  rtcConnection.ondatachannel = event => {
-    switch (event.channel.label) {
-      case 'messaging': handleMessaging(event.channel); break;
-    }
-  }
-
-  const accelerometerChannel = rtcConnection.createDataChannel('accelerometer', {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
-  function handleDeviceMotion(event) { accelerometerChannel.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
-  accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
-  accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
+  const keepaliveChannel = rtcConnection.createDataChannel('keepalive', {negotiated: true, id: 7, ordered: false});
+  const waitForKeepaliveEnd = setupKeepaliveChannel(keepaliveChannel);
 
   const visibilityChannel = rtcConnection.createDataChannel('visibility', {negotiated: true, id: 5, ordered: true});
   function handleVisibilityChange() { visibilityChannel.send(document.visibilityState); }
   visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
   visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-  const acceptPlayerChannel = rtcConnection.createDataChannel('acceptPlayer', {negotiated: true, id: 8, ordered: true});
-  const waitForPlayerAccepted = new Promise(resolve => {
-    acceptPlayerChannel.onmessage = () => resolve('accepted');
-    acceptPlayerChannel.onclose = () => resolve('channel-closed');
-  });
+  const accelerometerChannel = rtcConnection.createDataChannel('accelerometer', {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
+  function handleDeviceMotion(event) { accelerometerChannel.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
+  accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
+  accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
 
   const routeChannel = rtcConnection.createDataChannel('route', {negotiated: true, id: 9, ordered: true});
 
-  const closeChannel = rtcConnection.createDataChannel('close', {negotiated: true, id: 7, ordered: true});
-  function handleUnload() { closeChannel.send('true'); }
-  closeChannel.onopen = () => {
-    window.addEventListener('unload', handleUnload);
-    window.addEventListener('beforeunload', handleUnload);
-  }
-  closeChannel.onclose = () => {
-    window.removeEventListener('unload', handleUnload);
-    window.removeEventListener('beforeunload', handleUnload);
-  }
+  const errors = [];
+  let onFatalError = null;
 
-  let hasSentSdp = false;
-  const iceCandidatesToSend = [];
-  rtcConnection.onicecandidate = event => {
+  function onWebsocketMessage(event) {
+    try {
+      var command = JSON.parse(event.data);
+    } catch(error) {
+      errors.push(`Could not parse message from websocket ('${event.data}') as JSON: ${error}`);
+      if (onFatalError) onFatalError();
+    }
+    if (command.sdp) {
+      rtcConnection.setRemoteDescription({type: 'answer', sdp: command.sdp})
+      .catch(error => {
+        errors.push(`Could not use SDP received via websocket ('${command.sdp}') to set RTC remote description: ${error}`)
+        if (onFatalError) onFatalError();
+      });
+    } else if (command.iceCandidate) {
+      rtcConnection.addIceCandidate(command.iceCandidate)
+      .catch(error =>
+        errors.push(`Could not use ICE candidate received via websocket ('${command.iceCandidate}'): ${error}`)
+      );
+    } else if (command.host === 'disconnected') {
+      pushError('Host disconnected');
+      rtcConnection.close();
+    }
+  }
+  websocket.addEventListener('message', onWebsocketMessage);
+
+  function onIceCandidate(event) {
     if (event.candidate) {
-      iceCandidatesToSend.push(JSON.stringify(event.candidate.toJSON()));
-      if (websocket.readyState === websocket.OPEN && hasSentSdp) {
-        while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
+      try {
+        websocket.send(JSON.stringify({
+          iceCandidate: event.candidate.toJSON()
+        }));
+      } catch (error) {
+        pushError(error);
       }
+      const div = document.createElement('div');
+      div.textContent = JSON.stringify(event.candidate.toJSON());
+      document.querySelector('#menu > .connection-info .local-ice-candidates').append(div);
     }
   };
-  rtcConnection.onicegatheringstatechange = event => {
-    showStatus('waiting', 'Establishing WebRTC connection', 'ICE gathering state: ' + rtcConnection.iceGatheringState);
+  rtcConnection.onicecandidate = onIceCandidate;
+  websocket.addEventListener('close', () => rtcConnection.onicecandidate = null);
+
+  rtcConnection.onicecandidateerror = event => {
+    pushError(`Got ICE candidate error: ${event.errorCode} - '${event.errorText}'`);
   }
 
+  const onIceConnectionStateChange = () => document.querySelector('#menu > .connection-info .ice-connection-state').textContent = rtcConnection.iceConnectionState;
+  onIceConnectionStateChange();
+  rtcConnection.oniceconnectionstatechange = onIceConnectionStateChange;
+
+  const onIceGatheringStateChange = () => document.querySelector('#menu > .connection-info .ice-gathering-state').textContent = rtcConnection.iceGatheringState;
+  onIceGatheringStateChange();
+  rtcConnection.onicegatheringstatechange = onIceGatheringStateChange;
+
+  const onSignalingStateChange = () => document.querySelector('#menu > .connection-info .signaling-state').textContent = rtcConnection.signalingState;
+  onSignalingStateChange();
+  rtcConnection.onsignalingstatechange = onSignalingStateChange;
+
+  const waitRtcConnected = new Promise(resolve => {
+    websocket.addEventListener('close', () => resolve('websocket-closed'));
+    onFatalError = () => resolve('error');
+    setTimeout(() => resolve('timeout'), 4000);
+    rtcConnection.addEventListener('iceconnectionstatechange', event => {
+      switch (rtcConnection.iceConnectionState) {
+        case 'connected': case 'completed': resolve('rtc-connected'); break;
+        case 'failed': case 'closed': resolve('rtc-failed'); break;
+      }
+    });
+  });
+
+  showStatus('waiting', 'Establishing WebRTC connection', 'Creating offer...');
   try {
     var rtcOffer = await rtcConnection.createOffer();
   } catch(error) {
-    await showStatus('error', 'failed to connect', 'WebRTC offer creation failed');
+    await showStatus('error', 'failed to connect', `WebRTC offer creation failed: ${error}`);
     return;
   }
 
+  showStatus('waiting', 'Establishing WebRTC connection', 'Setting local description...');
   try {
     await rtcConnection.setLocalDescription(rtcOffer);
   } catch(error) {
-    await showStatus('error', 'failed to connect', 'failed to set RTC local description: ' + error);
+    await showStatus('error', 'failed to connect', `failed to set RTC local description: ${error}`);
     return;
   }
 
+  showStatus('waiting', 'Establishing WebRTC connection', 'Sending SDP...');
   try {
     websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
   } catch(error) {
     await showStatus('error', 'failed to connect', 'failed to send SDP over websocket: ' + error);
     return;
   }
-  hasSentSdp = true;
 
-  try {
-    while (iceCandidatesToSend.length) websocket.send(JSON.stringify({iceCandidate: iceCandidatesToSend.pop()}));
-  } catch(error) {
-    await showStatus('error', 'failed to connect', 'failed to send ICE candidates over websocket: ' + error);
-    return;
-  }
+  showStatus('waiting', 'Establishing WebRTC connection', 'Waiting to connect...');
+  const connectResult = await waitRtcConnected;
 
-  websocket.addEventListener('message', function callback(event) {
-    const message = JSON.parse(event.data);
-    if (message.sdp) {
-      rtcConnection.setRemoteDescription({type: 'answer', sdp: message.sdp});
-    } else if (message.iceCandidate) {
-      rtcConnection.addIceCandidate(JSON.parse(message.iceCandidate));
-    } else if (message.host === 'disconnected') {
-      websocket.removeEventListener('message', callback);
-      rtcConnection.close();
+  if (connectResult != 'rtc-connected') {
+    if (connectResult == 'websocket-closed') {
+      await showStatus('error', 'failed to connect', 'websocket closed before RTC connection could be established')
+    } else if (connectResult === 'timeout') {
+      await showStatus('error', 'Timed-out waiting for RTC to connect', errors.join(', '))
+    } else {
+      await showStatus('error', 'failed to connect', errors.join(', '))
     }
-  });
-
-  var connectResult = await Promise.race([waitForRtcConnect(rtcConnection), waitForWebsocketClose(websocket)]);
-  rtcConnection.onicegatheringstatechange = null;
-  if (connectResult === 'websocket-closed') {
-    await showStatus('error', 'failed to connect', 'websocket closed before RTC connection could be established');
     return;
   }
-  if (connectResult !== 'rtc-connected') {
-    await showStatus('error', 'failed to connect', 'RTC connection could not be established');
-    return;
-  }
-
-  // TODO: handle renegotion
-//   rtcConnection.onnegotiationneeded = async () => {
-//     var rtcOffer = await rtcConnection.createOffer();
-//     await rtcConnection.setLocalDescription(rtcOffer);
-//     try {
-//       websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
-//     } catch(error) {
-//       rtcConnection.close();
-//     }
-//   }
 
   showStatus('');
 
-  const waitForCloseChannel = new Promise(resolve => closeChannel.onmessage = () => resolve('close-channel'));
+//   rtcConnection.onnegotiationneeded = async () => {
+//     const rtcOffer = await rtcConnection.createOffer();
+//     await rtcConnection.setLocalDescription(rtcOffer);
+//     websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
+//   }
 
   const waitForRouting = startRouting(rtcConnection, routeChannel);
 
-  showStatus('waiting', 'Waiting to be accepted');
-  const acceptResult = await waitForPlayerAccepted;
-  if (acceptResult === 'channel-closed') {
-    rtcConnection.close();
-    await showStatus('error', 'failed to connect', 'The RTC channel was closed before the player was accepted');
-    return;
-  }
   showStatus('');
 
-  var result = await Promise.race([waitForRtcClose(rtcConnection), waitForCloseChannel]);
+  await Promise.race([waitForRtcClose(rtcConnection), waitForKeepaliveEnd]);
   rtcConnection.close();
   await waitForRouting;
   await showStatus('error', 'Host disconnected', 'reconnecting in 2 seconds..');

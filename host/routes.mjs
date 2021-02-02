@@ -1,7 +1,6 @@
 import {
   players,
   listenForAllPlayers, stopListeningForAllPlayers,
-  acceptAllPlayers, stopAcceptingPlayers,
   listenForLeavingPlayers, stopListeningForLeavingPlayers,
 } from '/host/players.mjs';
 
@@ -54,12 +53,6 @@ export async function startRouting({defaultRoute}) {
         // the current route to return.
         if (hasRouteEnded) return 'route-ended';
         return new Promise(resolve => routeEndListeners.add(() => resolve('route-ended')));
-      },
-
-      acceptAllPlayers: callback => {
-        if (hasRouteEnded) throw 'Route has ended';
-        acceptAllPlayers(callback);
-        routeEndListeners.add(() => stopAcceptingPlayers());
       },
 
       listenForPlayers: callback => {
