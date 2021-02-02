@@ -62,23 +62,25 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
 
   let presentingPhotoId = null;
 
-  async function presentPhoto(photoId) {
+  function presentPhoto(photoId) {
+    if (presentingPhotoId === photoId) {
+      return;
+    }
     presentingPhotoId = photoId;
 
     const gridCell = gridCells.get(photoId);
     const canvas = gridCell.canvas;
 
-    gridCells.forEach(cell => cell.style.zIndex = cell === gridCell ? '1' : '');
+    // If the web animations API is available, animate the transition
+    if (canvas.animate) {
+      animateElementToFillNewParent(canvas, grid);
+    }
 
-    const origin      = gridCell.getBoundingClientRect();
-    const destination = panelA.getBoundingClientRect();
-    canvas.style.left   = `${(origin.left   / destination.width)  * 100}%`;
-    canvas.style.top    = `${(origin.top    / destination.height) * 100}%`;
-    canvas.style.width  = `${(origin.width  / destination.width)  * 100}%`;
-    canvas.style.height = `${(origin.height / destination.height) * 100}%`;
-    panelA.shadowRoot.append(canvas);
-    setTimeout(() => canvas.classList.add('present'), 200);
-    await waitForNSeconds(.5);
+    // Make the photo fill the screen
+    gridCell.classList.add('present');
+
+    // Fade out the other photos
+    grid.classList.add('fade-out');
   }
 
   async function revealPhotoUncropped(photoId) {
@@ -91,7 +93,7 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
     }, 2000);
   }
 
-  async function unpresent() {
+  function stopPresentingPhoto() {
     if (!presentingPhotoId) {
       return;
     }
@@ -99,24 +101,18 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
     const gridCell = gridCells.get(presentingPhotoId);
     const canvas = gridCell.canvas;
 
-    const origin      = grid.getBoundingClientRect();
-    const destination = gridCell.getBoundingClientRect();
-    gridCell.append(canvas);
-    canvas.style.left   = `${origin.left - destination.left}px`;
-    canvas.style.top    = `${origin.top  - destination.top}px`;
-    canvas.style.width  = `${origin.width}px`;
-    canvas.style.height = `${origin.height}px`;
-    canvas.classList.remove('present');
-    setTimeout(() => {
-      canvas.style.left   = null;
-      canvas.style.top    = null;
-      canvas.style.width  = null;
-      canvas.style.height = null;
-    }, 200);
+    // If the web animations API is available, animate the transition
+    if (canvas.animate) {
+      animateElementToFillNewParent(canvas, gridCell);
+    }
+
+    // Restore the photo to its grid cell
+    gridCell.classList.remove('present');
+
+    // Fade-in the other photos
+    grid.classList.remove('fade-out');
 
     presentingPhotoId = null;
-
-    await waitForNSeconds(.5);
   }
 
   const photoCallbacks = [];
@@ -138,34 +134,38 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
       const uuidv4length = 36;
       channel.send('ready');
       channel.onmessage = async ({data}) => {
-        const photoId = textDecoder.decode(data.slice(0, uuidv4length));
+        try {
+          const photoId = textDecoder.decode(data.slice(0, uuidv4length));
 
-        const photoArrayBuffer = data.slice(uuidv4length);
-        const blob = new Blob([photoArrayBuffer], {type: 'image/jpeg'});
+          const photoArrayBuffer = data.slice(uuidv4length);
+          const blob = new Blob([photoArrayBuffer], {type: 'image/jpeg'});
 
-        const image = new Image();
-        image.src = URL.createObjectURL(blob);
-        await new Promise(resolve => image.onload = resolve);
+          const image = new Image();
+          image.src = URL.createObjectURL(blob);
+          await new Promise(resolve => image.onload = resolve);
 
-        photos.set(photoId, {blob, image});
+          photos.set(photoId, {blob, image});
 
-        console.log(`Received photo #${photos.size} id ${photoId}, size ${Math.round(photoArrayBuffer.byteLength / 1024)}KB`);
+          console.log(`Received photo #${photos.size} id ${photoId}, size ${Math.round(photoArrayBuffer.byteLength / 1024)}KB`);
 
-        const canvas = document.createElement('canvas');
-        canvas.classList.add('photo');
-        drawPhotoOntoCanvas(image, canvas, {cropAmount: 1});
+          const canvas = document.createElement('canvas');
+          canvas.classList.add('photo');
+          drawPhotoOntoCanvas(image, canvas, {cropAmount: 1});
 
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.dataset.photoId = photoId;
-        cell.canvas = canvas;
-        cell.append(canvas);
-        grid.append(cell);
-        gridCells.set(photoId, cell);
-        updateGridDimensions();
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.photoId = photoId;
+          cell.canvas = canvas;
+          cell.append(canvas);
+          grid.append(cell);
+          gridCells.set(photoId, cell);
+          updateGridDimensions();
 
-        for (const callback of photoCallbacks) {
-          callback(photoId);
+          for (const callback of photoCallbacks) {
+            callback(photoId);
+          }
+        } catch (e) {
+          alert(e);
         }
       }
     }
@@ -182,6 +182,8 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
         }
       }
 
+      let revealJudgementPanelTimer = null;
+
       for await (const messageString of createChannelQueue(channel)) {
 
         const message = JSON.parse(messageString);
@@ -191,11 +193,13 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
             await waitForNSeconds(1);
             if (message.presentingPhotoId) {
               await waitForPhoto(message.presentingPhotoId);
-              await presentPhoto(message.presentingPhotoId);
+              presentPhoto(message.presentingPhotoId);
               await waitForNSeconds(1);
-              document.getElementById('panel-B').append(panelB);
-              await waitForNSeconds(.5);
-              judgement.classList.add('reveal');
+              if (!message.revealedPhotoIds.includes(message.presentingPhotoId)) {
+                document.getElementById('panel-B').append(panelB);
+                await waitForNSeconds(.5);
+                panelB.classList.add('reveal');
+              }
             }
             await Promise.all(message.revealedPhotoIds.map(async photoId => {
               await waitForPhoto(photoId);
@@ -204,21 +208,57 @@ routes['#apps/tunnel-vision/present'] = async function shoot({params, waitForEnd
             break;
           case 'present':
             await waitForPhoto(message.photoId);
-            await presentPhoto(message.photoId);
-            await waitForNSeconds(1);
-            document.getElementById('panel-B').append(panelB);
-            await waitForNSeconds(.5);
-            judgement.classList.add('reveal');
+            presentPhoto(message.photoId);
+            revealJudgementPanelTimer = setTimeout(() => {
+              document.getElementById('panel-B').append(panelB);
+              revealJudgementPanelTimer = setTimeout(() => {
+                panelB.classList.add('reveal');
+              }, 500);
+            }, 1000);
             break;
           case 'reveal':
+            if (panelB.classList.contains('reveal')) {
+              panelB.remove();
+              panelB.classList.remove('reveal');
+              clearTimeout(revealJudgementPanelTimer);
+              await waitForNSeconds(.5);
+            }
             await waitForPhoto(message.photoId);
             await revealPhotoUncropped(message.photoId)
             break;
           case 'unpresent':
-            await unpresent();
+            stopPresentingPhoto();
+            panelB.remove();
+            panelB.classList.remove('reveal');
+            clearTimeout(revealJudgementPanelTimer);
             break;
         }
       }
     }
   });
+}
+
+function animateElementToFillNewParent(element, destinationParent) {
+  // Uses the FLIP animation technique
+  // See https://css-tricks.com/animating-layouts-with-the-flip-technique/
+
+  const origin      = element.getBoundingClientRect();
+  const destination = destinationParent.getBoundingClientRect();
+
+  return element.animate([
+    {
+      left:   `${((origin.left - destination.left) / destination.width)  * 100}%`,
+      top:    `${((origin.top  - destination.top)  / destination.height) * 100}%`,
+      width:  `${(origin.width  / destination.width)  * 100}%`,
+      height: `${(origin.height / destination.height) * 100}%`,
+      zIndex: '1',
+    },
+    {
+      left: '0',
+      top:  '0',
+      width:  '100%',
+      height: '100%',
+      zIndex: '1',
+    }
+  ], {duration: 500, easing: 'ease', fill: 'forwards'});
 }

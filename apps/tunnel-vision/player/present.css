@@ -21,23 +21,31 @@
   position: relative;
 }
 
-canvas {
+#grid .cell {
+  opacity: 1;
+  transition: 1s opacity;
+  position: relative;
+}
+#grid .cell.present {
+  /* Make the canvas inside the cell fill the whole grid, by making the canvas absolute-positioned coordinates no longer relative to the cell, and therefore to the parent grid instead.*/
+  position: static;
+}
+#grid.fade-out .cell:not(.present) {
+  opacity: 0;
+}
+
+#grid .cell canvas {
+  /* Fill the whole area of the cell (if the cell has position: relative), otherwise the whole grid (when the photo is presented) */
   position: absolute;
   left: 0;
   top:  0;
   width:  100%;
   height: 100%;
 
-  background: black;
   object-fit: contain;
-
-  transition: .5s left, .5s top, .5s width, .5s height;
+  cursor: pointer;
 }
-canvas.present {
-  left: 0 !important;
-  top:  0 !important;
-  width:  100% !important;
-  height: 100% !important;
+#grid .cell.present canvas {
   z-index: 1;
 }
 
@@ -45,6 +53,13 @@ canvas.present {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+:host(.panel-b) > * {
+  opacity: 0;
+  transition: .5s opacity;
+}
+:host(.panel-b.reveal) > * {
+  opacity: 1;
 }
 
 #target {
@@ -82,14 +97,6 @@ p {
   display: flex;
   justify-content: center;
   align-items:     center;
-
-  opacity: 0;
-  transition: 1s opacity;
-  pointer-events: none;
-}
-#judgement.reveal {
-  opacity: 1;
-  pointer-events: auto;
 }
 #judgement push-button {
   border-radius: 1rem;

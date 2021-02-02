@@ -21,9 +21,14 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       <label></label>
     </div>
 
-    <div id="centered-content">
+    <div id="main-content">
       <div id="grid"></div>
       <div id="message"></div>
+    </div>
+
+    <div id="buttons">
+      <push-button id="back-button">back</push-button>
+      <push-button id="reveal-button">reveal</push-button>
       <push-button id="end-round-button">End Round</push-button>
     </div>
   `;
@@ -35,8 +40,6 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       message.innerHTML = '';
     }
   }
-
-  const centeredContent = container.shadowRoot.getElementById('centered-content');
 
   const audience = new Audience(routeContext);
   container.shadowRoot.append(audience);
@@ -69,9 +72,18 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       async function onPlayer(player) {
         const response = await fetch(`/apps/tunnel-vision/test_photos/${testPhotos[testPhotoIndex++]}`);
         const blob = await response.blob();
+        const arrayBuffer = await new Response(blob).arrayBuffer();
         const image = new Image();
         image.src = URL.createObjectURL(blob);
-        photos.set(player, {id: uuidv4(), image, blob, judgement: 'mark-fake'});
+        photos.set(player, {
+          id: uuidv4(),
+          image,
+          blob,
+          arrayBuffer,
+          isReal: false,
+          judgements: new Map(),
+          isRevealed: false,
+        });
         if (photos.size >= 3) {
           stopListeningForAllPlayers(onPlayer);
           resolve();
@@ -106,8 +118,7 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       for (const photo of photos.values()) {
         const message = new Uint8Array(uuidv4length + photo.blob.size);
         textEncoder.encodeInto(photo.id, message);
-        const arrayBuffer = await photo.blob.arrayBuffer();
-        message.set(new Uint8Array(arrayBuffer), uuidv4length);
+        message.set(new Uint8Array(photo.arrayBuffer), uuidv4length);
         photosChannel.send(message.buffer);
       }
     }
@@ -119,7 +130,7 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
     controlChannels.add(controlChannel);
     controlChannel.onmessage = ({data}) => {
       if (data === 'ready') {
-        const revealedPhotos = [...photos.values()].filter(photo => photo.uncroppedRevealed);
+        const revealedPhotos = [...photos.values()].filter(photo => photo.isRevealed);
         controlChannel.send(JSON.stringify({
           command: 'init',
           presentingPhotoId: presentingPhoto ? presentingPhoto.id : null,
@@ -128,7 +139,7 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       } else {
         const message = JSON.parse(data);
         const playerBubble = audience.getPlayerBubble(player);
-        const speechBubble = new SpeechBubble(message.action);
+        const speechBubble = new SpeechBubble(message.action === 'mark-real' ? 'real' : 'fake');
         playerBubble.append(speechBubble);
         const photo = [...photos.values()].find(photo => photo.id === message.photoId);
         photo.judgements.set(player, message.action);
@@ -149,7 +160,7 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
   const grid = container.shadowRoot.getElementById('grid');
   grid.innerHTML = [...photos.values()].map(photo => `
     <div class="cell" data-photo-id="${photo.id}">
-      <canvas class="photo" data-photo-id="${photo.id}"></canvas>
+      <canvas class="photo"></canvas>
     </div>
   `).join('');
   const photoCanvases = new Map();
@@ -177,24 +188,27 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
 
   grid.onclick = async event => {
     event.stopPropagation();
-    if (presentingPhoto) return;
-
-    const cell = event.target.closest('.cell');
-    if (!cell) return;
-    const photo = [...photos.values()].find(photo => photo.id === cell.dataset.photoId);
-    presentPhoto(photo);
+    if (presentingPhoto) {
+      stopPresentingPhoto();
+    } else {
+      const cell = event.target.closest('.cell');
+      if (!cell) return;
+      const photo = [...photos.values()].find(photo => photo.id === cell.dataset.photoId);
+      presentPhoto(photo);
+    }
   }
-//   centeredContent.onclick = ({target}) => {
-//     if (target === presentingCanvas) {
-//       const photo = [...photos.values()].find(photo => photo.id === presentingCanvas.dataset.photoId);
-//       if (!photo.uncroppedRevealed) {
-//         revealPhotoUncropped(presentingCanvas);
-//         photo.uncroppedRevealed = true;
-//       } else {
-//         unpresentCanvas();
-//       }
-//     }
-//   }
+
+  const revealButton = container.shadowRoot.getElementById('reveal-button');
+  revealButton.onclick = () => {
+    if (presentingPhoto && !presentingPhoto.isRevealed) {
+      revealPhoto(presentingPhoto);
+    }
+  }
+
+  const backButton = container.shadowRoot.getElementById('back-button');
+  backButton.onclick = () => {
+    stopPresentingPhoto();
+  }
 
   function presentPhoto(photo) {
     if (presentingPhoto === photo) {
@@ -202,28 +216,27 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
     }
     presentingPhoto = photo;
 
-    const command = JSON.stringify({command: 'present', photoId: photo.id});
-    controlChannels.forEach(channel => channel.send(command));
-
-    const lastPresented = grid.querySelector('.last-presented');
-    if (lastPresented) {
-      lastPresented.classList.remove('last-presented');
-    }
-    gridCell.classList.add('last-presented');
-
     const gridCell = grid.querySelector(`[data-photo-id="${photo.id}"]`);
     const canvas = gridCell.querySelector('canvas');
 
-    const origin      = gridCell.getBoundingClientRect();
-    const destination = grid.getBoundingClientRect();
-    canvas.style.left   = `${(origin.left   / destination.width)  * 100}%`;
-    canvas.style.top    = `${(origin.top    / destination.height) * 100}%`;
-    canvas.style.width  = `${(origin.width  / destination.width)  * 100}%`;
-    canvas.style.height = `${(origin.height / destination.height) * 100}%`;
-    centeredContent.append(canvas);
-    setTimeout(() => canvas.classList.add('present'), 200);
+    // If the web animations API is available, animate the transition
+    if (canvas.animate) {
+      animateElementToFillNewParent(canvas, grid);
+    }
 
-    grid.classList.remove('reveal');
+    // Make the photo fill the screen
+    gridCell.classList.add('present');
+
+    // Fade out the other photos
+    grid.classList.add('fade-out');
+
+    revealButton.classList.toggle('reveal', !photo.isRevealed);
+    backButton.classList.add('reveal');
+    endRoundButton.classList.remove('reveal');
+
+    // Present the photo on all players screens too
+    const command = JSON.stringify({command: 'present', photoId: photo.id});
+    controlChannels.forEach(channel => channel.send(command));
   }
 
   function stopPresentingPhoto() {
@@ -231,40 +244,43 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
       return;
     }
 
-    const command = JSON.stringify({command: 'unpresent'});
-    controlChannels.forEach(channel => channel.send(command));
-
     const gridCell = grid.querySelector(`.cell[data-photo-id="${presentingPhoto.id}"]`);
     const canvas = photoCanvases.get(presentingPhoto);
 
-    const origin      = grid.getBoundingClientRect();
-    const destination = gridCell.getBoundingClientRect();
-    gridCell.append(canvas);
-    canvas.style.left   = `${origin.left - destination.left}px`;
-    canvas.style.top    = `${origin.top  - destination.top}px`;
-    canvas.style.width  = `${origin.width}px`;
-    canvas.style.height = `${origin.height}px`;
-    canvas.classList.remove('present');
-    setTimeout(() => {
-      canvas.style.left   = null;
-      canvas.style.top    = null;
-      canvas.style.width  = null;
-      canvas.style.height = null;
-    }, 200);
+    // If the web animations API is available, animate the transition
+    if (canvas.animate) {
+      animateElementToFillNewParent(canvas, gridCell);
+    }
+
+    // Restore the photo to its grid cell
+    gridCell.classList.remove('present');
+
+    // Fade-in the other photos
+    grid.classList.remove('fade-out');
+
+    revealButton.classList.remove('reveal');
+    backButton.classList.remove('reveal');
+    endRoundButton.classList.add('reveal');
 
     presentingPhoto = null;
-    grid.classList.add('reveal');
+
+    // Stop presenting the photo on all players screens too
+    const command = JSON.stringify({command: 'unpresent'});
+    controlChannels.forEach(channel => channel.send(command));
   }
 
-  function revealPhotoUncropped(canvas) {
-    const photo = photos.get(canvas.player);
+  function revealPhoto(photo) {
+    revealButton.classList.remove('reveal');
 
     const command = JSON.stringify({command: 'reveal', photoId: photo.id});
     controlChannels.forEach(channel => channel.send(command));
 
+    const canvas = photoCanvases.get(photo);
     animate(t => {
       drawPhotoOntoCanvas(photo.image, canvas, {cropAmount: easeInOutQuad(1 - t)});
     }, 2000);
+
+    photo.isRevealed = true;
   }
 
   await waitForNSeconds(1);
@@ -275,4 +291,29 @@ routes['#apps/tunnel-vision/present'] = async function present(routeContext) {
   await Promise.race([waitForEndRoundButton, waitForEnd()]);
 
   return '#apps/tunnel-vision/end';
+}
+
+function animateElementToFillNewParent(element, destinationParent) {
+  // Uses the FLIP animation technique
+  // See https://css-tricks.com/animating-layouts-with-the-flip-technique/
+
+  const origin      = element.getBoundingClientRect();
+  const destination = destinationParent.getBoundingClientRect();
+
+  return element.animate([
+    {
+      left:   `${((origin.left - destination.left) / destination.width)  * 100}%`,
+      top:    `${((origin.top  - destination.top)  / destination.height) * 100}%`,
+      width:  `${(origin.width  / destination.width)  * 100}%`,
+      height: `${(origin.height / destination.height) * 100}%`,
+      zIndex: '1',
+    },
+    {
+      left: '0',
+      top:  '0',
+      width:  '100%',
+      height: '100%',
+      zIndex: '1',
+    }
+  ], {duration: 500, easing: 'ease', fill: 'forwards'});
 }

@@ -1,4 +1,3 @@
-import {acceptAllPlayers} from '/host/players.mjs';
 import {waitForNSeconds} from '/common/utils.mjs';
 
 import Audience from '/host/audience.mjs';

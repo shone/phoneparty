@@ -227,8 +227,14 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot({params, waitForEnd, 
       // Send photo to host
       listenForChannel(async channel => {
         const blob = await new Promise(resolve => photo.toBlob(resolve, 'image/jpeg'));
-        // TODO: use large buffer transfer function
-        channel.send(blob);
+
+        // Must convert to an ArrayBuffer as Chrome (as of v88) doesn't support sending blobs over an RTCDataChannel.
+        // Must use Response.arrayBuffer() as Safari (as of v13) doesn't support Blob.arrayBuffer()
+        const arrayBuffer = await new Response(blob).arrayBuffer();
+
+        // TODO: RTCDataChannel can have a maximum message size which might be exceeded with a high-resolution image.
+        // May need to split up the ArrayBuffer into parts.
+        channel.send(arrayBuffer);
 
         function setRealFake(state) {
           channel.send(state);

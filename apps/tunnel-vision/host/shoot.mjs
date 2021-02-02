@@ -2,7 +2,6 @@ import {waitForNSeconds, getMessageFromChannel, uuidv4, createChannelQueue} from
 
 import {
   players,
-  stopAcceptingPlayers,
   listenForLeavingPlayers,
   stopListeningForLeavingPlayers
 } from '/host/players.mjs';
@@ -14,7 +13,7 @@ export const photos = new Map();
 
 routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
 
-  const {params, waitForEnd, acceptAllPlayers, listenForPlayers, createChannel, listenForLeavingPlayers} = routeContext;
+  const {params, waitForEnd, listenForPlayers, createChannel, listenForLeavingPlayers} = routeContext;
 
   const thingName = params.get('thing');
 
@@ -66,7 +65,7 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   window.addEventListener('resize', updateGridDimensions);
   waitForEnd().then(() => window.removeEventListener('resize', updateGridDimensions));
 
-  acceptAllPlayers(player => {
+  listenForPlayers(player => {
     // TODO: Don't add players without cameras to the grid
 
     updateGridDimensions();
@@ -100,7 +99,6 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
   const waitResult = await new Promise(resolve => {
     function checkIfAllPhotosTaken() {
       if (players.length >= 2 && players.every(player => photos.has(player))) {
-        stopAcceptingPlayers();
         stopListeningForLeavingPlayers(checkIfAllPhotosTaken);
         resolve('all-photos-taken');
         return true;
@@ -111,15 +109,18 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
     waitForEnd().then(() => resolve('route-ended'));
     listenForPlayers(player => {
       const channel = createChannel(player);
-      channel.binaryType = 'blob';
+      channel.binaryType = 'arraybuffer';
       const channelQueue = createChannelQueue(channel);
       const cell = cellMap.get(player);
       (async function() {
         while (true) {
-          var {value: photoBlob, done} = await channelQueue.next();
+          var {value: photoArrayBuffer, done} = await channelQueue.next();
           if (done) {
             return;
           }
+
+          const photoBlob = new Blob([photoArrayBuffer], {type: 'image/jpeg'});
+
           const photoImage = new Image();
           photoImage.src = URL.createObjectURL(photoBlob);
 
@@ -147,9 +148,10 @@ routes['#apps/tunnel-vision/shoot'] = async function shoot(routeContext) {
             id: uuidv4(),
             image: photoImage,
             blob: photoBlob,
+            arrayBuffer: photoArrayBuffer,
             isReal: action === 'mark-real',
             judgements: new Map(),
-            uncroppedRevealed: false,
+            isRevealed: false,
           }
           photos.set(player, photo);
 
