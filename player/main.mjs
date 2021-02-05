@@ -26,7 +26,11 @@ async function showStatus(status, description='', detail='') {
 
 if (navigator.serviceWorker) {
   // A registered service worker is a browser requirement to allow the app to be installed as a PWA.
-  navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'});
+  navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'})
+  .catch(error => {
+    // Ignore any error. It might be because the app is running from an insecure context, for development.
+    // The app can run without a service worker.
+  });
 }
 
 location.hash = '';
@@ -42,7 +46,7 @@ location.hash = '';
     try {
       var websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
     } catch(error) {
-      showStatus('error', 'failed to connect', `Unable to initialize websocket: ${error}`);
+      showStatus('error', 'websocket failed', `Unable to initialize: ${error}`);
       continue;
     }
 
@@ -64,21 +68,20 @@ location.hash = '';
       }
     });
 
-    const websocketConnectResult = await new Promise(resolve => {
+    const connectResult = await new Promise(resolve => {
       websocket.addEventListener('open',  () => resolve('websocket-open'),   {once: true});
-      websocket.addEventListener('close', () => resolve('websocket-closed'), {once: true});
-      websocket.addEventListener('error', () => resolve('websocket-error'),  {once: true});
+      websocket.addEventListener('close', event => resolve(event), {once: true});
       setTimeout(() => {
         resolve('timeout');
         websocket.close();
       }, 3000);
     });
 
-    if (websocketConnectResult !== 'websocket-open') {
-      if (websocketConnectResult === 'timeout') {
-        await showStatus('error', 'failed to connect', 'Timed-out waiting for websocket to connect');
+    if (connectResult !== 'websocket-open') {
+      if (connectResult === 'timeout') {
+        await showStatus('error', 'websocket failed', 'Timed-out waiting for websocket to connect');
       } else {
-        await showStatus('error', 'failed to connect', 'Could not open websocket');
+        await showStatus('error', 'websocket failed', `Code: ${connectResult.code}, reason: "${connectResult.reason}", was clean: ${connectResult.wasClean}`);
       }
       showStatus('waiting', 'Connecting..', 'Opening websocket');
       await waitForNSeconds(1);
@@ -97,7 +100,7 @@ location.hash = '';
         const waitForHostResult = await new Promise(resolve => waitingOnHostCallback = resolve);
         waitingOnHostCallback = null;
         if (waitForHostResult !== 'host-connected') {
-          await showStatus('error', 'failed to connect', 'Websocket closed before a host could be found');
+          await showStatus('error', 'websocket failed', 'Websocket closed before a host could be found');
           break;
         }
       }
@@ -124,7 +127,8 @@ function setupMenu() {
 
 function setupFullscreenButton() {
   // Only show the fullscreen button if the fullscreen API is available.
-  if (!document.documentElement.requestFullscreen) {
+  // Note that Safari's fullscreen functions are prefixed with 'webkit'.
+  if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) {
     return;
   }
 
@@ -132,10 +136,12 @@ function setupFullscreenButton() {
 
   const clickSound = new Audio('/sounds/click.wav');
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen({navigationUI: "hide"});
+    if (!(document.fullscreenElement || document.webkitFullscreenElement)) {
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen({navigationUI: "hide"});
+      else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     }
     clickSound.play();
   }
