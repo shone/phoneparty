@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	serve_address = flag.String("serve_address", ":http", "The host/port to serve on, e.g. localhost:8080")
-	domain        = flag.String("domain", "", "e.g. 'example.com' When given, serves HTTPS for the domain using Let's Encrypt.")
-	multihost     = flag.Bool("multihost", false, "Allow multiple hosts (one per IPv4 address).")
+	listen    = flag.String("listen", ":http", "The host/port to listen on, e.g. localhost:8080")
+	domain    = flag.String("domain", "", "e.g. 'example.com' When given, serves HTTPS for the domain using Let's Encrypt.")
+	multihost = flag.Bool("multihost", false, "Allow multiple hosts (one per IPv4 address).")
 )
 
 func main() {
@@ -67,8 +67,8 @@ func main() {
 		err := server.ListenAndServeTLS("", "")
 		log.Fatal(err)
 	} else {
-		log.Println("Starting HTTP server on", *serve_address)
-		err := http.ListenAndServe(*serve_address, nil)
+		log.Println("Starting HTTP server on", *listen)
+		err := http.ListenAndServe(*listen, nil)
 		log.Fatal(err)
 	}
 }
