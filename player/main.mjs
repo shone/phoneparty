@@ -1,3 +1,5 @@
+setupServiceWorker();
+
 import {
   waitForNSeconds,
   waitForPageToBeVisible,
@@ -15,36 +17,24 @@ import '/apps/show-and-tell/player/show-and-tell.mjs';
 import '/apps/bubbleland/player/bubbleland.mjs';
 import '/apps/test/player/test.mjs';
 
-async function showStatus(status, description='', detail='') {
-  document.getElementById('status-container').className = status;
-  document.getElementById('status-description').textContent = description;
-  document.getElementById('status-detail').textContent = detail;
-  if (status === 'error') {
-    await waitForNSeconds(2);
-  }
-}
-
-if (navigator.serviceWorker) {
-  // A registered service worker is a browser requirement to allow the app to be installed as a PWA.
-  navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'})
-  .catch(error => {
-    // Ignore any error. It might be because the app is running from an insecure context, for development.
-    // The app can run without a service worker.
-  });
-}
-
 location.hash = '';
 
-(async function main() {
+setupMenu();
 
-  setupMenu();
+connectLoop();
+
+async function connectLoop() {
+
+  // Continuosly attempt to connect to a host, by first establishing a websocket to the server which
+  // will then broker a WebRTC connection to a host. A host is another web browser running at /host instead of /player
 
   while (true) {
     await waitForPageToBeVisible();
 
     showStatus('waiting', 'Connecting..', 'Opening websocket');
     try {
-      var websocket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port}/player/ws`);
+      const websocketProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+      var websocket = new WebSocket(`${websocketProtocol}://${location.hostname}:${location.port}/player/ws`);
     } catch(error) {
       showStatus('error', 'websocket failed', `Unable to initialize: ${error}`);
       continue;
@@ -69,12 +59,24 @@ location.hash = '';
     });
 
     const connectResult = await new Promise(resolve => {
-      websocket.addEventListener('open',  () => resolve('websocket-open'),   {once: true});
-      websocket.addEventListener('close', event => resolve(event), {once: true});
-      setTimeout(() => {
+      const timerId = setTimeout(() => {
         resolve('timeout');
         websocket.close();
       }, 3000);
+      websocket.addEventListener('open', 
+        () => {
+          clearTimeout(timerId);
+          resolve('websocket-open');
+        },
+        {once: true}
+      );
+      websocket.addEventListener('close',
+        event => {
+          clearTimeout(timerId);
+          resolve(event);
+        },
+        {once: true}
+      );
     });
 
     if (connectResult !== 'websocket-open') {
@@ -108,7 +110,27 @@ location.hash = '';
       await connectRtcAndStartRouting(websocket);
     }
   }
-})();
+}
+
+async function showStatus(status, description='', detail='') {
+  document.getElementById('status-container').className = status;
+  document.getElementById('status-description').textContent = description;
+  document.getElementById('status-detail').textContent = detail;
+  if (status === 'error') {
+    await waitForNSeconds(2);
+  }
+}
+
+function setupServiceWorker() {
+  if (navigator.serviceWorker) {
+    // A registered service worker is a browser requirement to allow the app to be installed as a PWA.
+    navigator.serviceWorker.register('/common/service-worker.js', {scope: '/'})
+    .catch(error => {
+      // Ignore any error. It might be because the app is running from an insecure context, for development.
+      // The app can run without a service worker.
+    });
+  }
+}
 
 function setupMenu() {
   const menu = document.getElementById('menu');
@@ -132,9 +154,8 @@ function setupFullscreenButton() {
     return;
   }
 
-  const fullscreenButton = document.querySelector('#menu .items .fullscreen');
-
   const clickSound = new Audio('/sounds/click.wav');
+
   function toggleFullscreen() {
     if (!(document.fullscreenElement || document.webkitFullscreenElement)) {
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen({navigationUI: "hide"});
@@ -145,11 +166,12 @@ function setupFullscreenButton() {
     }
     clickSound.play();
   }
+
+  const fullscreenButton = document.querySelector('#menu .items .fullscreen');
   fullscreenButton.onclick = () => {
     toggleFullscreen();
     document.getElementById('menu').classList.remove('visible');
   }
-
   fullscreenButton.classList.remove('unimplemented');
 }
 
@@ -174,11 +196,12 @@ function setupInstallButton() {
 }
 
 function setupConnectionInfoButton() {
+  const connectionInfo = document.querySelector('#menu > .connection-info');
   const connectionInfoButton = document.querySelector('#menu .items .connection-info');
   connectionInfoButton.onclick = () => {
-    document.querySelector('#menu > .connection-info').classList.toggle('visible');
+    connectionInfo.classList.toggle('visible');
   }
-  document.querySelector('#menu > .connection-info .close-button').onclick = () => document.querySelector('#menu > .connection-info').classList.remove('visible');
+  connectionInfo.querySelector('.close-button').onclick = () => connectionInfo.classList.remove('visible');
 }
 
 async function connectRtcAndStartRouting(websocket) {
@@ -269,7 +292,7 @@ async function connectRtcAndStartRouting(websocket) {
     rtcConnection.addEventListener('iceconnectionstatechange', event => {
       switch (rtcConnection.iceConnectionState) {
         case 'connected': case 'completed': resolve('rtc-connected'); break;
-        case 'failed': case 'closed': resolve('rtc-failed'); break;
+        case 'failed': case 'closed':       resolve('rtc-failed');    break;
       }
     });
   });
