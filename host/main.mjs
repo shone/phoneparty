@@ -26,9 +26,10 @@ setupMenu();
     websocket.onopen = () => connectionStatus.className = '';
 
     websocket.onmessage = event => {
-      const message = JSON.parse(event.data);
-      if (message.sdp) {
-        handleNewPlayer(message.playerId, message.sdp, websocket);
+      const signal = JSON.parse(event.data);
+      if (signal.sessionDescription && !players.find(player => player.playerId === signal.playerId)) {
+        const signalling = setupSignalling(websocket, signal.playerId);
+        handleNewPlayer(signal.playerId, signal.sessionDescription, signalling);
       }
     }
 
@@ -41,6 +42,22 @@ setupMenu();
     warningIndicator.textContent = '';
   }
 })();
+
+function setupSignalling(websocket, playerId) {
+  const signalling = {
+    send: signal => websocket.send(JSON.stringify({playerId, ...signal})),
+    onsignal: () => {},
+    onclose: () => {},
+  }
+  websocket.addEventListener('close', () => signalling.onclose());
+  websocket.addEventListener('message', ({data}) => {
+    const signal = JSON.parse(data);
+    if (signal.playerId === playerId) {
+      signalling.onsignal(signal);
+    }
+  });
+  return signalling;
+}
 
 function setupMenu() {
   const menu = document.getElementById('menu');

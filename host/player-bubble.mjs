@@ -11,14 +11,12 @@ export default class PlayerBubble extends HTMLElement {
     const video = document.createElement('video');
     video.autoplay = true;
     video.muted = true;
-    if (player.stream) {
-      video.srcObject = player.stream;
-    } else {
-      player.rtcConnection.addEventListener('track', ({streams}) => {
-        video.srcObject = streams[0];
-      }); // TODO: clean up listener with disconnectedCallback
-    }
     this.append(video);
+
+    player.getAvatarStream().then(stream => {
+      // Firefox supports assigning the track directly to srcObject, but Chrome needs a MediaStream.
+      video.srcObject = stream;
+    });
   }
 }
 

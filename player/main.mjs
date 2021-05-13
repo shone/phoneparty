@@ -3,10 +3,14 @@ setupServiceWorker();
 import {
   waitForNSeconds,
   waitForPageToBeVisible,
-  waitForWebsocketOpen,
+  waitForWebsocketOpen
+} from '/common/utils.mjs';
+
+import {
+  negotiateRtcConnection,
   waitForRtcClose,
   setupKeepaliveChannel
-} from '/common/utils.mjs';
+} from '/common/rtc.mjs';
 
 import {startRouting} from './routes.mjs';
 
@@ -217,131 +221,51 @@ async function connectRtcAndStartRouting(websocket) {
   visibilityChannel.onopen  = () => document.addEventListener(   'visibilitychange', handleVisibilityChange);
   visibilityChannel.onclose = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-  const accelerometerChannel = rtcConnection.createDataChannel('accelerometer', {negotiated: true, id: 3, ordered: false, maxRetransmits: 0});
-  function handleDeviceMotion(event) { accelerometerChannel.send(`{"x": ${event.acceleration.x}, "y": ${event.acceleration.y}}`); }
-  accelerometerChannel.onopen  = () => window.addEventListener(   'devicemotion', handleDeviceMotion);
-  accelerometerChannel.onclose = () => window.removeEventListener('devicemotion', handleDeviceMotion);
+  const avatarChannel = rtcConnection.createDataChannel('avatar', {negotiated: true, id: 10, ordered: true});
+  avatarChannel.onmessage = async ({data}) => {
+    if (data === 'request') {
+      if (!navigator.mediaDevices) {
+        return;
+      }
+      try {
+        var stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'user'}, audio: false});
+      } catch(error) {
+        avatarChannel.send(JSON.stringify({error: error}));
+        return;
+      }
+      const tracks = stream.getTracks();
+      if (tracks.length === 1) {
+        rtcConnection.addTrack(tracks[0], stream);
+        // Track IDs are not preserved on the remote peer, but stream IDs are.
+        // See https://stackoverflow.com/a/61928039
+        avatarChannel.send(JSON.stringify({streamId: stream.id}));
+      } else {
+        alert(`Got ${tracks.length} tracks intead of 1 when getting avatar video`);
+      }
+    }
+  }
 
   const routeChannel = rtcConnection.createDataChannel('route', {negotiated: true, id: 9, ordered: true});
 
-  const errors = [];
-  let onFatalError = null;
-
-  function onWebsocketMessage(event) {
-    try {
-      var command = JSON.parse(event.data);
-    } catch(error) {
-      errors.push(`Could not parse message from websocket ('${event.data}') as JSON: ${error}`);
-      if (onFatalError) onFatalError();
-    }
-    if (command.sdp) {
-      rtcConnection.setRemoteDescription({type: 'answer', sdp: command.sdp})
-      .catch(error => {
-        errors.push(`Could not use SDP received via websocket ('${command.sdp}') to set RTC remote description: ${error}`)
-        if (onFatalError) onFatalError();
-      });
-    } else if (command.iceCandidate) {
-      rtcConnection.addIceCandidate(command.iceCandidate)
-      .catch(error =>
-        errors.push(`Could not use ICE candidate received via websocket ('${command.iceCandidate}'): ${error}`)
-      );
-    } else if (command.host === 'disconnected') {
-      pushError('Host disconnected');
-      rtcConnection.close();
-    }
+  // Setup RTC signalling
+  const signalling = {
+    send: signal => websocket.send(JSON.stringify(signal)),
+    onsignal: () => {},
+    onclose: () => {},
   }
-  websocket.addEventListener('message', onWebsocketMessage);
-
-  function onIceCandidate(event) {
-    if (event.candidate) {
-      try {
-        websocket.send(JSON.stringify({
-          iceCandidate: event.candidate.toJSON()
-        }));
-      } catch (error) {
-        pushError(error);
-      }
-      const div = document.createElement('div');
-      div.textContent = JSON.stringify(event.candidate.toJSON());
-      document.querySelector('#menu > .connection-info .local-ice-candidates').append(div);
-    }
-  };
-  rtcConnection.onicecandidate = onIceCandidate;
-  websocket.addEventListener('close', () => rtcConnection.onicecandidate = null);
-
-  rtcConnection.onicecandidateerror = event => {
-    pushError(`Got ICE candidate error: ${event.errorCode} - '${event.errorText}'`);
-  }
-
-  const onIceConnectionStateChange = () => document.querySelector('#menu > .connection-info .ice-connection-state').textContent = rtcConnection.iceConnectionState;
-  onIceConnectionStateChange();
-  rtcConnection.oniceconnectionstatechange = onIceConnectionStateChange;
-
-  const onIceGatheringStateChange = () => document.querySelector('#menu > .connection-info .ice-gathering-state').textContent = rtcConnection.iceGatheringState;
-  onIceGatheringStateChange();
-  rtcConnection.onicegatheringstatechange = onIceGatheringStateChange;
-
-  const onSignalingStateChange = () => document.querySelector('#menu > .connection-info .signaling-state').textContent = rtcConnection.signalingState;
-  onSignalingStateChange();
-  rtcConnection.onsignalingstatechange = onSignalingStateChange;
-
-  const waitRtcConnected = new Promise(resolve => {
-    websocket.addEventListener('close', () => resolve('websocket-closed'));
-    onFatalError = () => resolve('error');
-    setTimeout(() => resolve('timeout'), 4000);
-    rtcConnection.addEventListener('iceconnectionstatechange', event => {
-      switch (rtcConnection.iceConnectionState) {
-        case 'connected': case 'completed': resolve('rtc-connected'); break;
-        case 'failed': case 'closed':       resolve('rtc-failed');    break;
-      }
-    });
+  websocket.addEventListener('message', ({data}) => {
+    const signal = JSON.parse(data);
+    signalling.onsignal(signal);
   });
+  websocket.addEventListener('close', () => signalling.onclose());
 
-  showStatus('waiting', 'Establishing WebRTC connection', 'Creating offer...');
+  showStatus('waiting', 'Connecting', 'Negotiating WebRTC connection...');
   try {
-    var rtcOffer = await rtcConnection.createOffer();
+    await negotiateRtcConnection(rtcConnection, signalling);
   } catch(error) {
-    await showStatus('error', 'failed to connect', `WebRTC offer creation failed: ${error}`);
+    await showStatus('error', 'Failed to connect', error);
     return;
   }
-
-  showStatus('waiting', 'Establishing WebRTC connection', 'Setting local description...');
-  try {
-    await rtcConnection.setLocalDescription(rtcOffer);
-  } catch(error) {
-    await showStatus('error', 'failed to connect', `failed to set RTC local description: ${error}`);
-    return;
-  }
-
-  showStatus('waiting', 'Establishing WebRTC connection', 'Sending SDP...');
-  try {
-    websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
-  } catch(error) {
-    await showStatus('error', 'failed to connect', 'failed to send SDP over websocket: ' + error);
-    return;
-  }
-
-  showStatus('waiting', 'Establishing WebRTC connection', 'Waiting to connect...');
-  const connectResult = await waitRtcConnected;
-
-  if (connectResult != 'rtc-connected') {
-    if (connectResult == 'websocket-closed') {
-      await showStatus('error', 'failed to connect', 'websocket closed before RTC connection could be established')
-    } else if (connectResult === 'timeout') {
-      await showStatus('error', 'Timed-out waiting for RTC to connect', errors.join(', '))
-    } else {
-      await showStatus('error', 'failed to connect', errors.join(', '))
-    }
-    return;
-  }
-
-  showStatus('');
-
-//   rtcConnection.onnegotiationneeded = async () => {
-//     const rtcOffer = await rtcConnection.createOffer();
-//     await rtcConnection.setLocalDescription(rtcOffer);
-//     websocket.send(JSON.stringify({sdp: rtcOffer.sdp}));
-//   }
 
   const waitForRouting = startRouting(rtcConnection, routeChannel);
 

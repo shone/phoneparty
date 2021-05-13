@@ -20,23 +20,26 @@ type Host struct {
 	SendChannel chan []byte
 }
 
-// HostMessage(s) are received as JSON from hosts via their websockets
-type HostMessage struct {
+// HostSignal(s) are received as JSON from hosts via their websockets
+type HostSignal struct {
 	// The ID of the player this message should be forwarded to
 	PlayerID *uint64 `json:"playerId"`
 
-	// A Session Description Protocol used in the process of making a WebRTC connection with a player
-	SDP *string `json:"sdp"`
+	// 'type' can be 'sessionDescription' or 'iceCandidate'
+	Type string `json:"type"`
 
-	// An Interactive Connectivity Establishment candidate used in the process of making a WebRTC connection with a player
-	ICECandidate *map[string]interface{} `json:"iceCandidate"`
+	// A WebRTC Session Description used in the process of making a connection with a player.
+	SessionDescription *map[string]interface{} `json:"sessionDescription,omitempty"`
+
+	// A WebRTC Interactive Connectivity Establishment candidate used in the process of making a connection with a player.
+	ICECandidate *map[string]interface{} `json:"iceCandidate,omitempty"`
 
 	// Indicates to players whether the host for their IP is 'connected' or 'disconnected'
-	HostState *string `json:"host"`
+	HostState *string `json:"host,omitempty"`
 }
 
-// Upgrades the HTTP connection to a websocket and relays messages between host(s) and players
-// to allow them to connect over WebRTC.
+// Upgrades the HTTP connection to a websocket and relays signals between host(s) and players
+// to allow them to negotiate WebRTC connections.
 func HandleHostWebsocket(multihost bool) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 
@@ -112,7 +115,7 @@ func HandleHostWebsocket(multihost bool) http.Handler {
 		}
 		players.RUnlock()
 
-		// Relay messages from players to host
+		// Relay signals from players to host
 		go func() {
 			for message := range host.SendChannel {
 				err = websocket_.WriteMessage(websocket.TextMessage, message)
@@ -123,7 +126,7 @@ func HandleHostWebsocket(multihost bool) http.Handler {
 			}
 		}()
 
-		// Relay messages from host to players
+		// Relay signals from host to players
 		for {
 			_, message, err := websocket_.ReadMessage()
 			if err != nil {
@@ -137,34 +140,34 @@ func HandleHostWebsocket(multihost bool) http.Handler {
 				return
 			}
 
-			hostMessage := HostMessage{}
-			err = json.Unmarshal(message, &hostMessage)
+			hostSignal := HostSignal{}
+			err = json.Unmarshal(message, &hostSignal)
 			if err != nil {
 				log.Printf("Error while decoding JSON from host at '%s': %s", host.IP, err)
 				return
 			}
 
-			if hostMessage.PlayerID == nil {
-				log.Printf("Message received from host at '%s' does not contain playerId: %s", host.IP, message)
+			if hostSignal.PlayerID == nil {
+				log.Printf("Signal received from host at '%s' does not contain playerId: %s", host.IP, message)
 				return
 			}
 
 			players.RLock()
-			player, found := players.m[*hostMessage.PlayerID]
+			player, found := players.m[*hostSignal.PlayerID]
 			players.RUnlock()
 			if !found {
-				log.Printf("Received message from host for player '%d' but the player could not be found.", *hostMessage.PlayerID)
+				log.Printf("Received signal from host for player '%d' but the player could not be found.", *hostSignal.PlayerID)
 				continue
 			}
 
 			if multihost && player.IP != host.IP {
-				log.Printf("Host at '%s' attempted to send a message to player ID %d which is on a different IP ('%s')", host.IP, *hostMessage.PlayerID, player.IP)
+				log.Printf("Host at '%s' attempted to send a signal to player ID %d which is on a different IP ('%s')", host.IP, *hostSignal.PlayerID, player.IP)
 				continue
 			}
 
-			hostMessage.PlayerID = nil // Don't send the player its own ID
+			hostSignal.PlayerID = nil // Don't send the player its own ID
 
-			messageToPlayer, err := json.Marshal(hostMessage)
+			messageToPlayer, err := json.Marshal(hostSignal)
 			if err != nil {
 				log.Printf("Could not encode JSON to send to player: %s", err)
 				return
@@ -181,7 +184,7 @@ func HandleHostWebsocket(multihost bool) http.Handler {
 				players.Lock()
 				delete(players.m, player.ID)
 				players.Unlock()
-				host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, player.ID))
+				host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "type": "disconnected"}`, player.ID))
 			}
 		}
 	})

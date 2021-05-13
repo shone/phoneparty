@@ -78,47 +78,6 @@ export async function waitForWebsocketClose(websocket) {
   }
 }
 
-export async function waitForRtcConnect(rtcConnection) {
-  switch (rtcConnection.iceConnectionState) {
-    case 'connected': case 'completed':
-      return 'rtc-connected';
-    case 'failed': return 'rtc-failed';
-    case 'closed': return 'rtc-closed';
-    default:
-      return new Promise(resolve =>
-        rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-          switch (rtcConnection.iceConnectionState) {
-            case 'connected': case 'completed':
-              resolve('rtc-connected');
-              break;
-            case 'failed': resolve('rtc-failed'); break;
-            case 'closed': resolve('rtc-closed'); break;
-            default:
-              return;
-          }
-          rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-        })
-      );
-  }
-}
-
-export function waitForRtcClose(rtcConnection) {
-  switch (rtcConnection.connectionState) {
-    case 'failed': case 'closed':
-      return 'rtc-closed';
-    default:
-      return new Promise(resolve => {
-        rtcConnection.addEventListener('iceconnectionstatechange', function callback(event) {
-          switch (rtcConnection.iceConnectionState) {
-            case 'failed': case 'closed':
-              resolve('rtc-closed');
-              rtcConnection.removeEventListener('iceconnectionstatechange', callback);
-          }
-        });
-      });
-  }
-}
-
 export function sendOnChannelWhenOpen(channel, message) {
   if (channel.readyState === 'open') {
     channel.send(message);
@@ -231,41 +190,4 @@ export async function getBlobOnChannel(channel) {
       resolve([null, new Error('Channel was closed before the entire blob could be received.')]);
     }, {once: true});
   });
-}
-
-export function setupKeepaliveChannel(channel) {
-  let sendInterval = null;
-  let receiveInterval = null;
-  let onKeepaliveTimeout = null;
-  channel.addEventListener('open', () => {
-    sendInterval = setInterval(() => channel.send(performance.now()), 1000);
-    let lastKeepaliveTimestamp = performance.now();
-    channel.addEventListener('message', event => {
-      lastKeepaliveTimestamp = performance.now();
-    });
-    receiveInterval = setInterval(() => {
-      const timeSinceLastKeepalive = performance.now() - lastKeepaliveTimestamp;
-      if (timeSinceLastKeepalive > 3000) {
-        if (onKeepaliveTimeout) {
-          onKeepaliveTimeout();
-        }
-        clearInterval(sendInterval);
-        clearInterval(receiveInterval);
-        channel.close();
-      }
-    }, 1000);
-  });
-  channel.addEventListener('close', () => {
-    clearInterval(sendInterval);
-    clearInterval(receiveInterval);
-  });
-  const onBeforeUnload = () => channel.close();
-  channel.addEventListener('open', window.addEventListener('beforeunload', onBeforeUnload));
-  channel.addEventListener('close', window.removeEventListener('beforeunload', onBeforeUnload));
-
-  const waitForKeepaliveEnd = new Promise(resolve => {
-    channel.addEventListener('close', () => resolve('keepalive-end'));
-    onKeepaliveTimeout = () => resolve('keepalive-end');
-  });
-  return waitForKeepaliveEnd;
 }

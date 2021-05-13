@@ -24,23 +24,26 @@ type Player struct {
 	Websocket *websocket.Conn
 }
 
-type PlayerMessage struct {
+type PlayerSignal struct {
 	// The ID of the player this message was received from
 	PlayerID *uint64 `json:"playerId"`
 
-	// A Session Description Protocol used in the process of making a WebRTC connection with a host
-	SDP *string `json:"sdp"`
+	// 'type' can be 'sessionDescription' or 'iceCandidate'
+	Type string `json:"type"`
 
-	// An Interactive Connectivity Establishment candidate used in the process of
-	// making a WebRTC connection with a host
-	ICECandidate *map[string]interface{} `json:"iceCandidate"`
+	// A WebRTC Session Description used in the process of making a connection with a host.
+	SessionDescription *map[string]interface{} `json:"sessionDescription,omitempty"`
+
+	// A WebRTC Interactive Connectivity Establishment candidate used in the process of
+	// making a connection with a host.
+	ICECandidate *map[string]interface{} `json:"iceCandidate,omitempty"`
 
 	// This will be 'disconnected' when the player websocket disconnects
-	ConnectionState *string `json:"connectionState"`
+	ConnectionState *string `json:"connectionState,omitempty"`
 }
 
-// Upgrades the HTTP connection to a websocket and relays messages between the player and any host to
-// allow them to connect over WebRTC.
+// Upgrades the HTTP connection to a websocket and relays signals between the player and any host to
+// allow them to negotiate WebRTC connections.
 func HandlePlayerWebsocket(multihost bool) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 
@@ -100,12 +103,12 @@ func HandlePlayerWebsocket(multihost bool) http.Handler {
 				}
 			}
 			if host != nil {
-				host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "connectionState": "disconnected"}`, playerID))
+				host.SendChannel <- []byte(fmt.Sprintf(`{"playerId": %d, "type": "disconnected"}`, playerID))
 			}
 			hosts.RUnlock()
 		}()
 
-		// Relay messages from player to host
+		// Relay signals from player to host
 		for {
 			_, message, err := websocket_.ReadMessage()
 			if err != nil {
@@ -119,16 +122,16 @@ func HandlePlayerWebsocket(multihost bool) http.Handler {
 				return
 			}
 
-			playerMessage := PlayerMessage{}
-			err = json.Unmarshal(message, &playerMessage)
+			playerSignal := PlayerSignal{}
+			err = json.Unmarshal(message, &playerSignal)
 			if err != nil {
 				log.Printf("Error while decoding JSON from player %d at '%s': %s", playerID, ip, err)
 				return
 			}
 
-			playerMessage.PlayerID = &playerID
+			playerSignal.PlayerID = &playerID
 
-			messageWithPlayerID, err := json.Marshal(playerMessage)
+			signalWithPlayerID, err := json.Marshal(playerSignal)
 			if err != nil {
 				log.Printf("Error while encoding JSON for player %d: %s", playerID, err)
 				return
@@ -145,7 +148,7 @@ func HandlePlayerWebsocket(multihost bool) http.Handler {
 				}
 			}
 			if host != nil {
-				host.SendChannel <- messageWithPlayerID
+				host.SendChannel <- signalWithPlayerID
 			}
 			hosts.RUnlock()
 		}
