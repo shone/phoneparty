@@ -20,6 +20,7 @@ import '/apps/tunnel-vision/player/tunnel-vision.mjs';
 import '/apps/show-and-tell/player/show-and-tell.mjs';
 import '/apps/bubbleland/player/bubbleland.mjs';
 import '/apps/test/player/test.mjs';
+import '/apps/remote-control/player/remote-control.mjs';
 
 location.hash = '';
 

@@ -4,6 +4,7 @@ import '/apps/tunnel-vision/host/tunnel-vision.mjs';
 import '/apps/show-and-tell/host/show-and-tell.mjs';
 import '/apps/bubbleland/host/bubbleland.mjs';
 import '/apps/test/host/test.mjs';
+import '/apps/remote-control/host/remote-control.mjs';
 
 const container = document.createElement('div');
 container.id = 'apps-index';
