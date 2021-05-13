@@ -1,10 +1,9 @@
 #apps-index {
   height: 100%;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, var(--tile-size));
-  grid-template-rows: repeat(auto-fit, var(--tile-size));
-  grid-gap: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 3rem;
   box-sizing: border-box;
   justify-content: center;
@@ -15,6 +14,8 @@
 #apps-index > a {
   width:  var(--tile-size);
   height: var(--tile-size);
+  margin: 3rem;
+  flex-shrink: 0;
   background: white;
   text-decoration: none;
 }
