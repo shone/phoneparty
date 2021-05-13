@@ -4,24 +4,39 @@
   top: 0;
   right: 0;
   bottom: 0;
+  overflow: hidden;
 
   background: antiquewhite;
   color: white;
-
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-auto-rows: 1fr;
 }
 
+#master {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+}
+
+@media (orientation: portrait) {
+  #master {
+    flex-direction: column;
+  }
+}
 @media (orientation: landscape) {
-  :host {
-    grid-auto-flow: column;
+  #master {
+    flex-direction: row;
   }
 }
 
 .panel {
+  flex-basis: 1px;
   display: grid;
   place-items: center;
+  position: relative;
+  flex-grow: 1;
 }
 
 #direction {
@@ -32,7 +47,7 @@
 
 #indicators {
   transform: rotate(45deg);
-  --indicator-width: 250px;
+  --indicator-width: 30vmin;
   position: absolute;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -74,4 +89,49 @@
 
 #backward {
   background-color: #8AB17D;
+}
+
+#puppet-choice {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#puppet-choice push-button {
+  width: 10rem;
+  height: 6rem;
+  border-radius: 1rem;
+  font-size: 2rem;
+  color: black;
+  font-weight: bold;
+}
+#puppet-choice push-button:first-of-type {
+  margin-right: 1rem;
+}
+
+#puppet {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items:     center;
+}
+#puppet .eye {
+  width:  40vw;
+  height: 40vw;
+  overflow: hidden;
+  background: white;
+  border-radius: 50%;
+  border: 1rem solid black;
+  display: flex;
+  justify-content: center;
+  align-items:     center;
+}
+#puppet .eye:first-of-type {
+  margin-right: 6vw;
+}
+#puppet .pupil {
+  width:  6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: black;
 }

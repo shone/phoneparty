@@ -183,7 +183,7 @@ export function setupKeepaliveChannel(channel) {
     });
     receiveInterval = setInterval(() => {
       const timeSinceLastKeepalive = performance.now() - lastKeepaliveTimestamp;
-      if (timeSinceLastKeepalive > 3000) {
+      if (timeSinceLastKeepalive > 6000) {
         if (onKeepaliveTimeout) {
           onKeepaliveTimeout();
         }
