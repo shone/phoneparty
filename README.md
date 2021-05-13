@@ -1,6 +1,6 @@
-![Phone Party logo](docs/logo.svg)
-
 # Phone Party
+
+![Phone Party logo](docs/logo.svg)
 
 Instant-join mobile party games over wifi.
 
@@ -17,13 +17,13 @@ The emphasis is on zero-setup instant fun:
 Phone Party is a [Go Module](https://github.com/golang/go/wiki/Modules). The [go run](https://golang.org/cmd/go/#hdr-Compile_and_run_Go_program) command can install dependencies and run the server locally:
 
 ```bash
-$ cd phoneparty/
-$ go run . -listen :8080
+cd phoneparty/
+go run . --serve_address :8080
 ```
 
-- Try the sandbox at http://localhost:8080/sandbox
-- Host a game at http://localhost:8080/host
-- Join as a player at http://localhost:8080
+- Try the sandbox at <http://localhost:8080/sandbox>
+- Host a game at <http://localhost:8080/host>
+- Join as a player at <http://localhost:8080>
 
 ## Tech
 
