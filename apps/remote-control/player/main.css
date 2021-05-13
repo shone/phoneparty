@@ -5,7 +5,7 @@
   right: 0;
   bottom: 0;
 
-  background: green;
+  background: antiquewhite;
   color: white;
 
   display: grid;
@@ -21,9 +21,57 @@
 
 .panel {
   display: grid;
-  place-content: center;
+  place-items: center;
 }
 
-#top {
-  background: blue;
+#direction {
+  font-size: 5em;
+  color: black;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+#indicators {
+  transform: rotate(45deg);
+  --indicator-width: 250px;
+  position: absolute;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+#indicators > div {
+  width: var(--indicator-width);
+  height: var(--indicator-width);
+}
+
+#indicators > *:first-child {
+  border-radius: var(--indicator-width) 0 0 0;
+}
+
+#indicators > *:nth-child(2) {
+  border-radius: 0 var(--indicator-width) 0 0;
+}
+
+#indicators > *:nth-child(3) {
+  border-radius: 0 0 0 var(--indicator-width);
+}
+
+#indicators > *:nth-child(4) {
+  border-radius: 0 0 var(--indicator-width) 0;
+}
+
+#right {
+  background-color: #E9C46A;
+}
+
+#left {
+  background: #E76F51;
+}
+
+#forward {
+  background-color: #2A9D8F;
+}
+
+#backward {
+  background-color: #8AB17D;
 }

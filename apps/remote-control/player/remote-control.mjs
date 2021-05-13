@@ -17,9 +17,15 @@ routes['#apps/remote-control'] = async function remoteControl({waitForEnd, liste
   container.attachShadow({mode: 'open'}).innerHTML = `
     <link rel="stylesheet" href="/apps/remote-control/player/main.css">
     <div class="panel">
-      <p id="direction"></p>
+      <p id="direction">static</p>
     </div>
     <div class="panel">
+      <div id="indicators">
+        <div id="forward"></div>
+        <div id="right"></div>
+        <div id="backward"></div>
+        <div id="left"></div>
+      </div>
       <pp-joystick></pp-joystick>
     </div>
   `;
