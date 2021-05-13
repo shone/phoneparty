@@ -9,5 +9,21 @@
   color: white;
 
   display: grid;
-  place-items: center;
+  grid-auto-columns: 1fr;
+  grid-auto-rows: 1fr;
+}
+
+@media (orientation: landscape) {
+  :host {
+    grid-auto-flow: column;
+  }
+}
+
+.panel {
+  display: grid;
+  place-content: center;
+}
+
+#top {
+  background: blue;
 }
