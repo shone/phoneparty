@@ -9,7 +9,7 @@ document.head.insertAdjacentHTML('beforeend', `
   <link rel="stylesheet" href="/apps/bubbleland/host/app-index.css">
 `);
 
-routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChannel, acceptAllPlayers, listenForLeavingPlayers}) {
+routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChannel, listenForPlayers, listenForLeavingPlayers}) {
   document.body.style.backgroundColor = 'purple';
 
   const container = document.createElement('div');
@@ -23,11 +23,9 @@ routes['#apps/bubbleland'] = async function bubbleland({waitForEnd, createChanne
 
   const playerMap = new Map();
 
-  acceptAllPlayers(player => {
+  listenForPlayers(player => {
     const playerBubble = new PlayerBubble(player);
     container.shadowRoot.append(playerBubble);
-
-//     player.classList.add('bubble', 'wiggleable');
 
     playerMap.set(player, {
       bubble: playerBubble,
